@@ -1,6 +1,8 @@
-﻿import { useState } from 'react';
-import { Paperclip, X, FileText } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Paperclip, X, FileText, Loader2 } from 'lucide-react';
 import Modal from './Modal';
+import { useOutreachStore } from '../store/useOutreachStore';
+import { HARDCODED_PROFILE_ID } from '../api/client';
 
 interface AttachedFile {
   id: string;
@@ -14,10 +16,34 @@ interface Props {
 }
 
 export default function MailingMessagesModal({ isOpen, onClose }: Props) {
+  const { templates, isLoading, fetchTemplates, saveTemplate } = useOutreachStore();
+  
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<AttachedFile[]>([
     { id: '1', name: 'image_banner.jpg', size: '2.4 MB' },
   ]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchTemplates(HARDCODED_PROFILE_ID);
+    }
+  }, [isOpen, fetchTemplates]);
+
+  useEffect(() => {
+    if (templates.length > 0) {
+      setMessage(templates[0].content);
+    } else {
+      setMessage('');
+    }
+  }, [templates]);
+
+  const handleClose = () => {
+    const currentTplContent = templates.length > 0 ? templates[0].content : '';
+    if (message !== currentTplContent) {
+      saveTemplate(HARDCODED_PROFILE_ID, message);
+    }
+    onClose();
+  };
 
   const removeFile = (id: string) => {
     setFiles((prev) => prev.filter((f) => f.id !== id));
@@ -34,8 +60,13 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Сообщения">
-      <div className="flex flex-col gap-4">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Сообщения">
+      <div className="flex flex-col gap-4 relative">
+        {isLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0B0E18]/50">
+            <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#7C3AED' }} />
+          </div>
+        )}
         {/* ── Text area ── */}
         <div
           className="rounded-2xl p-4 flex-1"
