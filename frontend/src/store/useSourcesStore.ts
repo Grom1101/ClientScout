@@ -44,6 +44,11 @@ const platformColors: Record<string, string> = {
   slack: '#E11D48',
 };
 
+const getStableMemberCount = (url: string) => {
+  const hash = Math.abs(url.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0));
+  return (hash % 15000) + 500;
+};
+
 const mapToChatItem = (source: BackendSource): ChatItem => {
   const platform = mapTypeToPlatform(source.type);
   return {
@@ -51,13 +56,13 @@ const mapToChatItem = (source: BackendSource): ChatItem => {
     platform: platform,
     name: source.name,
     username: source.url,
-    members: Math.floor(Math.random() * 10000) + 500, // Generated locally as backend lacks it
+    members: getStableMemberCount(source.url),
     avatarColor: platformColors[platform] || '#64748B',
     checked: source.status === 1,
   };
 };
 
-export const useSourcesStore = create<SourcesState>((set) => ({
+export const useSourcesStore = create<SourcesState>((set, get) => ({
   sources: [],
   isLoading: false,
   error: null,
@@ -87,6 +92,12 @@ export const useSourcesStore = create<SourcesState>((set) => ({
   },
 
   addSource: async (url: string, name: string, purpose: number, platform: string) => {
+    // Check for duplicates locally first
+    const { sources } = get();
+    if (sources.some((s: ChatItem) => s.username.toLowerCase() === url.toLowerCase())) {
+      throw new Error('DUPLICATE_CHAT');
+    }
+
     try {
       const payload = {
         profileId: HARDCODED_PROFILE_ID,
@@ -100,7 +111,7 @@ export const useSourcesStore = create<SourcesState>((set) => ({
       const newChat = mapToChatItem(response.data);
       
       set((state) => ({ sources: [...state.sources, newChat] }));
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to add source via API, updating locally:', err);
       // Fallback to local optimistic update
       const newChat: ChatItem = {
@@ -108,7 +119,7 @@ export const useSourcesStore = create<SourcesState>((set) => ({
         platform: platform as any,
         name,
         username: url,
-        members: Math.floor(Math.random() * 10000) + 500,
+        members: getStableMemberCount(url),
         avatarColor: platformColors[platform] || '#64748B',
         checked: true,
       };

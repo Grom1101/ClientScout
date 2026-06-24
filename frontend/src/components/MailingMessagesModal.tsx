@@ -55,12 +55,18 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (attachmentUrls.length >= 3) {
+      alert("Нельзя прикрепить больше 3 файлов.");
+      e.target.value = '';
+      return;
+    }
+
     setIsUploading(true);
     try {
       const url = await uploadFile(file);
       setAttachmentUrls((prev) => [...prev, url]);
-    } catch (err) {
-      alert("Ошибка при загрузке файла");
+    } catch (err: any) {
+      alert(err.message || "Ошибка при загрузке файла");
     } finally {
       setIsUploading(false);
       // Reset input value
@@ -78,18 +84,22 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
         )}
         {/* ── Text area ── */}
         <div
-          className="rounded-2xl p-4 flex-1"
-          style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)' }}
+          className="rounded-2xl p-4 flex-1 shadow-[0_4px_24px_-1px_rgba(0,0,0,0.2)]"
+          style={{ 
+            backgroundColor: 'rgba(255, 255, 255, 0.03)', 
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            backdropFilter: 'blur(12px)'
+          }}
         >
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Введите текст сообщения..."
             maxLength={4096}
-            className="w-full h-48 bg-transparent text-sm text-white resize-none leading-relaxed"
+            className="w-full h-48 bg-transparent text-[15px] text-white resize-none leading-relaxed placeholder:text-white/30"
             style={{ outline: 'none' }}
           />
-          <p className="text-xs mt-1" style={{ color: '#64748B' }}>
+          <p className="text-[13px] mt-2 font-medium" style={{ color: '#94A3B8' }}>
             (можно использовать переменные)
           </p>
         </div>
@@ -111,17 +121,23 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
                 return (
                   <div
                     key={url}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
-                    style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)' }}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.1)] transition-all hover:bg-white/5"
+                    style={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.03)', 
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      backdropFilter: 'blur(8px)'
+                    }}
                   >
-                    <FileText className="w-5 h-5 shrink-0" style={{ color: '#7C3AED' }} />
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(124,58,237,0.15)' }}>
+                      <FileText className="w-5 h-5 shrink-0" style={{ color: '#A78BFA' }} />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{fileName}</p>
-                      <p className="text-xs" style={{ color: '#64748B' }}>Загружено</p>
+                      <p className="text-sm font-semibold text-white truncate">{fileName}</p>
+                      <p className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>Загружено</p>
                     </div>
                     <button
                       onClick={() => removeFile(url)}
-                      className="w-6 h-6 flex items-center justify-center rounded-full shrink-0 transition-colors hover:bg-white/10"
+                      className="w-8 h-8 flex items-center justify-center rounded-full shrink-0 transition-all hover:bg-red-500/20 hover:text-red-400 active:scale-95"
                       style={{ color: '#64748B' }}
                     >
                       <X className="w-4 h-4" />
@@ -135,16 +151,20 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
 
         {/* ── Attach file button ── */}
         <label
-          className="w-full py-3 rounded-2xl text-sm font-medium flex items-center justify-center gap-2 cursor-pointer transition-colors hover:bg-white/5"
-          style={{ border: '1px dashed rgba(255,255,255,0.15)', color: '#94A3B8' }}
+          className="w-full py-3.5 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all hover:bg-white/5 active:scale-[0.98]"
+          style={{ 
+            border: '1px dashed rgba(255,255,255,0.2)', 
+            backgroundColor: 'rgba(255,255,255,0.02)',
+            color: '#CBD5E1' 
+          }}
         >
           {isUploading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
           ) : (
-            <Paperclip className="w-4 h-4" />
+            <Paperclip className="w-5 h-5" />
           )}
-          {isUploading ? 'Загрузка...' : 'Прикрепить файл'}
-          <input type="file" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
+          {isUploading ? 'Загрузка...' : `Прикрепить файл (${attachmentUrls.length}/3)`}
+          <input type="file" className="hidden" onChange={handleFileUpload} disabled={isUploading || attachmentUrls.length >= 3} />
         </label>
       </div>
     </Modal>

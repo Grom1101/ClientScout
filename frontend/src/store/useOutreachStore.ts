@@ -91,9 +91,14 @@ export const useOutreachStore = create<OutreachState>((set, get) => ({
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       return response.data.url;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to upload file:', err);
-      throw err;
+      if (err.response) {
+        console.error('Server Error Data:', err.response.data);
+        console.error('Server Error Status:', err.response.status);
+        throw new Error(err.response.data?.message || err.response.data || 'Ошибка сервера при загрузке');
+      }
+      throw new Error('Сетевая ошибка при загрузке файла');
     }
   },
 

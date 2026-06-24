@@ -54,10 +54,17 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
     const platform = detectPlatform(newChatLink);
     const name = newChatLink.split('/').pop() || 'New Chat';
     
-    await addSource(newChatLink, name, purpose, platform);
-    
-    setNewChatLink('');
-    setShowAddChat(false);
+    try {
+      await addSource(newChatLink, name, purpose, platform);
+      setNewChatLink('');
+      setShowAddChat(false);
+    } catch (err: any) {
+      if (err.message === 'DUPLICATE_CHAT') {
+        alert('Этот чат уже добавлен в список.');
+      } else {
+        alert('Ошибка при добавлении чата.');
+      }
+    }
   };
 
   const filteredChats = chats.filter(
@@ -123,12 +130,18 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
               >
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                    className="w-7 h-7 rounded-full flex items-center justify-center"
                     style={{ backgroundColor: platformColors[platform] }}
                   >
-                    {platform.charAt(0).toUpperCase()}
+                    {platform === 'telegram' ? (
+                      <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.223-.548.223l.188-2.85 5.18-4.686c.223-.204-.054-.31-.346-.116l-6.405 4.04-2.777-.87c-.603-.188-.615-.604.126-.89l10.84-4.18c.5-.188.95.126.83.94l-.588 3.42z"/>
+                      </svg>
+                    ) : (
+                      <span className="text-white text-[10px] font-bold">{platform.charAt(0).toUpperCase()}</span>
+                    )}
                   </div>
-                  <span className="text-sm font-semibold text-white">{platformLabels[platform]}</span>
+                  <span className="text-[15px] font-bold text-white tracking-wide">{platformLabels[platform]}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span
@@ -162,10 +175,16 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
                       >
                         {/* Avatar */}
                         <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 shadow-lg"
+                          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg"
                           style={{ backgroundColor: chat.avatarColor }}
                         >
-                          {chat.name.charAt(0)}
+                          {chat.platform === 'telegram' ? (
+                            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.223-.548.223l.188-2.85 5.18-4.686c.223-.204-.054-.31-.346-.116l-6.405 4.04-2.777-.87c-.603-.188-.615-.604.126-.89l10.84-4.18c.5-.188.95.126.83.94l-.588 3.42z"/>
+                            </svg>
+                          ) : (
+                            <span className="text-white text-sm font-bold">{chat.name.charAt(0)}</span>
+                          )}
                         </div>
 
                         {/* Info */}

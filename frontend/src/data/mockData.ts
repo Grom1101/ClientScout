@@ -1,4 +1,4 @@
-﻿/* ─── Interfaces ─── */
+/* ─── Interfaces ─── */
 
 export interface ChatItem {
   id: string;
@@ -53,17 +53,7 @@ export const mockProfiles: Profile[] = [
   { id: '2', name: 'Frontend English' },
 ];
 
-export const mockChats: ChatItem[] = [
-  { id: '1', platform: 'telegram', name: 'Design Jobs', username: '@design_jobs', members: 12340, avatarColor: '#7C3AED', checked: true },
-  { id: '2', platform: 'telegram', name: 'Startup Founders', username: '@startup_founders', members: 8785, avatarColor: '#10B981', checked: true },
-  { id: '3', platform: 'telegram', name: 'Freelance RU', username: '@freelance_ru', members: 15210, avatarColor: '#3B82F6', checked: true },
-  { id: '4', platform: 'telegram', name: 'Remote Work', username: '@remote_work', members: 10876, avatarColor: '#F59E0B', checked: false },
-  { id: '5', platform: 'telegram', name: 'Marketing Ideas', username: '@marketing_ideas', members: 9321, avatarColor: '#EC4899', checked: true },
-  { id: '6', platform: 'telegram', name: 'Content Jobs', username: '@content_jobs', members: 5103, avatarColor: '#06B6D4', checked: false },
-  { id: '7', platform: 'whatsapp', name: 'Freelance Work', username: 'Freelance Work', members: 1240, avatarColor: '#22C55E', checked: true },
-  { id: '8', platform: 'whatsapp', name: 'Content Jobs', username: 'Content Jobs', members: 890, avatarColor: '#22C55E', checked: false },
-  { id: '9', platform: 'slack', name: '#job-posts', username: '#job-posts', members: 847, avatarColor: '#E11D48', checked: true },
-];
+export const mockChats: ChatItem[] = [];
 
 export const mockOrders: OrderItem[] = [
   {

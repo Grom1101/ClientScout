@@ -78,14 +78,13 @@ export default function SwipeableItem({ onDelete, children }: SwipeableItemProps
   return (
     <div className="relative overflow-hidden rounded-xl select-none">
       {/* Delete button behind the item */}
-      <div
-        className="absolute inset-y-0 right-0 w-20 flex items-center justify-center"
+      <button
+        onClick={onDelete}
+        className="absolute inset-y-0 right-0 w-20 flex items-center justify-center transition-colors hover:bg-red-600 active:bg-red-700"
         style={{ backgroundColor: '#EF4444' }}
       >
-        <button onClick={onDelete} className="p-2">
-          <Trash2 className="w-5 h-5 text-white" />
-        </button>
-      </div>
+        <Trash2 className="w-5 h-5 text-white" />
+      </button>
 
       {/* Item content — slides to reveal delete */}
       <div
