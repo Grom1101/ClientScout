@@ -15,18 +15,18 @@ export default function SubPage({ title, backTo, children, rightAction }: SubPag
   return (
     <div className="flex flex-col h-full">
       <header
-        className="flex items-center px-4 py-3 shrink-0"
+        className="flex items-center px-4 py-3 shrink-0 gap-3"
         style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
       >
         <button
           onClick={() => navigate(backTo)}
-          className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+          className="w-9 h-9 flex items-center justify-center rounded-full transition-colors hover:bg-white/10 shrink-0"
           style={{ color: '#94A3B8' }}
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="ml-2 text-lg font-semibold text-white flex-1">{title}</h1>
-        {rightAction && <div className="ml-auto">{rightAction}</div>}
+        <h1 className="text-lg font-semibold text-white flex-1 min-w-0 truncate">{title}</h1>
+        {rightAction && <div className="shrink-0">{rightAction}</div>}
       </header>
       <div className="flex-1 overflow-y-auto">{children}</div>
     </div>

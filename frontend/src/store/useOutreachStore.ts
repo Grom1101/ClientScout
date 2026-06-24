@@ -5,6 +5,7 @@ export interface MessageTemplate {
   id: string;
   name: string;
   content: string;
+  attachmentUrls?: string[];
   createdAt: string;
 }
 
@@ -28,7 +29,8 @@ interface OutreachState {
   error: string | null;
 
   fetchTemplates: (profileId: string) => Promise<void>;
-  saveTemplate: (profileId: string, content: string) => Promise<void>;
+  saveTemplate: (profileId: string, content: string, attachmentUrls?: string[]) => Promise<void>;
+  uploadFile: (file: File) => Promise<string>;
   
   fetchActiveCampaign: (profileId: string) => Promise<void>;
   startCampaign: (templateId: string, sourceIds: string[]) => Promise<void>;
@@ -52,7 +54,7 @@ export const useOutreachStore = create<OutreachState>((set, get) => ({
     }
   },
 
-  saveTemplate: async (profileId: string, content: string) => {
+  saveTemplate: async (profileId: string, content: string, attachmentUrls: string[] = []) => {
     set({ isLoading: true });
     try {
       const { templates } = get();
@@ -61,7 +63,8 @@ export const useOutreachStore = create<OutreachState>((set, get) => ({
         const tpl = templates[0];
         const response = await apiClient.put<MessageTemplate>(`/outreach/templates/${tpl.id}`, {
           name: 'Основной шаблон',
-          content
+          content,
+          attachmentUrls
         });
         set({ templates: [response.data], isLoading: false });
       } else {
@@ -69,13 +72,28 @@ export const useOutreachStore = create<OutreachState>((set, get) => ({
         const response = await apiClient.post<MessageTemplate>('/outreach/templates', {
           profileId,
           name: 'Основной шаблон',
-          content
+          content,
+          attachmentUrls
         });
         set({ templates: [response.data], isLoading: false });
       }
     } catch (err) {
       console.error('Failed to save template:', err);
       set({ isLoading: false, error: 'Failed to save template' });
+    }
+  },
+
+  uploadFile: async (file: File): Promise<string> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await apiClient.post<{url: string}>('/file/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data.url;
+    } catch (err) {
+      console.error('Failed to upload file:', err);
+      throw err;
     }
   },
 
