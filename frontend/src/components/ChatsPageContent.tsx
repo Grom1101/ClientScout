@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { Plus, Search, Check, ChevronUp, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Search, Check, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import SubPage from '../components/SubPage';
 import Modal from '../components/Modal';
 import SwipeableItem from '../components/SwipeableItem';
-import { mockChats, detectPlatform, formatMembers, type ChatItem } from '../data/mockData';
+import { detectPlatform, formatMembers } from '../data/mockData';
+import { useSourcesStore } from '../store/useSourcesStore';
 
 const platformLabels: Record<string, string> = {
   telegram: 'Telegram',
@@ -20,14 +21,19 @@ const platformColors: Record<string, string> = {
 interface ChatsPageContentProps {
   title: string;
   backTo: string;
+  purpose: number; // 0 for Search, 1 for Outreach
 }
 
-export default function ChatsPageContent({ title, backTo }: ChatsPageContentProps) {
-  const [chats, setChats] = useState<ChatItem[]>(mockChats);
+export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageContentProps) {
+  const { sources: chats, isLoading, fetchSources, addSource, deleteSource, toggleSource } = useSourcesStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddChat, setShowAddChat] = useState(false);
   const [newChatLink, setNewChatLink] = useState('');
   const [collapsedPlatforms, setCollapsedPlatforms] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    fetchSources(purpose);
+  }, [fetchSources, purpose]);
 
   const platforms = [...new Set(chats.map((c) => c.platform))];
 
@@ -35,27 +41,21 @@ export default function ChatsPageContent({ title, backTo }: ChatsPageContentProp
     setCollapsedPlatforms((prev) => ({ ...prev, [p]: !prev[p] }));
   };
 
-  const toggleChat = (id: string) => {
-    setChats((prev) => prev.map((c) => (c.id === id ? { ...c, checked: !c.checked } : c)));
+  const handleToggleChat = (id: string, currentStatus: boolean) => {
+    toggleSource(id, currentStatus);
   };
 
-  const deleteChat = (id: string) => {
-    setChats((prev) => prev.filter((c) => c.id !== id));
+  const handleDeleteChat = (id: string) => {
+    deleteSource(id);
   };
 
-  const addChat = () => {
+  const handleAddChat = async () => {
     if (!newChatLink.trim()) return;
     const platform = detectPlatform(newChatLink);
-    const newChat: ChatItem = {
-      id: String(Date.now()),
-      platform,
-      name: newChatLink.split('/').pop() || 'New Chat',
-      username: '@' + (newChatLink.split('/').pop() || 'new_chat'),
-      members: Math.floor(Math.random() * 10000) + 500,
-      avatarColor: platformColors[platform] || '#64748B',
-      checked: true,
-    };
-    setChats((prev) => [...prev, newChat]);
+    const name = newChatLink.split('/').pop() || 'New Chat';
+    
+    await addSource(newChatLink, name, purpose, platform);
+    
     setNewChatLink('');
     setShowAddChat(false);
   };
@@ -65,6 +65,7 @@ export default function ChatsPageContent({ title, backTo }: ChatsPageContentProp
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
 
   return (
     <SubPage
@@ -98,7 +99,12 @@ export default function ChatsPageContent({ title, backTo }: ChatsPageContentProp
       </div>
 
       {/* ── Chat groups ── */}
-      <div className="px-4 pb-24">
+      <div className="px-4 pb-24 relative">
+        {isLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0B0E18]/50">
+            <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#7C3AED' }} />
+          </div>
+        )}
         {platforms.map((platform) => {
           const platformChats = filteredChats.filter((c) => c.platform === platform);
           if (platformChats.length === 0) return null;
@@ -139,7 +145,7 @@ export default function ChatsPageContent({ title, backTo }: ChatsPageContentProp
               {!isCollapsed && (
                 <div className="flex flex-col gap-1.5">
                   {platformChats.map((chat) => (
-                    <SwipeableItem key={chat.id} onDelete={() => deleteChat(chat.id)}>
+                    <SwipeableItem key={chat.id} onDelete={() => handleDeleteChat(chat.id)}>
                       <div
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
                         style={{ backgroundColor: '#141828' }}
@@ -162,7 +168,7 @@ export default function ChatsPageContent({ title, backTo }: ChatsPageContentProp
 
                         {/* Checkbox */}
                         <button
-                          onClick={(e) => { e.stopPropagation(); toggleChat(chat.id); }}
+                          onClick={(e) => { e.stopPropagation(); handleToggleChat(chat.id, chat.checked); }}
                           className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 transition-colors"
                           style={{
                             backgroundColor: chat.checked ? '#7C3AED' : 'transparent',
@@ -206,11 +212,12 @@ export default function ChatsPageContent({ title, backTo }: ChatsPageContentProp
             </p>
           </div>
           <button
-            onClick={addChat}
-            className="w-full py-3 rounded-xl text-sm font-bold text-white transition-opacity active:opacity-80"
+            onClick={handleAddChat}
+            disabled={isLoading}
+            className="w-full py-3 rounded-xl text-sm font-bold text-white transition-opacity active:opacity-80 flex justify-center items-center gap-2 disabled:opacity-50"
             style={{ backgroundColor: '#7C3AED' }}
           >
-            ДОБАВИТЬ
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'ДОБАВИТЬ'}
           </button>
         </div>
       </Modal>

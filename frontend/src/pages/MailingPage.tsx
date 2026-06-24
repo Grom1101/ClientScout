@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, ChevronRight, Play, Square } from 'lucide-react';
 import MailingIntervalModal from '../components/MailingIntervalModal';
