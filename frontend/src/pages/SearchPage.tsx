@@ -1,10 +1,13 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, ChevronRight, RefreshCw, Send, ExternalLink } from 'lucide-react';
-import { mockOrders } from '../data/mockData';
+import { Settings, ChevronRight, RefreshCw, Send, ExternalLink, Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
+import SwipeableItem from '../components/SwipeableItem';
 import SearchSettingsModal from '../components/SearchSettingsModal';
 import SearchExchangesModal from '../components/SearchExchangesModal';
 import OrderDetailModal from '../components/OrderDetailModal';
+import { useLeadsStore } from '../store/useLeadsStore';
+import { HARDCODED_PROFILE_ID } from '../api/client';
 
 const sourceIcons: Record<string, string> = {
   telegram: '✈️',
@@ -16,10 +19,16 @@ export default function SearchPage() {
   const navigate = useNavigate();
   const [isSearching, setIsSearching] = useState(false);
 
+  const { leads, isLoading, fetchLeads, viewLead, hideLead } = useLeadsStore();
+
   const [showSettings, setShowSettings] = useState(false);
   const [showExchanges, setShowExchanges] = useState(false);
   const [showOrder, setShowOrder] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchLeads(HARDCODED_PROFILE_ID);
+  }, [fetchLeads]);
 
   const handleSearch = () => {
     setIsSearching(true);
@@ -29,6 +38,7 @@ export default function SearchPage() {
   const openOrder = (id: string) => {
     setSelectedOrderId(id);
     setShowOrder(true);
+    viewLead(id);
   };
 
   return (
@@ -90,21 +100,31 @@ export default function SearchPage() {
       {/* ── Found orders ── */}
       <div className="flex items-center justify-between mb-3">
         <p className="text-sm font-semibold text-white">
-          Найденных заказов: <span style={{ color: '#10B981' }}>24</span>
+          Найденных заказов: <span style={{ color: '#10B981' }}>{leads.length}</span>
         </p>
-        <button className="flex items-center gap-1 text-xs" style={{ color: '#7C3AED' }}>
-          <RefreshCw className="w-3.5 h-3.5" />
+        <button 
+          onClick={() => fetchLeads(HARDCODED_PROFILE_ID)}
+          disabled={isLoading}
+          className="flex items-center gap-1 text-xs disabled:opacity-50" 
+          style={{ color: '#7C3AED' }}
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
           <span>Обновить</span>
         </button>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {mockOrders.map((order) => (
-          <div
-            key={order.id}
-            className="w-full text-left p-4 rounded-2xl transition-colors cursor-default"
-            style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)' }}
-          >
+      <div className="flex flex-col gap-3 relative">
+        {isLoading && leads.length === 0 && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center pt-10">
+            <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#7C3AED' }} />
+          </div>
+        )}
+        {leads.map((order) => (
+          <SwipeableItem key={order.id} onDelete={() => hideLead(order.id)}>
+            <div
+              className="w-full text-left p-4 rounded-2xl transition-colors cursor-default"
+              style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)' }}
+            >
             <div className="flex items-start gap-3">
               {/* Source indicator */}
               <div
@@ -145,7 +165,8 @@ export default function SearchPage() {
                 )}
               </button>
             </div>
-          </div>
+            </div>
+          </SwipeableItem>
         ))}
       </div>
 

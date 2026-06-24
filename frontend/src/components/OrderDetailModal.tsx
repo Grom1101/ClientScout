@@ -1,6 +1,6 @@
-﻿import { Send, ExternalLink } from 'lucide-react';
+import { Send, ExternalLink } from 'lucide-react';
 import Modal from './Modal';
-import { mockOrders } from '../data/mockData';
+import { useLeadsStore } from '../store/useLeadsStore';
 
 interface Props {
   isOpen: boolean;
@@ -9,7 +9,8 @@ interface Props {
 }
 
 export default function OrderDetailModal({ isOpen, onClose, orderId }: Props) {
-  const order = mockOrders.find((o) => o.id === orderId);
+  const { leads } = useLeadsStore();
+  const order = leads.find((o) => o.id === orderId);
 
   if (!order) {
     return (

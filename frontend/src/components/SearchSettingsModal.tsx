@@ -1,7 +1,10 @@
-﻿import { useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronRight, Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
 import Modal from './Modal';
 import Toggle from './Toggle';
+import { useProfileStore } from '../store/useProfileStore';
+import { HARDCODED_PROFILE_ID } from '../api/client';
 
 interface Props {
   isOpen: boolean;
@@ -9,15 +12,45 @@ interface Props {
 }
 
 export default function SearchSettingsModal({ isOpen, onClose }: Props) {
+  const { settings, isLoading, fetchSettings, updateSettings } = useProfileStore();
+
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [periodicity, setPeriodicity] = useState('10');
   const [showPeriodicityPicker, setShowPeriodicityPicker] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) {
+      fetchSettings(HARDCODED_PROFILE_ID);
+    }
+  }, [isOpen, fetchSettings]);
+
+  useEffect(() => {
+    if (settings) {
+      setNotificationsEnabled(settings.notificationsEnabled);
+      setPeriodicity(settings.searchPeriodicityMinutes.toString());
+    }
+  }, [settings]);
+
+  const handleClose = () => {
+    if (settings && (settings.notificationsEnabled !== notificationsEnabled || settings.searchPeriodicityMinutes !== parseInt(periodicity))) {
+      updateSettings(HARDCODED_PROFILE_ID, {
+        notificationsEnabled,
+        searchPeriodicityMinutes: parseInt(periodicity) || 10
+      });
+    }
+    onClose();
+  };
+
   const periodicityOptions = ['5', '10', '15', '30', '60'];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Настройки поиска">
-      <div className="flex flex-col gap-3">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Настройки поиска">
+      <div className="flex flex-col gap-3 relative">
+        {isLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0B0E18]/50">
+            <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#7C3AED' }} />
+          </div>
+        )}
         {/* Periodicity */}
         <div
           className="p-4 rounded-2xl"
