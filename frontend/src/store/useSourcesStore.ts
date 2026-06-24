@@ -10,6 +10,8 @@ export interface BackendSource {
   name: string;
   url: string;
   status: number; // 0 = Pending/Выключен, 1 = Active/Включен
+  memberCount?: number; // (To be provided by backend)
+  avatarUrl?: string;   // (To be provided by backend)
 }
 
 interface SourcesState {
@@ -56,8 +58,9 @@ const mapToChatItem = (source: BackendSource): ChatItem => {
     platform: platform,
     name: source.name,
     username: source.url,
-    members: getStableMemberCount(source.url),
+    members: source.memberCount ?? getStableMemberCount(source.url),
     avatarColor: platformColors[platform] || '#64748B',
+    avatarUrl: source.avatarUrl,
     checked: source.status === 1,
   };
 };
@@ -94,7 +97,9 @@ export const useSourcesStore = create<SourcesState>((set, get) => ({
   addSource: async (url: string, name: string, purpose: number, platform: string) => {
     // Check for duplicates locally first
     const { sources } = get();
-    if (sources.some((s: ChatItem) => s.username.toLowerCase() === url.toLowerCase())) {
+    const normalizeUrl = (u: string) => u.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const normalizedNew = normalizeUrl(url);
+    if (sources.some((s: ChatItem) => normalizeUrl(s.username) === normalizedNew)) {
       throw new Error('DUPLICATE_CHAT');
     }
 

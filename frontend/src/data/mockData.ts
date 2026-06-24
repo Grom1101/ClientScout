@@ -7,6 +7,7 @@ export interface ChatItem {
   username: string;
   members: number;
   avatarColor: string;
+  avatarUrl?: string; // Real image from backend
   checked: boolean;
 }
 
