@@ -298,9 +298,9 @@ public sealed class AiJsonClient
         }));
 
         AddEnvProvider(providers, "Groq", "GROQ_API_KEY", "https://api.groq.com/openai/v1",
-            ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"], 10, 20, 45000, 2);
+            ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "mixtral-8x7b-32768"], 10, 20, 45000, 2);
         AddEnvProvider(providers, "OpenRouter", "OPENROUTER_API_KEY", "https://openrouter.ai/api/v1",
-            ["qwen/qwen3-32b:free", "meta-llama/llama-3.1-8b-instruct:free", "google/gemini-flash-1.5:free", "openrouter/auto"], 20, 20, 50000, 2);
+            ["qwen/qwen-2.5-72b-instruct:free", "meta-llama/llama-3.1-8b-instruct:free", "google/gemini-2.0-flash-lite-preview-02-05:free", "microsoft/phi-3-mini-128k-instruct:free", "openrouter/auto"], 20, 20, 50000, 2);
         AddEnvProvider(providers, "DeepSeek", "DEEPSEEK_API_KEY", "https://api.deepseek.com",
             ["deepseek-v4-flash", "deepseek-chat"], 30, 30, 90000, 3);
         AddEnvProvider(providers, "ZAI", "ZAI_API_KEY", "https://api.z.ai/api/paas/v4",
@@ -308,7 +308,7 @@ public sealed class AiJsonClient
         AddEnvProvider(providers, "Kimi", "KIMI_API_KEY", "https://api.moonshot.ai/v1",
             ["kimi-k2.7-code-highspeed", "kimi-k2.6", "moonshot-v1-8k"], 50, 20, 60000, 2);
         AddEnvProvider(providers, "Gemini", "GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai",
-            ["gemini-3.5-flash", "gemini-2.5-flash-lite"], 60, 10, 35000, 1);
+            ["gemini-2.5-flash-lite", "gemini-1.5-flash"], 60, 10, 35000, 1);
         AddEnvProvider(providers, "Qwen", "DASHSCOPE_API_KEY", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
             ["qwen-flash", "qwen-plus-latest", "qwen-turbo-latest"], 70, 20, 50000, 2);
         AddEnvProvider(providers, "Qwen", "QWEN_API_KEY", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
