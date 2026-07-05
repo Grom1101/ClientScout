@@ -259,15 +259,12 @@ public sealed class AiJsonClient
 
     private IEnumerable<AiProviderModelCandidate> GetProviderModelCandidates(AiTaskKind taskKind, int promptChars)
     {
-        foreach (var provider in GetProviders(taskKind))
-        {
-            foreach (var model in provider.Models
-                         .Where(model => IsModelUsableForTask(model, taskKind) && promptChars <= model.MaxInputChars)
-                         .OrderBy(model => model.Priority))
-            {
-                yield return new AiProviderModelCandidate(provider, model);
-            }
-        }
+        return GetProviders(taskKind)
+            .SelectMany(provider => provider.Models
+                .Where(model => IsModelUsableForTask(model, taskKind) && promptChars <= model.MaxInputChars)
+                .Select(model => new AiProviderModelCandidate(provider, model)))
+            .OrderBy(c => c.Model.Priority)
+            .ThenBy(c => c.Provider.Priority);
     }
 
     private IReadOnlyList<AiProviderOptions> GetProviders(AiTaskKind taskKind)
@@ -302,7 +299,11 @@ public sealed class AiJsonClient
             MaxRequestsPerMinute = 30,
             MaxTokensPerMinute = 90000,
             MaxConcurrency = 3,
-            Models = new[] { "gpt-4o-mini", "mimo-v2.5" }.Select((m, i) => new AiModelOptions { Id = m, Priority = i, MaxInputChars = 60000 }).ToList()
+            Models = new[] 
+            { 
+                new AiModelOptions { Id = "gpt-4o-mini", Priority = 1, MaxInputChars = 60000 },
+                new AiModelOptions { Id = "mimo-v2.5", Priority = 100, MaxInputChars = 60000 } 
+            }.ToList()
         }));
 
         AddEnvProvider(providers, "Groq", "GROQ_API_KEY", "https://api.groq.com/openai/v1",
