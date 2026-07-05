@@ -218,7 +218,7 @@ export default function AdminAnalyticsPage() {
   const renderForecast = () => {
     // Calculators
     const calcCost = (users: number) => {
-      const totalReqs = users * reqsPerUser * 30; // 30 days in a month
+      const totalReqs = users * reqsPerUser;
       const totalInTokens = totalReqs * avgInputTokens;
       const totalOutTokens = totalReqs * avgOutputTokens;
       const pricing = DEFAULT_PRICING[selectedModel] || { in: 0, out: 0 };
@@ -249,7 +249,7 @@ export default function AdminAnalyticsPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Бюджет ($/мес)</label>
+              <label className="block text-xs text-gray-400 mb-1">Дневной бюджет ($)</label>
               <input 
                 type="number" 
                 value={budget} 
