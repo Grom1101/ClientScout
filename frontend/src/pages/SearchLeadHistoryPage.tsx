@@ -1,23 +1,16 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { getActiveProfileId } from '../api/client';
 import { useLeadsStore } from '../store/useLeadsStore';
 import SwipeableItem from '../components/SwipeableItem';
+import SubPage from '../components/SubPage';
 
-// Kwork SVG logo
+// Modern Kwork SVG logo
 const KworkIcon = () => (
-  <svg viewBox="0 0 44 44" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="22" cy="22" r="22" fill="#FF7B00" />
-    <text
-      x="22" y="30"
-      textAnchor="middle"
-      fill="white"
-      fontSize="23"
-      fontWeight="900"
-      fontFamily="Arial Black, Arial, sans-serif"
-      fontStyle="italic"
-    >K</text>
+  <svg viewBox="0 0 100 100" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="17,20 41,20 41,36 25,52 25,28 17,28" fill="#FF9900" />
+    <polygon points="25,62 25,80 41,80 41,54 67,80 83,80 53,50 83,20 67,20" fill="#FFFFFF" />
   </svg>
 );
 
@@ -47,7 +40,7 @@ const SourceLabel = ({ order }: { order: { chatName?: string; source: string; so
       {label.topic && (
         <>
           <ChevronRight style={{ width: 14, height: 14, flexShrink: 0, strokeWidth: 3 }} />
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#A5B4FC', fontWeight: 700 }}>{label.topic}</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#60CDFF', fontWeight: 700 }}>{label.topic}</span>
         </>
       )}
     </span>
@@ -93,32 +86,8 @@ export default function SearchLeadHistoryPage() {
   };
 
   return (
-    <div className="min-h-full w-full px-5 pt-5 pb-6">
-
-      {/* РЁР°РїРєР° */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <button
-          onClick={() => navigate('/search')}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            backgroundColor: '#111827',
-            color: '#94A3B8',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            cursor: 'pointer',
-          }}
-        >
-          <ArrowLeft style={{ width: 18, height: 18 }} />
-        </button>
-        <div>
-          <h1 style={{ color: 'white', fontSize: 20, fontWeight: 900, lineHeight: 1.2 }}>История заказов</h1>
-          <p style={{ color: '#4B5563', fontSize: 12, marginTop: 2 }}>Лиды хранятся 24 часа</p>
-        </div>
-      </div>
+    <SubPage title="История заказов" backTo="/search" hideDivider={true}>
+      <div className="px-5 pt-4 pb-6">
 
       {/* Р¤РёР»СЊС‚СЂ AI вЂ” РІ СЃС‚РёР»Рµ mail-card */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, paddingLeft: 12, paddingRight: 12 }}>
@@ -135,16 +104,11 @@ export default function SearchLeadHistoryPage() {
             fontSize: 13,
             fontWeight: 700,
             cursor: 'pointer',
-            color: aiFilter === 'confirmed' ? '#FFFFFF' : '#64748B',
+            color: aiFilter === 'confirmed' ? '#F8FAFC' : '#64748B',
             border: aiFilter === 'confirmed'
-              ? '1px solid rgba(124,58,237,0.5)'
+              ? '1px solid rgba(0, 120, 212,0.5)'
               : '1px solid rgba(255,255,255,0.06)',
-            background: aiFilter === 'confirmed'
-              ? 'linear-gradient(135deg, rgba(109,40,217,0.35), rgba(76,29,149,0.2))'
-              : undefined,
-            boxShadow: aiFilter === 'confirmed'
-              ? '0 0 0 1px rgba(124,58,237,0.2)'
-              : undefined,
+            backgroundColor: aiFilter === 'confirmed' ? '#1E293B' : 'transparent',
           }}
         >
           Проверено нейросетью
@@ -162,16 +126,11 @@ export default function SearchLeadHistoryPage() {
             fontSize: 13,
             fontWeight: 700,
             cursor: 'pointer',
-            color: aiFilter === 'unverified' ? '#FFFFFF' : '#64748B',
+            color: aiFilter === 'unverified' ? '#F8FAFC' : '#64748B',
             border: aiFilter === 'unverified'
-              ? '1px solid rgba(124,58,237,0.5)'
+              ? '1px solid rgba(0, 120, 212,0.5)'
               : '1px solid rgba(255,255,255,0.06)',
-            background: aiFilter === 'unverified'
-              ? 'linear-gradient(135deg, rgba(109,40,217,0.35), rgba(76,29,149,0.2))'
-              : undefined,
-            boxShadow: aiFilter === 'unverified'
-              ? '0 0 0 1px rgba(124,58,237,0.2)'
-              : undefined,
+            backgroundColor: aiFilter === 'unverified' ? '#1E293B' : 'transparent',
           }}
         >
           Не проверено нейросетью
@@ -181,13 +140,13 @@ export default function SearchLeadHistoryPage() {
       {/* Р—Р°РіСЂСѓР·РєР° */}
       {isHistoryLoading && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
-          <Loader2 style={{ width: 32, height: 32, color: '#7C3AED' }} className="animate-spin" />
+          <Loader2 style={{ width: 32, height: 32, color: '#0078D4' }} className="animate-spin" />
         </div>
       )}
 
       {/* РџСѓСЃС‚Рѕ */}
       {!isHistoryLoading && history.length === 0 && (
-        <div style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, color: '#7F8CA0', fontSize: 14 }}>
+        <div style={{ backgroundColor: '#2B2B2B', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, color: '#7F8CA0', fontSize: 14 }}>
           История пока пустая.
         </div>
       )}
@@ -195,10 +154,10 @@ export default function SearchLeadHistoryPage() {
       {/* РЎРїРёСЃРѕРє РєР°СЂС‚РѕС‡РµРє */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {history.map((order) => (
-          <SwipeableItem key={order.id} onDelete={() => hideLead(order.id)}>
+          <SwipeableItem key={order.id} onDelete={() => hideLead(order.id)} className="overflow-hidden rounded-[16px]">
             <div
               style={{
-                backgroundColor: '#141828',
+                backgroundColor: '#2B2B2B',
                 border: '1px solid rgba(255,255,255,0.06)',
                 borderRadius: 16,
                 paddingTop: 12,
@@ -288,7 +247,7 @@ export default function SearchLeadHistoryPage() {
                     <button
                       onClick={() => openLead(order.id, order.link)}
                       style={{
-                        backgroundColor: '#7C3AED',
+                        backgroundColor: '#0078D4',
                         color: 'white',
                         borderRadius: 8,
                         paddingTop: 6,
@@ -329,7 +288,7 @@ export default function SearchLeadHistoryPage() {
               gap: 6,
               fontSize: 13,
               fontWeight: 700,
-              color: page === 0 ? '#374151' : '#A78BFA',
+              color: page === 0 ? '#374151' : '#60CDFF',
               cursor: page === 0 ? 'default' : 'pointer',
               opacity: page === 0 || isHistoryLoading ? 0.4 : 1,
               border: '1px solid rgba(255,255,255,0.06)',
@@ -346,10 +305,10 @@ export default function SearchLeadHistoryPage() {
             minWidth: 44,
             height: 44,
             borderRadius: 12,
-            backgroundColor: 'rgba(124,58,237,0.12)',
-            border: '1px solid rgba(124,58,237,0.2)',
+            backgroundColor: 'rgba(0, 120, 212,0.12)',
+            border: '1px solid rgba(0, 120, 212,0.2)',
           }}>
-            <span style={{ color: '#A78BFA', fontSize: 14, fontWeight: 800 }}>{page + 1}</span>
+            <span style={{ color: '#60CDFF', fontSize: 14, fontWeight: 800 }}>{page + 1}</span>
           </div>
 
           <button
@@ -367,7 +326,7 @@ export default function SearchLeadHistoryPage() {
               gap: 6,
               fontSize: 13,
               fontWeight: 700,
-              color: history.length < pageSize ? '#374151' : '#A78BFA',
+              color: history.length < pageSize ? '#374151' : '#60CDFF',
               cursor: history.length < pageSize ? 'default' : 'pointer',
               opacity: history.length < pageSize || isHistoryLoading ? 0.4 : 1,
               border: '1px solid rgba(255,255,255,0.06)',
@@ -378,6 +337,7 @@ export default function SearchLeadHistoryPage() {
           </button>
         </div>
       )}
-    </div>
+      </div>
+    </SubPage>
   );
 }

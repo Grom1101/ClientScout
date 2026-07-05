@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Modal from './Modal';
 import { useSearchRuntimeStore, type KworkLoginFlowStatus } from '../store/useSearchRuntimeStore';
 import { CheckCircle, AlertCircle, Loader2, Wifi, WifiOff } from 'lucide-react';
@@ -8,18 +8,11 @@ interface Props {
   onClose: () => void;
 }
 
+// Modern Kwork SVG logo
 const KworkSVG = () => (
-  <svg viewBox="0 0 34 34" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="17" cy="17" r="17" fill="#FF7B00" />
-    <text
-      x="17" y="23"
-      textAnchor="middle"
-      fill="white"
-      fontSize="17"
-      fontWeight="900"
-      fontFamily="Arial Black, Arial, sans-serif"
-      fontStyle="italic"
-    >K</text>
+  <svg viewBox="0 0 100 100" width="46" height="46" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="17,20 41,20 41,36 25,52 25,28 17,28" fill="#FF9900" />
+    <polygon points="25,62 25,80 41,80 41,54 67,80 83,80 53,50 83,20 67,20" fill="#FFFFFF" />
   </svg>
 );
 
@@ -94,160 +87,104 @@ export default function SearchExchangesModal({ isOpen, onClose }: Props) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Биржи">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="relative flex flex-col gap-4 pb-2" style={{ marginTop: '5px' }}>
 
-        {/* в”Ђв”Ђ Kwork в”Ђв”Ђ */}
-        <div style={{
-          borderRadius: 14,
-          border: isConnected
-            ? '1px solid rgba(16,185,129,0.2)'
-            : needsReconnect
-              ? '1px solid rgba(245,158,11,0.2)'
-              : '1px solid rgba(255,255,255,0.07)',
-          background: 'linear-gradient(160deg, rgba(20,30,48,0.98) 0%, rgba(12,18,32,0.98) 100%)',
-          overflow: 'hidden',
-        }}>
+        {/* ── Kwork ── */}
+        <div className="rounded-xl border border-white/[0.08] bg-black/20" style={{ padding: '15px 20px' }}>
+          {/* Шапка */}
+          <div className="flex items-center gap-4">
+            <div className="shrink-0"><KworkSVG /></div>
 
-          {/* РЁР°РїРєР° */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px' }}>
-            <div style={{ flexShrink: 0 }}><KworkSVG /></div>
-
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ color: 'white', fontSize: 14, fontWeight: 800, lineHeight: 1 }}>Kwork</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+            <div className="flex-1 min-w-0">
+              <p className="text-[17px] font-extrabold text-white leading-none" style={{ marginBottom: '4px' }}>Kwork</p>
+              <div className="flex items-center gap-1.5" style={{ marginBottom: '4px' }}>
                 {isLoading
-                  ? <Loader2 style={{ width: 11, height: 11, color: '#64748B' }} className="animate-spin" />
+                  ? <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
                   : isConnected
-                    ? <Wifi style={{ width: 11, height: 11, color: '#10B981' }} />
-                    : <WifiOff style={{ width: 11, height: 11, color: needsReconnect ? '#F59E0B' : '#64748B' }} />
+                    ? <Wifi className="h-4 w-4" style={{ color: '#4CC2FF' }} />
+                    : <WifiOff className="h-4 w-4" style={{ color: needsReconnect ? '#F59E0B' : '#64748B' }} />
                 }
-                <span style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: isLoading ? '#64748B' : isConnected ? '#10B981' : needsReconnect ? '#F59E0B' : '#64748B',
-                }}>
+                <span 
+                  className="text-[13px] font-bold"
+                  style={{ color: isLoading ? '#64748B' : isConnected ? '#4CC2FF' : needsReconnect ? '#F59E0B' : '#64748B' }}
+                >
                   {isLoading ? 'Проверка...' : isConnected ? 'Подключено' : needsReconnect ? 'Нужно переподключить' : 'Не подключено'}
                 </span>
               </div>
               {kwork?.lastCheckedAt && !isLoading && (
-                <p style={{ color: '#374151', fontSize: 10, marginTop: 2 }}>
+                <p className="text-[11px] font-medium text-slate-500">
                   Последняя проверка {new Date(kwork.lastCheckedAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               )}
             </div>
 
-            {/* РРЅРґРёРєР°С‚РѕСЂ */}
-            <div style={{
-              width: 7,
-              height: 7,
-              borderRadius: '50%',
-              flexShrink: 0,
-              backgroundColor: isConnected ? '#10B981' : needsReconnect ? '#F59E0B' : '#1F2937',
-              boxShadow: isConnected ? '0 0 8px rgba(16,185,129,0.8)' : needsReconnect ? '0 0 8px rgba(245,158,11,0.6)' : 'none',
-            }} />
+            {/* Индикатор */}
+            <div 
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{
+                backgroundColor: isConnected ? '#4CC2FF' : needsReconnect ? '#F59E0B' : '#1F2937',
+                boxShadow: isConnected ? '0 0 8px rgba(76,194,255,0.6)' : needsReconnect ? '0 0 8px rgba(245,158,11,0.6)' : 'none',
+              }} 
+            />
           </div>
 
-          {/* РћС€РёР±РєР° СЃ СЃРµСЂРІРµСЂР° (lastError) */}
+          {/* Ошибка с сервера (lastError) */}
           {errorText && !flow && (
-            <div style={{
-              marginLeft: 14, marginRight: 14, marginBottom: 8,
-              borderRadius: 8,
-              padding: '8px 10px',
-              backgroundColor: 'rgba(239,68,68,0.08)',
-              border: '1px solid rgba(239,68,68,0.15)',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 7,
-            }}>
-              <AlertCircle style={{ width: 13, height: 13, color: '#F87171', flexShrink: 0, marginTop: 1 }} />
-              <p style={{ fontSize: 12, lineHeight: 1.5, color: '#F87171' }}>{errorText}</p>
+            <div className="mb-3 mt-4 flex items-start gap-2 rounded-xl border border-red-500/15 bg-red-500/10 p-3">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+              <p className="text-xs font-semibold leading-relaxed text-red-400">{errorText}</p>
             </div>
           )}
 
-          {/* Р Р°Р·РґРµР»РёС‚РµР»СЊ */}
-          <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginLeft: 12, marginRight: 12 }} />
 
-          {/* РљРЅРѕРїРєР° + С„Р»РѕСѓ */}
-          <div style={{ padding: '8px 12px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+
+          {/* Кнопки + флоу */}
+          <div className="flex flex-col gap-3" style={{ marginTop: '15px' }}>
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleConnect}
                 disabled={isStarting || isFlowPending}
-                style={{
-                  width: '100%',
-                  borderRadius: 8,
-                  paddingTop: 7,
-                  paddingBottom: 7,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'white',
-                  cursor: isStarting || isFlowPending ? 'default' : 'pointer',
-                  opacity: isStarting || isFlowPending ? 0.6 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  background: needsReconnect
-                    ? 'linear-gradient(135deg, #D97706 0%, #B45309 100%)'
-                    : 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)',
-                }}
+                className="flex items-center justify-center gap-2 rounded-xl text-[13px] font-bold text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+                style={{ backgroundColor: needsReconnect ? '#F59E0B' : '#0078D4', height: '38px' }}
               >
                 {(isStarting || isFlowPending) && (
-                  <Loader2 style={{ width: 12, height: 12 }} className="animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 )}
-                {kwork?.requiresReconnect ? 'Переподключить' : 'Подключить'}
+                {kwork?.requiresReconnect ? 'Сброс' : 'Подключить'}
               </button>
 
               <button
                 onClick={handleDisconnect}
                 disabled={isDisconnecting || isFlowPending || !isConnected}
-                style={{
-                  width: '100%',
-                  borderRadius: 8,
-                  paddingTop: 7,
-                  paddingBottom: 7,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'white',
-                  cursor: isDisconnecting || isFlowPending || !isConnected ? 'default' : 'pointer',
-                  opacity: isDisconnecting || isFlowPending || !isConnected ? 0.45 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  background: 'linear-gradient(135deg, #334155 0%, #1F2937 100%)',
-                  border: '1px solid rgba(148,163,184,0.16)',
-                }}
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-[13px] font-bold text-white transition-all hover:bg-white/[0.08] active:scale-[0.98] disabled:opacity-50"
+                style={{ height: '38px' }}
               >
                 {isDisconnecting && (
-                  <Loader2 style={{ width: 12, height: 12 }} className="animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 )}
                 Отключить
               </button>
             </div>
 
-            {/* РЎС‚Р°С‚СѓСЃ С„Р»РѕСѓ */}
+            {/* Статус флоу */}
             {currentFlow && (
-              <div style={{
-                borderRadius: 6,
-                padding: '6px 8px',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 6,
-                backgroundColor: currentFlow.isError ? 'rgba(239,68,68,0.08)' : currentFlow.isDone ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.04)',
-                border: currentFlow.isError ? '1px solid rgba(239,68,68,0.15)' : currentFlow.isDone ? '1px solid rgba(16,185,129,0.15)' : '1px solid rgba(255,255,255,0.06)',
-              }}>
+              <div 
+                className="flex items-start gap-2 rounded-xl border p-3 mt-2"
+                style={{
+                  backgroundColor: currentFlow.isError ? 'rgba(239,68,68,0.08)' : currentFlow.isDone ? 'rgba(76,194,255,0.08)' : 'rgba(255,255,255,0.04)',
+                  borderColor: currentFlow.isError ? 'rgba(239,68,68,0.15)' : currentFlow.isDone ? 'rgba(76,194,255,0.15)' : 'rgba(255,255,255,0.06)',
+                }}
+              >
                 {currentFlow.isError
-                  ? <AlertCircle style={{ width: 12, height: 12, color: '#F87171', flexShrink: 0, marginTop: 1 }} />
+                  ? <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
                   : currentFlow.isDone
-                    ? <CheckCircle style={{ width: 12, height: 12, color: '#10B981', flexShrink: 0, marginTop: 1 }} />
-                    : <Loader2 style={{ width: 12, height: 12, color: '#94A3B8', flexShrink: 0, marginTop: 1 }} className="animate-spin" />
+                    ? <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#4CC2FF]" />
+                    : <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-slate-400" />
                 }
-                <p style={{
-                  fontSize: 11,
-                  lineHeight: 1.4,
-                  color: currentFlow.isError ? '#F87171' : currentFlow.isDone ? '#34D399' : '#94A3B8',
-                }}>
+                <p 
+                  className="text-xs font-semibold leading-relaxed"
+                  style={{ color: currentFlow.isError ? '#F87171' : currentFlow.isDone ? '#4CC2FF' : '#94A3B8' }}
+                >
                   {currentFlow.text}
                 </p>
               </div>
@@ -255,41 +192,17 @@ export default function SearchExchangesModal({ isOpen, onClose }: Props) {
           </div>
         </div>
 
-        {/* в”Ђв”Ђ Upwork (СЃРєРѕСЂРѕ) в”Ђв”Ђ */}
-        <div style={{
-          borderRadius: 14,
-          border: '1px solid rgba(255,255,255,0.05)',
-          background: 'rgba(14,21,35,0.5)',
-          padding: '8px 12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          opacity: 0.4,
-        }}>
-          <div style={{
-            width: 34,
-            height: 34,
-            borderRadius: '50%',
-            backgroundColor: '#0D2B1E',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <span style={{ color: '#6EE7B7', fontSize: 15, fontWeight: 900, fontFamily: 'Arial Black, Arial, sans-serif' }}>U</span>
+        {/* ── Upwork (скоро) ── */}
+        <div className="flex items-center gap-4 rounded-xl border border-white/[0.05] bg-black/10 opacity-40" style={{ padding: '15px 20px' }}>
+          <div className="flex shrink-0 items-center justify-center rounded-full bg-[#0D2B1E]" style={{ width: '46px', height: '46px' }}>
+            <span className="font-black text-[#6EE7B7] text-lg">U</span>
           </div>
           <div>
-            <p style={{ color: 'white', fontSize: 13, fontWeight: 700 }}>Upwork</p>
-            <p style={{ color: '#4B5563', fontSize: 11, marginTop: 1 }}>Скоро</p>
+            <p className="text-[15px] font-extrabold text-white">Upwork</p>
+            <p className="mt-0.5 text-[11px] font-bold text-slate-500">Скоро</p>
           </div>
         </div>
-
-        {/* РџРѕРґСЃРєР°Р·РєР° */}
-        <p style={{ color: '#374151', fontSize: 11, lineHeight: 1.6, textAlign: 'center' }}>
-          Откроется браузер. Войдите в Kwork, приложение сохранит сессию.
-        </p>
       </div>
     </Modal>
   );
 }
-

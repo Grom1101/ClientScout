@@ -15,7 +15,7 @@ export default function App() {
       tg.expand();
       
       // Set CSS variables based on Telegram's theme
-      document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor || '#0B0E18');
+      document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor || '#202020');
       document.documentElement.style.setProperty('--tg-theme-text-color', tg.textColor || '#FFFFFF');
     }
   }, []);

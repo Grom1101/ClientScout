@@ -21,12 +21,12 @@ public class LeadService : ILeadService
 
     public async Task<List<LeadDto>> GetLeadsByProfileAsync(Guid profileId, Guid accountId, CancellationToken cancellationToken = default)
     {
-        return await GetLeadHistoryAsync(profileId, accountId, 100, 0, null, cancellationToken);
+        return await GetLeadHistoryAsync(profileId, accountId, 100, 0, "confirmed", cancellationToken);
     }
 
     public async Task<List<LeadDto>> GetRecentLeadsAsync(Guid profileId, Guid accountId, CancellationToken cancellationToken = default)
     {
-        return await GetLeadHistoryAsync(profileId, accountId, 10, 0, null, cancellationToken);
+        return await GetLeadHistoryAsync(profileId, accountId, 10, 0, "confirmed", cancellationToken);
     }
 
     public async Task<List<LeadDto>> GetLeadHistoryAsync(Guid profileId, Guid accountId, int limit, int offset, string? aiFilter = null, CancellationToken cancellationToken = default)
@@ -77,6 +77,8 @@ public class LeadService : ILeadService
             .Where(l => l.ProfileId == profileId &&
                         l.Status != LeadStatus.Hidden &&
                         l.ExpiresAt > now);
+
+        aiFilter ??= "confirmed";
 
         if (string.Equals(aiFilter, "confirmed", StringComparison.OrdinalIgnoreCase))
         {

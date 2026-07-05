@@ -59,7 +59,7 @@ export default function AnimatedRoutes() {
           animate="animate"
           exit="exit"
           transition={{ type: "spring", stiffness: 260, damping: 30 }}
-          className="absolute inset-0 w-full h-full overflow-y-auto overflow-x-hidden bg-[#0B0E18]"
+          className="absolute inset-0 w-full h-full overflow-y-auto overflow-x-hidden bg-[#202020]"
         >
           <Routes location={location}>
             <Route path="/login" element={<LoginPage />} />

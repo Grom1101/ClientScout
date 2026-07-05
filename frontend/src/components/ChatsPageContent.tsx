@@ -1,5 +1,5 @@
-﻿import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Check, ChevronDown, ChevronUp, Loader2, Lock, Plus, Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { AlertCircle, Check, ChevronDown, ChevronUp, Link, Loader2, Lock, Plus, Search } from 'lucide-react';
 import Modal from '../components/Modal';
 import SubPage from '../components/SubPage';
 import SwipeableItem from '../components/SwipeableItem';
@@ -252,9 +252,9 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
     <div
       className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-all"
       style={{
-        backgroundColor: checked ? 'rgba(124,58,237,0.55)' : 'rgba(124,58,237,0.08)',
-        border: '1px solid rgba(167,139,250,0.75)',
-        boxShadow: checked ? '0 0 16px rgba(124,58,237,0.45)' : 'none',
+        backgroundColor: checked ? 'rgba(0, 120, 212,0.6)' : 'rgba(0, 120, 212,0.08)',
+        border: '1px solid rgba(76, 194, 255,0.75)',
+        boxShadow: checked ? '0 0 16px rgba(0, 120, 212,0.45)' : 'none',
       }}
     >
       {checked && <Check className="h-4 w-4 text-white" strokeWidth={3} />}
@@ -268,16 +268,16 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
       rightAction={
         <button
           onClick={() => setShowAddChat(true)}
-          className="flex h-9 w-9 items-center justify-center rounded-full"
-          style={{ background: 'linear-gradient(135deg, #7C3AED, #315DF4)', marginRight: '10px' }}
+          className="flex h-9 w-9 items-center justify-center rounded-full transition-transform hover:scale-105"
+          style={{ background: 'linear-gradient(135deg, #0078D4, #005A9E)', marginRight: '14px' }}
         >
           <Plus className="h-5 w-5 text-white" />
         </button>
       }
     >
-      <div className="w-full px-3 pb-5" style={{ paddingTop: '15px' }}>
+      <div className="w-full pb-5" style={{ paddingTop: '15px', paddingLeft: '10px', paddingRight: '10px' }}>
         <div className="mail-card flex min-h-[54px] items-center gap-3 rounded-xl px-5 py-3">
-          <Search className="h-5 w-5 shrink-0" style={{ color: '#7F8CA0' }} />
+          <Search className="h-5 w-5 shrink-0" style={{ color: '#7F8CA0', marginLeft: '15px' }} />
           <input
             type="text"
             placeholder="Поиск чатов"
@@ -291,7 +291,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
         <div className="relative pb-24">
           {isLoading && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#07111c]/50">
-              <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#7C3AED' }} />
+              <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#4CC2FF' }} />
             </div>
           )}
 
@@ -313,7 +313,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
                     <span className="truncate text-[15px] font-extrabold text-white">{platformLabels[platform]}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-lg px-2 py-0.5 text-xs font-black" style={{ backgroundColor: 'rgba(124,58,237,0.18)', color: '#B794F6' }}>
+                    <span className="flex min-w-[32px] h-[32px] items-center justify-center rounded-lg px-2 text-[15px] font-black" style={{ backgroundColor: 'rgba(0, 120, 212,0.18)', color: '#60CDFF' }}>
                       {platformEntries.length}
                     </span>
                     {isCollapsed ? <ChevronDown className="h-4 w-4 text-slate-500" /> : <ChevronUp className="h-4 w-4 text-slate-500" />}
@@ -409,33 +409,45 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
       </div>
 
       <Modal isOpen={showAddChat} onClose={closeAddModal} title="Добавить чат">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col" style={{ gap: '5px' }}>
           {addError && (
-            <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
+            <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400" style={{ marginTop: '5px' }}>
               <AlertCircle className="h-5 w-5 shrink-0" />
               <span>{addError}</span>
             </div>
           )}
 
           {!forumTopics ? (
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-200">Ссылка на чат</label>
-              <input
-                type="text"
-                value={newChatLink}
-                onChange={(e) => {
-                  setNewChatLink(e.target.value);
-                  setAddError(null);
-                }}
-                placeholder="https://t.me/your_chat_link"
-                className="w-full rounded-xl px-4 py-3 text-sm text-white transition-colors"
-                style={{ backgroundColor: '#101A26', border: addError ? '1px solid rgba(239,68,68,0.55)' : '1px solid rgba(148,163,184,0.12)' }}
-              />
-              <p className="mt-2 text-xs leading-relaxed" style={{ color: '#7F8CA0' }}>Вставьте ссылку на Telegram-чат или форум.</p>
+            <div className="flex flex-col" style={{ marginTop: addError ? '0' : '5px' }}>
+              <div className="relative group">
+                <div 
+                  className="pointer-events-none absolute inset-y-0 left-0 flex items-center transition-colors group-focus-within:text-[#0078D4]"
+                  style={{ paddingLeft: '15px' }}
+                >
+                  <Link className="h-5 w-5 text-slate-400 group-focus-within:text-[#0078D4] transition-colors" />
+                </div>
+                <input
+                  type="text"
+                  value={newChatLink}
+                  onChange={(e) => {
+                    setNewChatLink(e.target.value);
+                    setAddError(null);
+                  }}
+                  placeholder="https://t.me/your_chat_link"
+                  className="w-full rounded-2xl pr-4 text-[15px] text-white transition-all placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0078D4]/40 focus:border-[#0078D4]/40"
+                  style={{ 
+                    height: '46px',
+                    paddingLeft: '43px',
+                    backgroundColor: '#101A26',
+                    border: addError ? '1px solid rgba(239,68,68,0.55)' : '1px solid rgba(148,163,184,0.12)',
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)' 
+                  }}
+                />
+              </div>
             </div>
           ) : (
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-200">Выберите темы</label>
+            <div style={{ marginBottom: '6px' }}>
+              <label className="block text-sm font-semibold text-slate-200" style={{ marginBottom: '12px' }}>Выберите темы:</label>
               <div className="flex max-h-60 flex-col gap-2 overflow-y-auto pr-1">
                 {forumTopics.map((topic, idx) => {
                   const disabled = (purpose !== 0 && topic.canWrite === false) || topic.alreadyAdded;
@@ -443,17 +455,17 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
                   return (
                     <label
                       key={topic.id}
-                      className="flex cursor-pointer items-center gap-3 rounded-xl p-3 transition-all"
-                      style={{ backgroundColor: disabled ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)', opacity: disabled ? 0.55 : 1 }}
+                      className="flex cursor-pointer items-center gap-3 rounded-xl transition-all"
+                      style={{ padding: '14px 14px', backgroundColor: disabled ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)', opacity: disabled ? 0.55 : 1 }}
                     >
-                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: topic.checked ? '#7C3AED' : 'transparent', border: topic.checked ? 'none' : '1px solid rgba(255,255,255,0.2)' }}>
-                        {topic.checked && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
-                        {!topic.checked && showWriteLock && <Lock className="h-3 w-3 text-slate-400" />}
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-all" style={{ backgroundColor: topic.checked ? 'rgba(0, 120, 212,0.6)' : 'rgba(0, 120, 212,0.08)', border: '1px solid rgba(76, 194, 255,0.75)', boxShadow: topic.checked ? '0 0 16px rgba(0, 120, 212,0.45)' : 'none' }}>
+                        {topic.checked && <Check className="h-4 w-4 text-white" strokeWidth={3} />}
+                        {!topic.checked && showWriteLock && <Lock className="h-4 w-4 text-slate-400" />}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="block truncate text-sm text-white">{topic.name}</span>
-                        {topic.alreadyAdded && <span className="text-xs text-slate-500">уже добавлена</span>}
-                        {showWriteLock && <span className="text-xs text-slate-500">писать нельзя</span>}
+                      <div className="min-w-0 flex-1 flex flex-col justify-center">
+                        <span className="block truncate text-sm text-white leading-tight">{topic.name}</span>
+                        {topic.alreadyAdded && <span className="block text-xs text-slate-500 leading-tight">уже добавлена</span>}
+                        {showWriteLock && <span className="block text-xs text-slate-500 leading-tight">писать нельзя</span>}
                       </div>
                       <input
                         type="checkbox"
@@ -477,8 +489,12 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
           <button
             onClick={handleAddChat}
             disabled={isAdding || (!newChatLink.trim() && !forumTopics)}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-black uppercase text-white transition-all active:scale-[0.98] disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #7C3AED, #315DF4)' }}
+            className="flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl text-[15px] font-black uppercase tracking-wide text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+            style={{ 
+              marginTop: '5px',
+              background: 'linear-gradient(135deg, #0078D4, #005A9E)',
+              boxShadow: '0 8px 24px -6px rgba(0, 120, 212, 0.4)'
+            }}
           >
             {isAdding ? <Loader2 className="h-5 w-5 animate-spin" /> : forumTopics ? 'Сохранить' : 'Добавить'}
           </button>

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, RefreshCw, Send, Play, Square, Loader2 } from 'lucide-react';
+import { ChevronRight, RefreshCw, Send, Play, Square, Loader2, Check } from 'lucide-react';
 import SearchSettingsModal from '../components/SearchSettingsModal';
 import SearchExchangesModal from '../components/SearchExchangesModal';
 import OrderDetailModal from '../components/OrderDetailModal';
@@ -11,19 +11,11 @@ import { useSearchSettingsStore } from '../store/useSearchSettingsStore';
 import { useSourcesStore } from '../store/useSourcesStore';
 import { useSearchRuntimeStore } from '../store/useSearchRuntimeStore';
 
-// Kwork SVG logo.
+// Modern Kwork SVG logo
 const KworkIcon = () => (
-  <svg viewBox="0 0 44 44" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="22" cy="22" r="22" fill="#FF7B00" />
-    <text
-      x="22" y="30"
-      textAnchor="middle"
-      fill="white"
-      fontSize="23"
-      fontWeight="900"
-      fontFamily="Arial Black, Arial, sans-serif"
-      fontStyle="italic"
-    >K</text>
+  <svg viewBox="0 0 100 100" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="17,20 41,20 41,36 25,52 25,28 17,28" fill="#FF9900" />
+    <polygon points="25,62 25,80 41,80 41,54 67,80 83,80 53,50 83,20 67,20" fill="#FFFFFF" />
   </svg>
 );
 
@@ -72,7 +64,7 @@ const SourceLabel = ({ order }: { order: { chatName?: string; source: string; so
       {label.topic && (
         <>
           <ChevronRight style={{ width: 14, height: 14, flexShrink: 0, strokeWidth: 3 }} />
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#A5B4FC', fontWeight: 700 }}>{label.topic}</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#60CDFF', fontWeight: 700 }}>{label.topic}</span>
         </>
       )}
     </span>
@@ -190,31 +182,32 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-full w-full px-5 pt-5 pb-6">
-      <div className="relative mx-auto flex flex-col items-center" style={{ width: '100%', marginBottom: 8, paddingTop: 8 }}>
-        <h1 className="text-[22px] font-black leading-tight text-white">Поиск заказов</h1>
+      <div className="relative mx-auto flex flex-col items-center" style={{ width: '100%', marginBottom: (isSearching || settings?.needsAiExpansion || showAiToast) ? 12 : 24, paddingTop: 8 }}>
+        <h1 className="text-[22px] font-black leading-tight text-white" style={{ marginTop: 12 }}>Поиск заказов</h1>
 
         {isSearching && (
           <div className="flex items-center justify-center gap-2.5" style={{ marginTop: 8 }}>
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)]" />
-            <span className="text-[14px] font-black uppercase tracking-wide" style={{ color: '#34D399' }}>
+            <span className="h-2.5 w-2.5 rounded-full bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.9)]" />
+            <span className="text-[14px] font-black uppercase tracking-wide" style={{ color: '#38BDF8' }}>
               запущен
             </span>
           </div>
         )}
 
         {settings?.needsAiExpansion && (
-          <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20" style={{ marginTop: 8 }}>
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-400" />
-            <span className="text-xs font-semibold text-blue-400">Генерация AI-профиля...</span>
+          <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20" style={{ marginTop: 8 }}>
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-sky-400" />
+            <span className="text-xs font-semibold text-sky-400">Генерация AI-профиля...</span>
+          </div>
+        )}
+
+        {showAiToast && (
+          <div className="flex items-center justify-center gap-2" style={{ marginTop: 8 }}>
+            <Check className="h-4 w-4 text-sky-400" />
+            <span className="text-[14px] font-bold text-sky-400">AI-профиль создан</span>
           </div>
         )}
       </div>
-
-      {showAiToast && (
-        <div className="absolute top-2 left-1/2 z-50 flex -translate-x-1/2 items-center justify-center gap-2 rounded-full px-4 py-2 shadow-[0_4px_12px_rgba(16,185,129,0.4)]" style={{ backgroundColor: '#10B981', color: '#fff' }}>
-          <span className="text-sm font-bold">✨ Теневой AI-профиль создан</span>
-        </div>
-      )}
 
       <div className="mx-auto flex w-full flex-col gap-4">
         <button
@@ -230,8 +223,8 @@ export default function SearchPage() {
           </div>
           <div className="flex items-center gap-3">
             <span
-              className="min-w-8 rounded-lg px-2.5 py-1 text-center text-sm font-black"
-              style={{ backgroundColor: 'rgba(124,58,237,0.18)', color: '#B794F6' }}
+              className="flex min-w-[28px] h-[28px] items-center justify-center rounded-[8px] px-2 text-[13px] font-black"
+              style={{ backgroundColor: 'rgba(0, 120, 212,0.18)', color: '#60CDFF' }}
             >
               {selectedSearchChats.length}
             </span>
@@ -276,8 +269,8 @@ export default function SearchPage() {
             className="relative flex h-[58px] items-center justify-center gap-3 overflow-hidden rounded-[10px] text-[14px] font-black uppercase tracking-wide text-white transition-all disabled:opacity-50"
             style={{
               width: actionWidth,
-              background: 'linear-gradient(135deg, #2CCB86 0%, #22B873 100%)',
-              boxShadow: '0 14px 32px rgba(34,184,115,0.28)',
+              background: 'linear-gradient(135deg, #0078D4, #005A9E)',
+              boxShadow: '0 8px 24px rgba(0, 120, 212,0.3)',
             }}
           >
             {isToggling ? <Loader2 className="relative z-10 h-5 w-5 animate-spin" fill="white" /> : <Play className="relative z-10 h-5 w-5" fill="white" />}
@@ -307,7 +300,7 @@ export default function SearchPage() {
         <button
           onClick={() => fetchLeads(getActiveProfileId())}
           disabled={isLoading}
-          style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#6D28D9', fontSize: 12, fontWeight: 600, opacity: isLoading ? 0.5 : 1 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#4CC2FF', fontSize: 12, fontWeight: 600, opacity: isLoading ? 0.5 : 1 }}
         >
           <RefreshCw style={{ width: 13, height: 13 }} className={isLoading ? 'animate-spin' : ''} />
           Обновить
@@ -316,7 +309,7 @@ export default function SearchPage() {
 
       <div className="relative flex flex-col gap-3">
         {!isLoading && leads.length === 0 && (
-          <div className="rounded-2xl p-4 text-sm" style={{ backgroundColor: '#141828', color: '#7F8CA0', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="rounded-2xl p-4 text-sm" style={{ backgroundColor: '#2B2B2B', color: '#7F8CA0', border: '1px solid rgba(255,255,255,0.06)' }}>
             Пока нет найденных заказов.
           </div>
         )}
@@ -325,7 +318,7 @@ export default function SearchPage() {
           <SwipeableItem key={order.id} onDelete={() => hideLead(order.id)}>
             <div
               style={{
-                backgroundColor: '#141828',
+                backgroundColor: '#2B2B2B',
                 border: '1px solid rgba(255,255,255,0.06)',
                 borderRadius: 16,
                 paddingTop: 12,
@@ -411,9 +404,9 @@ export default function SearchPage() {
                     <button
                       onClick={() => openOrder(order.id, order.link)}
                       style={{
-                        backgroundColor: '#7C3AED',
+                        backgroundColor: '#0078D4',
                         color: 'white',
-                        borderRadius: 8,
+                        borderRadius: 10,
                         paddingTop: 6,
                         paddingBottom: 6,
                         paddingLeft: 16,
@@ -437,21 +430,24 @@ export default function SearchPage() {
       {totalCount > leads.length && (
         <button
           onClick={() => navigate('/search/leads')}
-          className="mail-card flex min-h-[64px] w-full items-center justify-between text-left transition-all active:scale-[0.99]"
+          className="flex w-full items-center justify-between transition-all hover:brightness-110 active:scale-[0.98]"
           style={{
-            borderRadius: 12,
-            paddingLeft: 15,
-            paddingRight: 15,
-            marginTop: 12,
-            marginBottom: 12,
-            border: '1px solid rgba(100,58,200,0.25)',
-            background: 'linear-gradient(180deg, rgba(28,20,55,0.97), rgba(18,12,38,0.97))',
+            paddingLeft: 35,
+            paddingRight: 35,
+            marginTop: 16,
+            marginBottom: -24,
+            marginLeft: -20,
+            marginRight: -20,
+            width: 'calc(100% + 40px)',
+            minHeight: 76,
+            backgroundColor: 'rgba(0, 120, 212, 0.12)',
+            borderTop: '1px solid rgba(0, 120, 212, 0.25)',
           }}
         >
-          <span style={{ color: '#C4B5FD', fontSize: 15, fontWeight: 700 }}>Показать все</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ color: '#7C5FBF', fontSize: 13, fontWeight: 600 }}>{totalCount} заказов</span>
-            <ChevronRight style={{ color: '#7C5FBF', width: 20, height: 20 }} />
+          <span style={{ color: '#E2E8F0', fontSize: 16, fontWeight: 700 }}>Показать все</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ color: '#4CC2FF', fontSize: 15, fontWeight: 700 }}>{totalCount} заказов</span>
+            <ChevronRight style={{ color: '#4CC2FF', width: 20, height: 20 }} />
           </div>
         </button>
       )}

@@ -53,6 +53,12 @@ public partial class SearchCandidateFilter : ISearchCandidateFilter
             return new PrefilterResult(false, regularMatches, strongMatches, "PROVIDER_OFFER_OR_RESUME", 0);
         }
 
+        var hasHiringOrResumeNoise = HasHiringOrResumeNoise(normalizedText);
+        if (hasHiringOrResumeNoise && !HasConcreteDeliveryRequest(normalizedText))
+        {
+            return new PrefilterResult(false, regularMatches, strongMatches, "HIRING_OR_RESUME_NOISE", 0);
+        }
+
         var isCandidate = regularMatches.Length >= 2 ||
                           strongMatches.Length >= 1 ||
                           regularMatches.Length >= 1 && hasBuyerIntent;
@@ -269,6 +275,61 @@ public partial class SearchCandidateFilter : ISearchCandidateFilter
         };
 
         return providerOfferTerms.Any(term => ContainsTerm(normalizedText, term));
+    }
+
+    private static bool HasHiringOrResumeNoise(string normalizedText)
+    {
+        var hiringNoiseTerms = new[]
+        {
+            "\u0432\u0430\u043a\u0430\u043d\u0441\u0438\u044f",
+            "\u0432\u0430\u043a\u0430\u043d\u0441\u0438\u0438",
+            "\u043f\u043e\u0437\u0438\u0446\u0438\u044f",
+            "\u0440\u0435\u0437\u044e\u043c\u0435",
+            "\u043e\u0442\u043a\u043b\u0438\u043a",
+            "\u043e\u0442\u043a\u043b\u0438\u043a\u043d\u0443\u0442\u044c\u0441\u044f",
+            "\u0437\u0430\u0440\u043f\u043b\u0430\u0442\u0430",
+            "\u0437\u043f",
+            "\u043e\u043a\u043b\u0430\u0434",
+            "\u0444\u0443\u043b\u0442\u0430\u0439\u043c",
+            "\u0444\u0443\u043b\u043b\u0442\u0430\u0439\u043c",
+            "fulltime",
+            "full time",
+            "part time",
+            "job opening",
+            "vacancy",
+            "position",
+            "resume",
+            "cv"
+        };
+
+        return hiringNoiseTerms.Any(term => ContainsTerm(normalizedText, term));
+    }
+
+    private static bool HasConcreteDeliveryRequest(string normalizedText)
+    {
+        var deliveryTerms = new[]
+        {
+            "\u0440\u0430\u0437\u0440\u0430\u0431\u043e\u0442\u0430\u0442\u044c",
+            "\u0441\u0434\u0435\u043b\u0430\u0442\u044c",
+            "\u0441\u043e\u0437\u0434\u0430\u0442\u044c",
+            "\u0434\u043e\u0440\u0430\u0431\u043e\u0442\u0430\u0442\u044c",
+            "\u0434\u043e\u0434\u0435\u043b\u0430\u0442\u044c",
+            "\u0438\u0441\u043f\u0440\u0430\u0432\u0438\u0442\u044c",
+            "\u043f\u043e\u0444\u0438\u043a\u0441\u0438\u0442\u044c",
+            "\u0443\u0441\u0442\u0440\u0430\u043d\u0438\u0442\u044c",
+            "\u0440\u0435\u0430\u043b\u0438\u0437\u043e\u0432\u0430\u0442\u044c",
+            "\u043d\u0430\u043f\u0438\u0441\u0430\u0442\u044c",
+            "\u0441\u043e\u0431\u0440\u0430\u0442\u044c",
+            "develop",
+            "build",
+            "create",
+            "implement",
+            "fix",
+            "debug",
+            "complete"
+        };
+
+        return deliveryTerms.Any(term => ContainsTerm(normalizedText, term));
     }
 
     private static string[] Merge(params IEnumerable<string>[] groups)

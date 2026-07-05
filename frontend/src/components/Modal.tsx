@@ -19,16 +19,17 @@ export default function Modal({ isOpen, onClose, onBack, title, children }: Moda
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[360px] rounded-[24px] animate-scale-in"
+        className="w-full max-w-[360px] rounded-[24px] animate-scale-in flex flex-col"
         style={{
-          background: 'linear-gradient(180deg, #132031 0%, #0F1825 100%)',
-          border: '1px solid rgba(148,163,184,0.14)',
-          boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
-          padding: '24px 30px 32px 30px'
+          background: 'linear-gradient(180deg, #2B2B2B 0%, #202020 100%)',
+          border: '1px solid rgba(76, 194, 255,0.16)',
+          boxShadow: '0 25px 60px rgba(5,8,18,0.6)',
+          padding: '20px 24px 24px 24px',
+          maxHeight: 'calc(100vh - 48px)'
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex shrink-0 items-center justify-between mb-5">
           <div className="flex items-center gap-3">
             {onBack && (
               <button
@@ -43,15 +44,14 @@ export default function Modal({ isOpen, onClose, onBack, title, children }: Moda
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors"
-            style={{ color: '#64748B' }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#F1F5F9')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#64748B')}
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-[#64748B] hover:text-[#0078D4] hover:bg-[#0078D4]/10 active:text-[#005A9E] active:scale-95 transition-all"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        {children}
+        <div className="flex-1 overflow-y-auto min-h-0 -mx-4 px-4">
+          {children}
+        </div>
       </div>
     </div>
   );

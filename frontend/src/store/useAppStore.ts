@@ -57,7 +57,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   addProfile: async (name) => {
     const response = await apiClient.post<Profile>('/profiles', {
       name,
-      color: '#7C3AED',
+      color: '#0078D4',
       keywords: null,
       negativeKeywords: null,
       minBudget: null,
@@ -70,7 +70,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   renameProfile: async (profile, name) => {
     const response = await apiClient.put<Profile>(`/profiles/${profile.id}`, {
       name,
-      color: profile.color ?? '#7C3AED',
+      color: profile.color ?? '#0078D4',
       isActive: profile.isActive ?? true,
       keywords: null,
       negativeKeywords: null,

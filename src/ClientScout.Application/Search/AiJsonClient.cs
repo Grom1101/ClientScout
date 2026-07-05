@@ -40,6 +40,7 @@ public sealed class AiJsonClient
 
     public bool IsAvailable => GetProviders(AiTaskKind.LeadClassification).Any();
     public AiFailureKind LastFailureKind { get; private set; } = AiFailureKind.None;
+    private int LastFailureCooldownSeconds { get; set; }
 
     public async Task<T?> GenerateJsonAsync<T>(
         string prompt,
@@ -47,6 +48,7 @@ public sealed class AiJsonClient
         CancellationToken cancellationToken = default)
     {
         LastFailureKind = AiFailureKind.None;
+        LastFailureCooldownSeconds = 0;
         var estimatedTokens = EstimateTokens(prompt);
 
         foreach (var candidate in GetProviderModelCandidates(taskKind, prompt.Length))
@@ -80,7 +82,9 @@ public sealed class AiJsonClient
 
                 if (LastFailureKind == AiFailureKind.RateLimited || LastFailureKind == AiFailureKind.RequestFailed)
                 {
-                    runtime.CoolDown(candidate.Provider.CooldownSeconds);
+                    runtime.CoolDown(LastFailureCooldownSeconds > 0
+                        ? LastFailureCooldownSeconds
+                        : candidate.Provider.CooldownSeconds);
                 }
             }
             finally
@@ -136,6 +140,7 @@ public sealed class AiJsonClient
                 LastFailureKind = IsRateLimitOrCapacityFailure(response.StatusCode, body)
                     ? AiFailureKind.RateLimited
                     : AiFailureKind.RequestFailed;
+                LastFailureCooldownSeconds = GetFailureCooldownSeconds(response.StatusCode, body, candidate.Provider);
                 _logger.LogWarning(
                     "AI provider {Provider}/{Model} failed with {StatusCode}: {Body}",
                     candidate.Provider.Name,
@@ -167,6 +172,7 @@ public sealed class AiJsonClient
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LastFailureKind = AiFailureKind.InvalidResponse;
+            LastFailureCooldownSeconds = candidate.Provider.CooldownSeconds;
             _logger.LogWarning(ex, "AI JSON generation failed for provider {Provider}/{Model}", candidate.Provider.Name, candidate.Model.Id);
             return default;
         }
@@ -372,6 +378,21 @@ public sealed class AiJsonClient
                body.Contains("capacity", StringComparison.OrdinalIgnoreCase) ||
                body.Contains("temporarily", StringComparison.OrdinalIgnoreCase) ||
                body.Contains("insufficient", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static int GetFailureCooldownSeconds(HttpStatusCode statusCode, string body, AiProviderOptions provider)
+    {
+        if (statusCode is HttpStatusCode.PaymentRequired or HttpStatusCode.Forbidden ||
+            body.Contains("insufficient balance", StringComparison.OrdinalIgnoreCase) ||
+            body.Contains("suspended", StringComparison.OrdinalIgnoreCase) ||
+            body.Contains("access denied", StringComparison.OrdinalIgnoreCase) ||
+            body.Contains("AccessDenied", StringComparison.OrdinalIgnoreCase) ||
+            body.Contains("Unpurchased", StringComparison.OrdinalIgnoreCase))
+        {
+            return 3600;
+        }
+
+        return provider.CooldownSeconds;
     }
 
     private static int EstimateTokens(string text) => Math.Max(1, text.Length / 4);

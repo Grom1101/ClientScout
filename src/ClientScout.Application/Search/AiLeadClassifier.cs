@@ -6,10 +6,10 @@ namespace ClientScout.Application.Search;
 
 public class AiLeadClassifier : IAiLeadClassifier
 {
-    private const int MaxBatchSize = 10;
-    private const int MaxBatchInputChars = 10000;
-    private const int MaxCandidateTextLength = 1200;
-    private const int MaxProfileSummaryLength = 2600;
+    private const int MaxBatchSize = 4;
+    private const int MaxBatchInputChars = 4200;
+    private const int MaxCandidateTextLength = 700;
+    private const int MaxProfileSummaryLength = 1200;
     private readonly AiJsonClient _ai;
 
     public AiLeadClassifier(AiJsonClient ai)
@@ -39,9 +39,9 @@ public class AiLeadClassifier : IAiLeadClassifier
             settings.UserKeywords,
             settings.NegativeKeywords,
             SearchProfileSummary = Trim(settings.SearchProfileSummary, MaxProfileSummaryLength),
-            MustIncludeSignals = settings.MustIncludeSignals.Take(16).ToArray(),
-            RejectSignals = settings.RejectSignals.Take(24).ToArray(),
-            StrongTerms = settings.StrongTerms.Take(24).ToArray(),
+            MustIncludeSignals = settings.MustIncludeSignals.Take(10).ToArray(),
+            RejectSignals = settings.RejectSignals.Take(14).ToArray(),
+            StrongTerms = settings.StrongTerms.Take(14).ToArray(),
             matchedTerms
         };
 
@@ -59,6 +59,10 @@ Return STRICT JSON only:
 Decision target:
 - The hidden profile is authoritative. UserKeywords are short hints, not the whole intent.
 - Decide by requested deliverable/profession/result, not simple keyword presence.
+- First decide whether the text is a concrete request from a buyer/client to perform work. It must ask for a deliverable such as develop, build, create, implement, fix, debug, finish, integrate, configure, or help with a specific task.
+- Reject job vacancies, job ads, full-time/part-time hiring posts, resumes, CVs, candidate profiles, and "looking for work" posts. Words like "job", "work", "vacancy", "position", and "resume" are not positive signals by themselves.
+- Reject adjacent non-matching deliverables even when they contain profile keywords. Example: for a Unity/C#/gamedev/game profile, reject video editing, YouTube clips, trailers, gameplay montage, marketing content, articles, news, analytics, or community posts unless the text clearly asks to develop/fix/build game software or game code.
+- If the text only mentions a domain keyword like game/gamedev/Unity/C# but the requested deliverable is not development/bug fixing/implementation of matching software, set isRelevant=false.
 - Respect NegativeKeywords and RejectSignals strictly.
 - Reject spam, tutorials, news, discussions, portfolios, resumes, and adjacent work with a different deliverable.
 - Reject service-provider/self-promotion messages like "я разработчик", "предлагаю услуги", "портфолио", "коротко обо мне", unless the text also clearly asks to hire someone for a concrete task.
@@ -97,9 +101,9 @@ Input JSON:
             settings.UserKeywords,
             settings.NegativeKeywords,
             SearchProfileSummary = Trim(settings.SearchProfileSummary, MaxProfileSummaryLength),
-            MustIncludeSignals = settings.MustIncludeSignals.Take(16).ToArray(),
-            RejectSignals = settings.RejectSignals.Take(24).ToArray(),
-            StrongTerms = settings.StrongTerms.Take(24).ToArray(),
+            MustIncludeSignals = settings.MustIncludeSignals.Take(10).ToArray(),
+            RejectSignals = settings.RejectSignals.Take(14).ToArray(),
+            StrongTerms = settings.StrongTerms.Take(14).ToArray(),
             candidates = batch
                 .Select(candidate => new
                 {
@@ -131,6 +135,10 @@ Decision target:
 - The hidden profile is authoritative. UserKeywords are short hints, not the whole intent.
 - Compare each candidate independently by requested deliverable/profession/result.
 - Do not classify by simple keyword presence.
+- First decide whether each text is a concrete request from a buyer/client to perform work. It must ask for a deliverable such as develop, build, create, implement, fix, debug, finish, integrate, configure, or help with a specific task.
+- Reject job vacancies, job ads, full-time/part-time hiring posts, resumes, CVs, candidate profiles, and "looking for work" posts. Words like "job", "work", "vacancy", "position", and "resume" are not positive signals by themselves.
+- Reject adjacent non-matching deliverables even when they contain profile keywords. Example: for a Unity/C#/gamedev/game profile, reject video editing, YouTube clips, trailers, gameplay montage, marketing content, articles, news, analytics, or community posts unless the text clearly asks to develop/fix/build game software or game code.
+- If the text only mentions a domain keyword like game/gamedev/Unity/C# but the requested deliverable is not development/bug fixing/implementation of matching software, set isRelevant=false.
 - Respect NegativeKeywords and RejectSignals strictly.
 - Reject spam, tutorials, news, discussions, portfolios, resumes, and adjacent work with a different deliverable.
 - Reject service-provider/self-promotion messages like "я разработчик", "предлагаю услуги", "портфолио", "коротко обо мне", unless the text also clearly asks to hire someone for a concrete task.

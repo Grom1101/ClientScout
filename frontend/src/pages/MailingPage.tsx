@@ -33,7 +33,7 @@ const ChatNameLabel = ({ value }: { value: string }) => {
       {label.topic && (
         <>
           <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-500" strokeWidth={3} />
-          <span className="truncate font-bold" style={{ color: '#A5B4FC' }}>{label.topic}</span>
+          <span className="truncate font-bold" style={{ color: '#60CDFF' }}>{label.topic}</span>
         </>
       )}
     </p>
@@ -100,19 +100,19 @@ export default function MailingPage() {
 
   return (
     <div className="min-h-full w-full px-5 pt-5 pb-6">
-      <div className="relative mx-auto flex flex-col items-center" style={{ width: '100%', marginBottom: 8, paddingTop: 8 }}>
+      <div className="relative mx-auto flex flex-col items-center" style={{ width: '100%', marginBottom: isRunning ? 12 : 24, paddingTop: 8 }}>
         {isOutreachLoading && (
           <div className="absolute left-0 top-1 z-10 rounded-full bg-white/10 p-1.5 shadow-lg backdrop-blur-md">
-            <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#8B5CF6' }} />
+            <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#4CC2FF' }} />
           </div>
         )}
 
-        <h1 className="text-[22px] font-black leading-tight text-white">Рассылка</h1>
+        <h1 className="text-[22px] font-black leading-tight text-white" style={{ marginTop: 12 }}>Рассылка</h1>
         
         {isRunning && (
-          <div className="flex items-center justify-center gap-2.5" style={{ marginTop: '8px' }}>
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)]" />
-            <span className="text-[14px] font-black uppercase tracking-wide" style={{ color: '#34D399' }}>запущена</span>
+          <div className="flex items-center justify-center gap-2.5" style={{ marginTop: 8 }}>
+            <span className="h-2.5 w-2.5 rounded-full bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.9)]" />
+            <span className="text-[14px] font-black uppercase tracking-wide" style={{ color: '#38BDF8' }}>запущена</span>
           </div>
         )}
       </div>
@@ -131,8 +131,8 @@ export default function MailingPage() {
           </div>
           <div className="flex items-center gap-3">
             <span
-              className="min-w-8 rounded-lg px-2.5 py-1 text-center text-sm font-black"
-              style={{ backgroundColor: 'rgba(124,58,237,0.18)', color: '#B794F6' }}
+              className="flex min-w-[28px] h-[28px] items-center justify-center rounded-[8px] px-2 text-[13px] font-black"
+              style={{ backgroundColor: 'rgba(0, 120, 212,0.18)', color: '#60CDFF' }}
             >
               {selectedChats.length}
             </span>
@@ -169,7 +169,7 @@ export default function MailingPage() {
         </button>
       </div>
 
-      <div className="flex w-full flex-col items-center gap-4" style={{ marginTop: 24 }}>
+      <div className="flex w-full flex-col items-center gap-4" style={{ marginTop: 24, marginBottom: 24 }}>
         {!isRunning ? (
           <button
             onClick={handleStart}
@@ -177,8 +177,8 @@ export default function MailingPage() {
             className="relative flex h-[58px] items-center justify-center gap-3 overflow-hidden rounded-[10px] text-[14px] font-black uppercase tracking-wide text-white transition-all disabled:opacity-50"
             style={{
               width: actionWidth,
-              background: 'linear-gradient(135deg, #2CCB86 0%, #22B873 100%)',
-              boxShadow: '0 14px 32px rgba(34,184,115,0.28)',
+              background: 'linear-gradient(135deg, #0078D4, #005A9E)',
+              boxShadow: '0 8px 24px rgba(0, 120, 212,0.3)',
             }}
           >
             <Play className="relative z-10 h-5 w-5" fill="white" />
@@ -207,7 +207,7 @@ export default function MailingPage() {
           <button
             onClick={() => fetchStats(getActiveProfileId(), 'today')}
             disabled={isStatsLoading}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#6D28D9', fontSize: 12, fontWeight: 600, opacity: isStatsLoading ? 0.5 : 1 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#4CC2FF', fontSize: 12, fontWeight: 600, opacity: isStatsLoading ? 0.5 : 1 }}
           >
             <RefreshCw style={{ width: 13, height: 13 }} className={isStatsLoading ? 'animate-spin' : ''} />
             Обновить
@@ -215,7 +215,7 @@ export default function MailingPage() {
         </div>
         
         {(!stats?.recentLogs || stats.recentLogs.length === 0) && (
-          <div className="flex flex-col items-center justify-center py-6 text-center rounded-2xl" style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex flex-col items-center justify-center py-6 text-center rounded-2xl" style={{ backgroundColor: '#2B2B2B', border: '1px solid rgba(255,255,255,0.06)' }}>
             <div className="w-12 h-12 rounded-full mb-3 flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
               <Send className="w-5 h-5 text-slate-600" />
             </div>
@@ -224,7 +224,7 @@ export default function MailingPage() {
         )}
 
         {stats?.recentLogs && stats.recentLogs.length > 0 && (
-          <div className="flex flex-col gap-4 rounded-2xl py-5" style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex flex-col gap-4 rounded-2xl py-5" style={{ backgroundColor: '#2B2B2B', border: '1px solid rgba(255,255,255,0.06)' }}>
             {stats.recentLogs.map((entry, index) => (
               <div key={entry.id} className="flex items-center gap-4 group" style={{ 
                 paddingLeft: 20, 
@@ -232,8 +232,8 @@ export default function MailingPage() {
                 paddingTop: index === 0 ? 20 : 0,
                 paddingBottom: index === stats.recentLogs.length - 1 ? 20 : 0
               }}>
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-active:scale-95 shadow-sm" style={{ backgroundColor: entry.status === 0 ? 'rgba(139, 92, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: entry.status === 0 ? '1px solid rgba(139, 92, 246, 0.15)' : '1px solid rgba(239, 68, 68, 0.15)' }}>
-                  <Send className="w-5 h-5" style={{ color: entry.status === 0 ? '#A78BFA' : '#F87171' }} />
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-active:scale-95 shadow-sm" style={{ backgroundColor: entry.status === 0 ? 'rgba(0, 120, 212, 0.12)' : 'rgba(239, 68, 68, 0.1)', border: entry.status === 0 ? '1px solid rgba(0, 120, 212, 0.18)' : '1px solid rgba(239, 68, 68, 0.15)' }}>
+                  <Send className="w-5 h-5" style={{ color: entry.status === 0 ? '#60CDFF' : '#F87171' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <ChatNameLabel value={entry.chatName} />
@@ -246,7 +246,7 @@ export default function MailingPage() {
                     {entry.matchedKeyword && (
                       <>
                         <span className="text-slate-600 shrink-0">→</span>
-                        <span className="font-semibold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 shrink-0 border border-purple-500/20">{entry.matchedKeyword}</span>
+                        <span className="font-semibold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-300 shrink-0 border border-sky-500/20">{entry.matchedKeyword}</span>
                       </>
                     )}
                   </div>

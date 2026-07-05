@@ -47,7 +47,7 @@ export default function OrderDetailModal({ isOpen, onClose, orderId }: Props) {
         {/* ── Info section ── */}
         <div
           className="rounded-2xl p-4 mb-4 flex flex-col gap-3"
-          style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ backgroundColor: '#2B2B2B', border: '1px solid rgba(255,255,255,0.06)' }}
         >
           {isTelegram && (
             <>
@@ -84,7 +84,7 @@ export default function OrderDetailModal({ isOpen, onClose, orderId }: Props) {
         {/* ── Message / Description ── */}
         <div
           className="rounded-2xl p-4 mb-6 max-h-60 overflow-y-auto"
-          style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ backgroundColor: '#2B2B2B', border: '1px solid rgba(255,255,255,0.06)' }}
         >
           <h3 className="text-sm font-semibold text-white mb-2">
             {isTelegram ? 'Сообщение' : 'Описание'}
@@ -98,7 +98,7 @@ export default function OrderDetailModal({ isOpen, onClose, orderId }: Props) {
         <button
           onClick={onClose}
           className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity active:opacity-80"
-          style={{ backgroundColor: '#7C3AED' }}
+          style={{ backgroundColor: '#0078D4' }}
         >
           {isTelegram ? (
             <><Send className="w-4 h-4" /> Написать в чат</>

@@ -1,21 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #0B0E18;
-  --color-surface: #141828;
-  --color-surface-light: #1C2038;
-  --color-primary: #7C3AED;
-  --color-primary-light: #8B5CF6;
-  --color-success: #10B981;
-  --color-success-dark: #059669;
-  --color-danger: #EF4444;
-  --color-warning: #F59E0B;
-  --color-text: #F1F5F9;
-  --color-text-muted: #64748B;
-  --color-text-secondary: #94A3B8;
+  --color-bg: #1B1B1B;
+  --color-surface: #2B2B2B;
+  --color-surface-light: #333333;
+  --color-primary: #0078D4;
+  --color-primary-light: #60CDFF;
+  --color-success: #6CCB5F;
+  --color-success-dark: #4B9B41;
+  --color-danger: #F85149;
+  --color-warning: #FCE100;
+  --color-text: #FFFFFF;
+  --color-text-muted: #969696;
+  --color-text-secondary: #C7C7C7;
   --color-border: rgba(255, 255, 255, 0.08);
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Segoe UI Variable', 'Segoe UI', 'Open Sans', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+  --font-display: 'Segoe UI Variable Display', 'Segoe UI Variable', 'Segoe UI', 'Open Sans', system-ui, sans-serif;
 }
 
 * {
@@ -30,16 +31,30 @@ html, body, #root {
 }
 
 body {
-  background-color: #050810;
+  background-color: #141414;
   color: var(--color-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Fluent leans on weight for hierarchy; Semibold headings on the same family */
+h1, h2, h3,
+[class*="font-black"],
+[class*="font-extrabold"] {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* Mica-style layered backdrop: neutral base with a faint accent wash up top */
 #root {
   position: relative;
   background-color: var(--color-bg);
+  background-image:
+    radial-gradient(140% 90% at 50% -20%, rgba(0, 120, 212, 0.10), transparent 55%),
+    linear-gradient(180deg, #202020 0%, #1B1B1B 100%);
+  background-attachment: fixed;
   min-height: 100vh;
   width: 100%;
   display: flex;
@@ -47,46 +62,55 @@ body {
 }
 
 .app-bg {
-  background: #07111c;
+  background: #1B1B1B;
 }
 
+/* Fluent card: subtle elevated layer, hairline stroke, 8px radius */
 .mail-card {
-  background: linear-gradient(180deg, rgba(23, 34, 46, 0.96), rgba(16, 26, 37, 0.96));
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 14px 34px rgba(0,0,0,0.22);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 2px 6px rgba(0, 0, 0, 0.32);
 }
 
 .mail-card-pressed {
-  background: linear-gradient(180deg, rgba(27, 40, 54, 0.98), rgba(18, 29, 41, 0.98));
+  background: rgba(255, 255, 255, 0.085);
+}
+
+* {
+  scrollbar-width: none !important;
 }
 
 ::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
-input, textarea, select, button {
-  font-family: inherit;
-  outline: none;
-  border: none;
-  background: none;
-  color: inherit;
+@layer base {
+  input, textarea, select, button {
+    font-family: inherit;
+    outline: none;
+    border: none;
+    background: none;
+    color: inherit;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-text-muted);
+  }
 }
 
-input::placeholder,
-textarea::placeholder {
-  color: var(--color-text-muted);
-}
-
-/* Stat card gradients */
+/* Stat card gradients (Fluent accent tints) */
 .stat-card-green {
-  background: linear-gradient(135deg, #064e3b 0%, #0B0E18 100%);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: linear-gradient(135deg, rgba(108, 203, 95, 0.14) 0%, rgba(255,255,255,0.04) 100%);
+  border: 1px solid rgba(108, 203, 95, 0.22);
 }
 
 .stat-card-purple {
-  background: linear-gradient(135deg, #3b0764 0%, #0B0E18 100%);
-  border: 1px solid rgba(124, 58, 237, 0.2);
+  background: linear-gradient(135deg, rgba(0, 120, 212, 0.20) 0%, rgba(255,255,255,0.04) 100%);
+  border: 1px solid rgba(0, 120, 212, 0.28);
 }
 
 /* Animations */
