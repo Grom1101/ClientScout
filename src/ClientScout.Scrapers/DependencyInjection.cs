@@ -1,4 +1,4 @@
-﻿using ClientScout.Scrapers.Implementations;
+using ClientScout.Scrapers.Implementations;
 using ClientScout.Application.Common.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +10,10 @@ public static class DependencyInjection
     {
         services.AddScoped<ISourceScraper, TelegramScraper>();
         services.AddScoped<ISourceScraper, KworkScraper>();
+        
+        services.AddSingleton<ClientScout.Scrapers.Implementations.TelegramClientManager>();
+        services.AddSingleton<ClientScout.Application.Telegram.ITelegramClientManager>(p => p.GetRequiredService<ClientScout.Scrapers.Implementations.TelegramClientManager>());
+        services.AddSingleton<ClientScout.Application.Telegram.ITelegramValidator>(p => p.GetRequiredService<ClientScout.Scrapers.Implementations.TelegramClientManager>());
         
         return services;
     }

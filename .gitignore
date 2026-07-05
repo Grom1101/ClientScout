@@ -64,6 +64,9 @@ secrets.json
 *.db-wal
 pgdata/
 redis-data/
+src/ClientScout.Api/wwwroot/uploads/
+src/ClientScout.Api/session_*.dat
+session_*.dat
 
 # OS files
 .DS_Store
@@ -76,3 +79,5 @@ desktop.ini
 *.bak
 *.swp
 *.swo
+scratch/
+diff.txt

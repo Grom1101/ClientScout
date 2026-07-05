@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,10 +8,10 @@ namespace ClientScout.Application.Profiles;
 
 public interface IProfileService
 {
-    Task<List<ProfileDto>> GetProfilesAsync(long userId, CancellationToken cancellationToken = default);
-    Task<ProfileDto?> GetProfileAsync(Guid id, long userId, CancellationToken cancellationToken = default);
-    Task<ProfileDto> CreateProfileAsync(long userId, CreateProfileDto dto, CancellationToken cancellationToken = default);
-    Task<ProfileDto> UpdateProfileAsync(Guid id, long userId, UpdateProfileDto dto, CancellationToken cancellationToken = default);
-    Task DeleteProfileAsync(Guid id, long userId, CancellationToken cancellationToken = default);
-    Task SetDefaultProfileAsync(Guid id, long userId, CancellationToken cancellationToken = default);
+    Task<List<ProfileDto>> GetProfilesAsync(Guid accountId, CancellationToken cancellationToken = default);
+    Task<ProfileDto?> GetProfileAsync(Guid id, Guid accountId, CancellationToken cancellationToken = default);
+    Task<ProfileDto> CreateProfileAsync(Guid accountId, CreateProfileDto dto, CancellationToken cancellationToken = default);
+    Task<ProfileDto> UpdateProfileAsync(Guid id, Guid accountId, UpdateProfileDto dto, CancellationToken cancellationToken = default);
+    Task DeleteProfileAsync(Guid id, Guid accountId, CancellationToken cancellationToken = default);
+    Task SetDefaultProfileAsync(Guid id, Guid accountId, CancellationToken cancellationToken = default);
 }

@@ -1,175 +1,159 @@
-﻿import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Clock, CalendarDays } from 'lucide-react';
 import Modal from './Modal';
+import { useOutreachStore } from '../store/useOutreachStore';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const PERIODICITY_OPTIONS = [
+  { value: '5', label: '5 мин' },
+  { value: '30', label: '30 мин' },
+  { value: '60', label: '60 мин' },
+];
+
 export default function MailingIntervalModal({ isOpen, onClose }: Props) {
-  const [timeMode, setTimeMode] = useState<'allday' | 'custom'>('allday');
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('23:00');
-  const [periodicity, setPeriodicity] = useState('30');
-  const [showPeriodicity, setShowPeriodicity] = useState(false);
+  const {
+    periodicityMinutes,
+    scheduleMode,
+    scheduleStartTime,
+    scheduleEndTime,
+    setSchedule,
+  } = useOutreachStore();
 
-  const periodicityOptions = [
-    { value: '5', label: 'Каждые 5 минут' },
-    { value: '10', label: 'Каждые 10 минут' },
-    { value: '15', label: 'Каждые 15 минут' },
-    { value: '30', label: 'Каждые 30 минут' },
-    { value: '60', label: 'Каждый час' },
-    { value: '120', label: 'Каждые 2 часа' },
-  ];
+  const [draftTimeMode, setDraftTimeMode] = useState<'allday' | 'custom'>('allday');
+  const [draftStartTime, setDraftStartTime] = useState('09:00');
+  const [draftEndTime, setDraftEndTime] = useState('23:00');
+  const [draftPeriodicity, setDraftPeriodicity] = useState('30');
 
-  const currentPeriodicityLabel = periodicityOptions.find((o) => o.value === periodicity)?.label || '';
+  useEffect(() => {
+    if (!isOpen) return;
+    setDraftTimeMode(scheduleMode);
+    setDraftStartTime(scheduleStartTime);
+    setDraftEndTime(scheduleEndTime);
+    // Snap to nearest option
+    const raw = String(periodicityMinutes);
+    const valid = PERIODICITY_OPTIONS.map(o => o.value);
+    setDraftPeriodicity(valid.includes(raw) ? raw : '30');
+  }, [isOpen, periodicityMinutes, scheduleMode, scheduleStartTime, scheduleEndTime]);
+
+  const handleSave = async () => {
+    await setSchedule({
+      periodicityMinutes: Number(draftPeriodicity),
+      scheduleMode: draftTimeMode,
+      scheduleStartTime: draftStartTime,
+      scheduleEndTime: draftEndTime,
+    });
+    onClose();
+  };
+
+  const RadioOption = ({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) => (
+    <button
+      onClick={onClick}
+      className="flex w-full items-center justify-between rounded-xl h-[56px] transition-all"
+      style={{
+        paddingLeft: '15px',
+        paddingRight: '15px',
+        backgroundColor: selected ? 'rgba(124,58,237,0.1)' : 'rgba(0,0,0,0.15)',
+        border: selected ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.04)',
+      }}
+    >
+      <span className="text-[14px] font-semibold" style={{ color: selected ? '#fff' : '#94A3B8' }}>
+        {label}
+      </span>
+      <div
+        className="flex h-5 w-5 items-center justify-center rounded-full transition-all"
+        style={{
+          border: selected ? '5px solid #7C3AED' : '1px solid rgba(255,255,255,0.2)',
+          backgroundColor: selected ? '#fff' : 'transparent',
+          boxShadow: selected ? '0 0 10px rgba(124,58,237,0.5)' : 'none',
+        }}
+      />
+    </button>
+  );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Интервал">
-      <div className="flex flex-col gap-4">
-        {/* ── Time period ── */}
-        <div
-          className="rounded-2xl p-4"
-          style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)' }}
-        >
-          <h3 className="text-sm font-semibold text-white mb-1">Промежуток времени</h3>
-          <p className="text-xs mb-4" style={{ color: '#64748B' }}>
-            Укажите период времени, в который сообщения будут отправляться
+    <Modal isOpen={isOpen} onClose={onClose} title="Настройки рассылки">
+      <div className="flex flex-col gap-5 px-1 pb-2 pt-6">
+
+        {/* Блок 1: Периодичность рассылки */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2 px-1">
+            <Clock className="h-4 w-4" style={{ color: '#8B5CF6' }} />
+            <h3 className="text-[15px] font-extrabold text-white">Периодичность рассылки</h3>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {PERIODICITY_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setDraftPeriodicity(option.value)}
+                className="h-11 rounded-xl text-[13px] font-black transition-all active:scale-95"
+                style={{
+                  backgroundColor: draftPeriodicity === option.value ? 'rgba(124,58,237,0.24)' : 'rgba(255,255,255,0.04)',
+                  color: draftPeriodicity === option.value ? '#FFFFFF' : '#94A3B8',
+                  border: draftPeriodicity === option.value ? '1px solid rgba(167,139,250,0.45)' : '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Блок 2: Промежуток времени */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2 px-1">
+            <CalendarDays className="h-4 w-4" style={{ color: '#8B5CF6' }} />
+            <h3 className="text-[15px] font-extrabold text-white">Промежуток времени</h3>
+          </div>
+          <p className="px-1 text-[13px] leading-relaxed" style={{ color: '#64748B' }}>
+            Сообщения будут отправляться по вашему локальному времени.
           </p>
 
-          {/* Radio: All day */}
-          <label className="flex items-center gap-3 mb-3 cursor-pointer">
-            <div
-              className="w-5 h-5 rounded-full flex items-center justify-center"
-              style={{
-                border: `2px solid ${timeMode === 'allday' ? '#7C3AED' : 'rgba(255,255,255,0.2)'}`,
-              }}
-            >
-              {timeMode === 'allday' && (
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#7C3AED' }} />
-              )}
-            </div>
-            <span className="text-sm text-white">Круглосуточно</span>
-            <input
-              type="radio"
-              checked={timeMode === 'allday'}
-              onChange={() => setTimeMode('allday')}
-              className="hidden"
-            />
-          </label>
+          <div className="mt-1 flex flex-col gap-2">
+            <RadioOption label="Круглосуточно" selected={draftTimeMode === 'allday'} onClick={() => setDraftTimeMode('allday')} />
+            <RadioOption label="Задать диапазон" selected={draftTimeMode === 'custom'} onClick={() => setDraftTimeMode('custom')} />
+          </div>
 
-          {/* Radio: Custom range */}
-          <label className="flex items-center gap-3 mb-3 cursor-pointer">
-            <div
-              className="w-5 h-5 rounded-full flex items-center justify-center"
-              style={{
-                border: `2px solid ${timeMode === 'custom' ? '#7C3AED' : 'rgba(255,255,255,0.2)'}`,
-              }}
-            >
-              {timeMode === 'custom' && (
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#7C3AED' }} />
-              )}
-            </div>
-            <span className="text-sm text-white">
-              Задать диапазон времени
-            </span>
-            <input
-              type="radio"
-              checked={timeMode === 'custom'}
-              onChange={() => setTimeMode('custom')}
-              className="hidden"
-            />
-          </label>
-
-          {/* Time inputs */}
-          {timeMode === 'custom' && (
-            <div className="grid grid-cols-2 gap-3 mt-3 animate-slide-up">
-              <div>
-                <label className="text-xs mb-1 block" style={{ color: '#64748B' }}>Время начала</label>
+          {draftTimeMode === 'custom' && (
+            <div className="mt-2 grid grid-cols-2 gap-3 animate-slide-up">
+              <div className="flex flex-col rounded-xl py-3" style={{ paddingLeft: '15px', paddingRight: '15px', backgroundColor: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <label className="mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>От</label>
                 <input
                   type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl text-sm text-white"
-                  style={{
-                    backgroundColor: '#0B0E18',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    colorScheme: 'dark',
-                  }}
+                  value={draftStartTime}
+                  onChange={(e) => setDraftStartTime(e.target.value)}
+                  className="bg-transparent text-[15px] font-bold text-white outline-none"
+                  style={{ colorScheme: 'dark' }}
                 />
               </div>
-              <div>
-                <label className="text-xs mb-1 block" style={{ color: '#64748B' }}>Время окончания</label>
+              <div className="flex flex-col rounded-xl py-3" style={{ paddingLeft: '15px', paddingRight: '15px', backgroundColor: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <label className="mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>До</label>
                 <input
                   type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl text-sm text-white"
-                  style={{
-                    backgroundColor: '#0B0E18',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    colorScheme: 'dark',
-                  }}
+                  value={draftEndTime}
+                  onChange={(e) => setDraftEndTime(e.target.value)}
+                  className="bg-transparent text-[15px] font-bold text-white outline-none"
+                  style={{ colorScheme: 'dark' }}
                 />
               </div>
             </div>
           )}
         </div>
 
-        {/* ── Periodicity ── */}
-        <div
-          className="rounded-2xl p-4"
-          style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)' }}
-        >
-          <h3 className="text-sm font-semibold text-white mb-1">Периодичность</h3>
-          <p className="text-xs mb-3" style={{ color: '#64748B' }}>Как часто отправлять сообщения</p>
-
+        {/* Кнопка сохранения */}
+        <div className="mt-4">
           <button
-            onClick={() => setShowPeriodicity(!showPeriodicity)}
-            className="w-full flex items-center justify-between px-4 py-3 rounded-xl"
-            style={{ backgroundColor: '#0B0E18', border: '1px solid rgba(255,255,255,0.08)' }}
+            onClick={handleSave}
+            className="flex h-[52px] w-full items-center justify-center rounded-[14px] text-[14px] font-black uppercase tracking-widest text-white transition-all active:scale-[0.98]"
+            style={{ background: 'linear-gradient(135deg, #7C3AED, #315DF4)', boxShadow: '0 8px 24px rgba(124,58,237,0.25)' }}
           >
-            <span className="text-sm text-white">{currentPeriodicityLabel}</span>
-            <ChevronDown
-              className="w-4 h-4 transition-transform"
-              style={{
-                color: '#64748B',
-                transform: showPeriodicity ? 'rotate(180deg)' : 'none',
-              }}
-            />
+            Сохранить
           </button>
-
-          {showPeriodicity && (
-            <div className="mt-2 flex flex-col rounded-xl overflow-hidden animate-slide-up"
-              style={{ backgroundColor: '#0B0E18', border: '1px solid rgba(255,255,255,0.06)' }}
-            >
-              {periodicityOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => { setPeriodicity(opt.value); setShowPeriodicity(false); }}
-                  className="w-full text-left px-4 py-3 text-sm transition-colors"
-                  style={{
-                    color: periodicity === opt.value ? '#7C3AED' : '#94A3B8',
-                    backgroundColor: periodicity === opt.value ? 'rgba(124,58,237,0.08)' : 'transparent',
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* ── Save button ── */}
-        <button
-          onClick={onClose}
-          className="w-full py-3.5 rounded-2xl text-sm font-bold text-white transition-opacity active:opacity-80"
-          style={{ backgroundColor: '#7C3AED' }}
-        >
-          СОХРАНИТЬ
-        </button>
       </div>
     </Modal>
   );

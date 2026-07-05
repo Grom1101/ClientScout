@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 using ClientScout.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -7,8 +7,11 @@ namespace ClientScout.Application.Common.Interfaces;
 
 public interface IAppDbContext
 {
+    DbSet<Account> Accounts { get; }
     DbSet<User> Users { get; }
     DbSet<Profile> Profiles { get; }
+    DbSet<ExchangeConnection> ExchangeConnections { get; }
+    DbSet<SearchSettings> SearchSettings { get; }
     DbSet<Source> Sources { get; }
     DbSet<JobLead> JobLeads { get; }
     DbSet<MessageTemplate> MessageTemplates { get; }

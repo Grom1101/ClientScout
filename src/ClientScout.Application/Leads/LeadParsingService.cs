@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using ClientScout.Application.Common.Interfaces;
 using ClientScout.Domain.Entities;
 using ClientScout.Domain.Enums;
-using ClientScout.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -68,6 +67,12 @@ public class LeadParsingService
             var isMatch = IsMatch(lead, source.Profile!);
             if (isMatch)
             {
+                lead.SourceId = source.Id;
+                lead.ProfileId = source.ProfileId;
+                lead.SourceName = source.Name;
+                lead.SourceType = source.Type;
+                lead.ExpiresAt = lead.FoundAt.AddHours(24);
+                lead.MatchedTerms = lead.MatchedKeywords.ToList();
                 _dbContext.JobLeads.Add(lead);
             }
         }

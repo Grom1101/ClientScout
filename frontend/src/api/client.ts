@@ -1,25 +1,39 @@
 import axios from 'axios';
-import { useAppStore } from '../store/useAppStore';
-
-const HARDCODED_PROFILE_ID = '00000000-0000-0000-0000-000000000001';
-const FAKE_BEARER_TOKEN = 'fake-token-123';
+import { useAuthStore } from '../store/useAuthStore';
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5184/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
 });
 
 apiClient.interceptors.request.use((config) => {
-  const stateToken = useAppStore.getState().token;
-  const token = stateToken || FAKE_BEARER_TOKEN;
+  const token = useAuthStore.getState().token;
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-  // Inject hardcoded ProfileId if needed globally (optional, but good practice if Backend expects it)
-  // config.headers['X-Profile-Id'] = HARDCODED_PROFILE_ID;
-
   return config;
 });
 
-export { HARDCODED_PROFILE_ID };
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const isMissingCurrentAccount =
+      error.config?.url?.includes('/auth/me') &&
+      error.response?.status === 404 &&
+      error.response?.data?.message === 'Account not found.';
+
+    if (error.response?.status === 401 || isMissingCurrentAccount) {
+      useAuthStore.getState().logout();
+      if (!window.location.pathname.includes('/login')) {
+        window.location.assign('/login');
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export const getActiveProfileId = () => {
+  return useAuthStore.getState().account?.activeProfileId || "";
+};

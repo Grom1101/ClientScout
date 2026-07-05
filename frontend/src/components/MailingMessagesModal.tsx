@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
-import { Paperclip, X, FileText, Loader2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { FileText, Loader2, Paperclip, X } from 'lucide-react';
 import Modal from './Modal';
-import { useOutreachStore } from '../store/useOutreachStore';
-import { HARDCODED_PROFILE_ID } from '../api/client';
-
-
+import {
+  ALLOWED_ATTACHMENT_EXTENSIONS,
+  MAX_ATTACHMENT_COUNT,
+  MAX_MESSAGE_LENGTH,
+  useOutreachStore,
+} from '../store/useOutreachStore';
+import { getActiveProfileId } from '../api/client';
 
 interface Props {
   isOpen: boolean;
@@ -13,37 +16,38 @@ interface Props {
 
 export default function MailingMessagesModal({ isOpen, onClose }: Props) {
   const { templates, isLoading, fetchTemplates, saveTemplate, uploadFile } = useOutreachStore();
-  
+
   const [message, setMessage] = useState('');
   const [attachmentUrls, setAttachmentUrls] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const hydratedRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
-      fetchTemplates(HARDCODED_PROFILE_ID);
+      fetchTemplates(getActiveProfileId());
     }
   }, [isOpen, fetchTemplates]);
 
   useEffect(() => {
+    if (!isOpen) {
+      hydratedRef.current = false;
+      return;
+    }
+
+    if (hydratedRef.current) return;
+
     if (templates.length > 0) {
-      setMessage(templates[0].content);
-      setAttachmentUrls(templates[0].attachmentUrls || []);
+      setMessage(templates[0].content.slice(0, MAX_MESSAGE_LENGTH));
+      setAttachmentUrls((templates[0].attachmentUrls || []).slice(0, MAX_ATTACHMENT_COUNT));
     } else {
       setMessage('');
       setAttachmentUrls([]);
     }
-  }, [templates]);
+    hydratedRef.current = true;
+  }, [templates, isOpen]);
 
-  const handleClose = () => {
-    const currentTplContent = templates.length > 0 ? templates[0].content : '';
-    const currentTplAttachments = templates.length > 0 ? (templates[0].attachmentUrls || []) : [];
-    
-    // Check if changed
-    const attachmentsChanged = JSON.stringify(attachmentUrls) !== JSON.stringify(currentTplAttachments);
-    
-    if (message !== currentTplContent || attachmentsChanged) {
-      saveTemplate(HARDCODED_PROFILE_ID, message, attachmentUrls);
-    }
+  const handleSave = async () => {
+    await saveTemplate(getActiveProfileId(), message, attachmentUrls);
     onClose();
   };
 
@@ -55,8 +59,8 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (attachmentUrls.length >= 3) {
-      alert("Нельзя прикрепить больше 3 файлов.");
+    if (attachmentUrls.length >= MAX_ATTACHMENT_COUNT) {
+      alert('Можно прикрепить только один файл.');
       e.target.value = '';
       return;
     }
@@ -64,98 +68,101 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
     setIsUploading(true);
     try {
       const url = await uploadFile(file);
-      setAttachmentUrls((prev) => [...prev, url]);
+      setAttachmentUrls([url]);
     } catch (err: any) {
-      alert(err.message || "Ошибка при загрузке файла");
+      alert(err.message || 'Ошибка при загрузке файла');
     } finally {
       setIsUploading(false);
-      // Reset input value
       e.target.value = '';
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Сообщения">
+    <Modal isOpen={isOpen} onClose={onClose} title="Сообщения">
       <div className="flex flex-col gap-4 relative">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0B0E18]/50">
             <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#7C3AED' }} />
           </div>
         )}
-        {/* ── Text area ── */}
+
         <div
-          className="rounded-2xl p-4 flex-1 shadow-[0_4px_24px_-1px_rgba(0,0,0,0.2)]"
-          style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.03)', 
+          className="rounded-2xl flex-1 shadow-[0_4px_24px_-1px_rgba(0,0,0,0.2)]"
+          style={{
+            paddingTop: '10px',
+            paddingLeft: '15px',
+            paddingRight: '15px',
+            paddingBottom: '10px',
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
             border: '1px solid rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(12px)'
+            backdropFilter: 'blur(12px)',
           }}
         >
           <textarea
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
             placeholder="Введите текст сообщения..."
-            maxLength={4096}
+            maxLength={MAX_MESSAGE_LENGTH}
             className="w-full h-48 bg-transparent text-[15px] text-white resize-none leading-relaxed placeholder:text-white/30"
             style={{ outline: 'none' }}
           />
-          <p className="text-[13px] mt-2 font-medium" style={{ color: '#94A3B8' }}>
-            (можно использовать переменные)
+          <p className="text-[13px] mt-0 font-medium" style={{ color: '#94A3B8' }}>
+            Текст отправляется как подпись к файлу, если файл прикреплен.
           </p>
         </div>
 
-        {/* ── Character count ── */}
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
           <span className="text-xs" style={{ color: '#64748B' }}>
-            {message.length} / 4096
+            Файл {attachmentUrls.length} / {MAX_ATTACHMENT_COUNT}
+          </span>
+          <span className="text-xs" style={{ color: '#64748B' }}>
+            {message.length} / {MAX_MESSAGE_LENGTH}
           </span>
         </div>
 
-        {/* ── Attached files ── */}
         {attachmentUrls.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold text-white mb-3">Прикреплённые файлы</h3>
-            <div className="flex flex-col gap-2">
-              {attachmentUrls.map((url) => {
-                const fileName = url.split('/').pop() || 'file';
-                return (
-                  <div
-                    key={url}
-                    className="flex items-center gap-3 px-3 py-3 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.1)] transition-all hover:bg-white/5"
-                    style={{ 
-                      backgroundColor: 'rgba(255, 255, 255, 0.03)', 
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      backdropFilter: 'blur(8px)'
-                    }}
-                  >
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(124,58,237,0.15)' }}>
-                      <FileText className="w-5 h-5 shrink-0" style={{ color: '#A78BFA' }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{fileName}</p>
-                      <p className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>Загружено</p>
-                    </div>
-                    <button
-                      onClick={() => removeFile(url)}
-                      className="w-8 h-8 flex items-center justify-center rounded-full shrink-0 transition-all hover:bg-red-500/20 hover:text-red-400 active:scale-95"
-                      style={{ color: '#64748B' }}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+            <h3 className="text-sm font-semibold text-white mb-3">Прикрепленный файл</h3>
+            {attachmentUrls.map((url) => {
+              const fileName = url.split('/').pop() || 'file';
+              return (
+                <div
+                  key={url}
+                  className="flex items-center gap-3 py-3 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.1)] transition-all hover:bg-white/5"
+                  style={{
+                    paddingLeft: '15px',
+                    paddingRight: '15px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    backdropFilter: 'blur(8px)',
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(124,58,237,0.15)' }}>
+                    <FileText className="w-5 h-5 shrink-0" style={{ color: '#A78BFA' }} />
                   </div>
-                );
-              })}
-            </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{fileName}</p>
+                    <p className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>Загружено</p>
+                  </div>
+                  <button
+                    onClick={() => removeFile(url)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full shrink-0 transition-all hover:bg-red-500/20 hover:text-red-400 active:scale-95"
+                    style={{ color: '#64748B' }}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
 
-        {/* ── Attach file button ── */}
         <label
-          className="w-full py-3.5 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all hover:bg-white/5 active:scale-[0.98]"
-          style={{ 
-            border: '1px dashed rgba(255,255,255,0.2)', 
-            backgroundColor: 'rgba(255,255,255,0.02)',
-            color: '#CBD5E1' 
+          className="w-full h-[56px] rounded-xl text-[15px] font-bold flex items-center justify-center gap-2 cursor-pointer transition-all hover:bg-white/5 active:scale-[0.98]"
+          style={{
+            border: '1px dashed rgba(124,58,237,0.5)',
+            backgroundColor: 'rgba(124,58,237,0.08)',
+            color: '#D8B4FE',
           }}
         >
           {isUploading ? (
@@ -163,9 +170,27 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
           ) : (
             <Paperclip className="w-5 h-5" />
           )}
-          {isUploading ? 'Загрузка...' : `Прикрепить файл (${attachmentUrls.length}/3)`}
-          <input type="file" className="hidden" onChange={handleFileUpload} disabled={isUploading || attachmentUrls.length >= 3} />
+          {isUploading ? 'Загрузка...' : `Прикрепить файл (${attachmentUrls.length}/${MAX_ATTACHMENT_COUNT})`}
+          <input
+            type="file"
+            className="hidden"
+            accept={ALLOWED_ATTACHMENT_EXTENSIONS.map((ext) => `.${ext}`).join(',')}
+            onChange={handleFileUpload}
+            disabled={isUploading || attachmentUrls.length >= MAX_ATTACHMENT_COUNT}
+          />
         </label>
+
+        <button
+          onClick={handleSave}
+          disabled={isLoading || isUploading}
+          className="w-full h-[56px] rounded-xl text-[14px] font-black tracking-wide text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+          style={{ 
+            background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)',
+            boxShadow: '0 8px 24px rgba(124,58,237,0.25)',
+          }}
+        >
+          СОХРАНИТЬ
+        </button>
       </div>
     </Modal>
   );

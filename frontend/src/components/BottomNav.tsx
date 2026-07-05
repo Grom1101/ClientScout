@@ -1,5 +1,5 @@
-﻿import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, Send, Search } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Home, Search, Send } from 'lucide-react';
 
 const tabs = [
   { path: '/', label: 'Главная', icon: Home },
@@ -11,18 +11,20 @@ export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const getActiveTab = () => {
-    if (location.pathname.startsWith('/mailing')) return '/mailing';
-    if (location.pathname.startsWith('/search')) return '/search';
-    return '/';
-  };
-
-  const activeTab = getActiveTab();
+  const activeTab = location.pathname.startsWith('/mailing')
+    ? '/mailing'
+    : location.pathname.startsWith('/search')
+      ? '/search'
+      : '/';
 
   return (
     <nav
-      className="flex items-center justify-around py-2 pb-3 border-t"
-      style={{ borderColor: 'rgba(255,255,255,0.06)', backgroundColor: '#0B0E18' }}
+      className="grid grid-cols-3 gap-2 px-5 pt-3 pb-[calc(14px+env(safe-area-inset-bottom))] border-t"
+      style={{
+        borderColor: 'rgba(148,163,184,0.10)',
+        backgroundColor: 'rgba(7, 13, 22, 0.96)',
+        boxShadow: '0 -16px 34px rgba(0,0,0,0.28)',
+      }}
     >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.path;
@@ -31,18 +33,14 @@ export default function BottomNav() {
           <button
             key={tab.path}
             onClick={() => navigate(tab.path)}
-            className="flex flex-col items-center gap-1 px-4 py-1 transition-colors"
+            className="h-[58px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all active:scale-[0.98]"
+            style={{
+              backgroundColor: isActive ? 'rgba(124,58,237,0.13)' : 'transparent',
+              color: isActive ? '#8B5CF6' : '#7A8798',
+            }}
           >
-            <Icon
-              className="w-5 h-5 transition-colors"
-              style={{ color: isActive ? '#7C3AED' : '#64748B' }}
-            />
-            <span
-              className="text-[11px] font-medium transition-colors"
-              style={{ color: isActive ? '#7C3AED' : '#64748B' }}
-            >
-              {tab.label}
-            </span>
+            <Icon className="w-7 h-7" strokeWidth={isActive ? 2.4 : 2} />
+            <span className="text-[13px] font-semibold leading-none">{tab.label}</span>
           </button>
         );
       })}

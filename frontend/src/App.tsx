@@ -1,24 +1,31 @@
-import { Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import AnimatedRoutes from './components/AnimatedRoutes';
+import { useLocation } from 'react-router-dom';
 import BottomNav from './components/BottomNav';
-import HomePage from './pages/HomePage';
-import SearchPage from './pages/SearchPage';
-import SearchChatsPage from './pages/SearchChatsPage';
-import MailingPage from './pages/MailingPage';
-import MailingChatsPage from './pages/MailingChatsPage';
 
 export default function App() {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Notify Telegram that the Web App is ready
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      // Optionally expand the webview to full height
+      tg.expand();
+      
+      // Set CSS variables based on Telegram's theme
+      document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor || '#0B0E18');
+      document.documentElement.style.setProperty('--tg-theme-text-color', tg.textColor || '#FFFFFF');
+    }
+  }, []);
+
+  const hideNav = ['/login', '/register', '/link-telegram'].includes(location.pathname);
+
   return (
-    <div className="flex flex-col h-screen" style={{ maxWidth: 430, margin: '0 auto', backgroundColor: '#0B0E18' }}>
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/search/chats" element={<SearchChatsPage />} />
-          <Route path="/mailing" element={<MailingPage />} />
-          <Route path="/mailing/chats" element={<MailingChatsPage />} />
-        </Routes>
-      </div>
-      <BottomNav />
+    <div className="app-bg flex flex-col h-screen w-full" style={{ color: 'var(--tg-theme-text-color, #ffffff)' }}>
+      <AnimatedRoutes />
+      {!hideNav && <BottomNav />}
     </div>
   );
 }

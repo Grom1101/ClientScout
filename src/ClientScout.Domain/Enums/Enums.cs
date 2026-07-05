@@ -7,6 +7,18 @@ public enum SourceType
     Upwork
 }
 
+public enum ExchangeType
+{
+    Kwork
+}
+
+public enum ExchangeConnectionStatus
+{
+    NotConnected,
+    Connected,
+    RequiresReconnect
+}
+
 public enum SourceStatus
 {
     Pending,
@@ -20,6 +32,16 @@ public enum LeadStatus
     Viewed,
     Responded,
     Hidden
+}
+
+public enum AiLeadStatus
+{
+    NotChecked,
+    Confirmed,
+    Rejected,
+    AiUnavailable,
+    KeywordOnly,
+    Error
 }
 
 public enum CampaignStatus

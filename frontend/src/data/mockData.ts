@@ -2,18 +2,26 @@
 
 export interface ChatItem {
   id: string;
-  platform: 'telegram' | 'whatsapp' | 'slack';
+  platform: 'telegram' | 'whatsapp' | 'slack' | 'kwork';
   name: string;
   username: string;
   members: number;
   avatarColor: string;
   avatarUrl?: string; // Real image from backend
+  baseUrl?: string;
+  topicId?: string;
+  topicName?: string;
+  forumName?: string;
+  isForumTopic?: boolean;
   checked: boolean;
+  purpose?: number;
+  status?: number;
+  lastError?: string;
 }
 
 export interface OrderItem {
   id: string;
-  source: 'telegram' | 'upwork' | 'quark';
+  source: 'telegram' | 'upwork' | 'quark' | 'kwork';
   sourceColor: string;
   chatName?: string;
   author?: string;
@@ -24,6 +32,9 @@ export interface OrderItem {
   date?: string;
   message?: string;
   link?: string;
+  status?: number;
+  aiLabel?: string;
+  expiresIn?: string;
 }
 
 export interface Exchange {

@@ -1,106 +1,100 @@
-using System.Text.Json;
-using System.Web;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 using ClientScout.Application.Auth;
-using ClientScout.Domain.Entities;
-using ClientScout.Infrastructure.Persistence;
+using ClientScout.Application.Auth.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace ClientScout.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly TelegramAuthService _telegramAuthService;
-    private readonly JwtService _jwtService;
-    private readonly AppDbContext _dbContext;
+    private readonly IAuthService _authService;
 
-    public AuthController(TelegramAuthService telegramAuthService, JwtService jwtService, AppDbContext dbContext)
+    public AuthController(IAuthService authService)
     {
-        _telegramAuthService = telegramAuthService;
-        _jwtService = jwtService;
-        _dbContext = dbContext;
+        _authService = authService;
     }
 
-    [HttpPost("telegram")]
-    public async Task<IActionResult> Authenticate([FromBody] TelegramAuthRequest request)
+    /// <summary>Register a new account with email and password.</summary>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Register([FromBody] RegisterDto dto, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(request.InitData))
-            return BadRequest("InitData is required.");
+        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
+            return BadRequest(new { message = "Email and password are required." });
 
-        // For local development MVP, we might bypass strict validation if TELEGRAM_BOT_TOKEN is not set yet,
-        // but let's keep it secure. Make sure to set TELEGRAM_BOT_TOKEN in appsettings or env.
-        
-        bool isValid = false;
-        if (request.InitData.StartsWith("user={"))
+        try
         {
-            isValid = request.InitData.Contains("\"id\":");
+            var result = await _authService.RegisterAsync(dto, cancellationToken);
+            return Ok(result);
         }
-        else
+        catch (InvalidOperationException ex) when (ex.Message == "EMAIL_ALREADY_EXISTS")
         {
-            try 
-            {
-                isValid = _telegramAuthService.ValidateInitData(request.InitData);
-            }
-            catch (Exception)
-            {
-                isValid = false;
-            }
+            return Conflict(new { message = "EMAIL_ALREADY_EXISTS" });
         }
-
-        if (!isValid) return Unauthorized("Invalid Telegram initData.");
-
-        // Extract user info from initData
-        var query = HttpUtility.ParseQueryString(request.InitData);
-        var userJson = query["user"];
-        if (string.IsNullOrEmpty(userJson)) return BadRequest("User data missing.");
-
-        var tgUser = JsonSerializer.Deserialize<TelegramUserDto>(userJson);
-        if (tgUser == null) return BadRequest("Invalid user data.");
-
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == tgUser.Id);
-        if (user == null)
+        catch (Exception ex)
         {
-            user = new User
-            {
-                Id = tgUser.Id,
-                Username = tgUser.Username ?? string.Empty,
-                FirstName = tgUser.FirstName ?? string.Empty
-            };
-            try
-            {
-                _dbContext.Users.Add(user);
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                // Handle concurrent insert during double-render in React StrictMode
-                user = await _dbContext.Users.FirstAsync(u => u.Id == tgUser.Id);
-            }
+            return BadRequest(new { message = ex.Message });
         }
-
-        var token = _jwtService.GenerateToken(user);
-        
-        return Ok(new
-        {
-            AccessToken = token,
-            User = new { user.Id, user.Username, user.FirstName }
-        });
     }
-}
 
-public class TelegramAuthRequest
-{
-    public string InitData { get; set; } = string.Empty;
-}
+    /// <summary>Login with email and password.</summary>
+    [HttpPost("login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Login([FromBody] LoginDto dto, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _authService.LoginAsync(dto, cancellationToken);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { message = "INVALID_CREDENTIALS" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 
-public class TelegramUserDto
-{
-    [System.Text.Json.Serialization.JsonPropertyName("id")]
-    public long Id { get; set; }
-    [System.Text.Json.Serialization.JsonPropertyName("first_name")]
-    public string? FirstName { get; set; }
-    [System.Text.Json.Serialization.JsonPropertyName("username")]
-    public string? Username { get; set; }
+    /// <summary>Get current account info (requires JWT).</summary>
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me(CancellationToken cancellationToken)
+    {
+        var accountId = GetAccountId();
+        if (accountId == null) return Unauthorized();
+
+        try
+        {
+            var account = await _authService.GetMeAsync(accountId.Value, cancellationToken);
+            return Ok(account);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    /// <summary>Telegram linking must go through TelegramAuthController to prove account ownership.</summary>
+    [HttpPost("link-telegram")]
+    [Authorize]
+    public IActionResult LinkTelegram()
+    {
+        return BadRequest(new { message = "Use /api/TelegramAuth/send-code and verification endpoints." });
+    }
+
+    private Guid? GetAccountId()
+    {
+        var sub = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+               ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Guid.TryParse(sub, out var id) ? id : null;
+    }
 }

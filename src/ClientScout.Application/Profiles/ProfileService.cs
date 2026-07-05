@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -19,10 +19,10 @@ public class ProfileService : IProfileService
         _dbContext = dbContext;
     }
 
-    public async Task<List<ProfileDto>> GetProfilesAsync(long userId, CancellationToken cancellationToken = default)
+    public async Task<List<ProfileDto>> GetProfilesAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
         var profiles = await _dbContext.Profiles
-            .Where(p => p.UserId == userId)
+            .Where(p => p.AccountId == accountId)
             .OrderByDescending(p => p.IsDefault)
             .ThenByDescending(p => p.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -30,29 +30,34 @@ public class ProfileService : IProfileService
         return profiles.Select(MapToDto).ToList();
     }
 
-    public async Task<ProfileDto?> GetProfileAsync(Guid id, long userId, CancellationToken cancellationToken = default)
+    public async Task<ProfileDto?> GetProfileAsync(Guid id, Guid accountId, CancellationToken cancellationToken = default)
     {
         var profile = await _dbContext.Profiles
-            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId, cancellationToken);
-            
+            .FirstOrDefaultAsync(p => p.Id == id && p.AccountId == accountId, cancellationToken);
+
         return profile == null ? null : MapToDto(profile);
     }
 
-    public async Task<ProfileDto> CreateProfileAsync(long userId, CreateProfileDto dto, CancellationToken cancellationToken = default)
+    public async Task<ProfileDto> CreateProfileAsync(Guid accountId, CreateProfileDto dto, CancellationToken cancellationToken = default)
     {
-        var hasProfiles = await _dbContext.Profiles.AnyAsync(p => p.UserId == userId, cancellationToken);
+        var profileCount = await _dbContext.Profiles.CountAsync(p => p.AccountId == accountId, cancellationToken);
+        if (profileCount >= 5)
+        {
+            throw new InvalidOperationException("Максимальное количество профилей — 5.");
+        }
+        var hasProfiles = profileCount > 0;
 
         var profile = new Profile
         {
             Id = Guid.NewGuid(),
-            UserId = userId,
+            AccountId = accountId,
             Name = dto.Name,
             Color = dto.Color ?? "#6C63FF",
             Keywords = dto.Keywords ?? new List<string>(),
             NegativeKeywords = dto.NegativeKeywords ?? new List<string>(),
             MinBudget = dto.MinBudget,
             LanguageFilter = dto.LanguageFilter,
-            IsDefault = !hasProfiles, // First profile is default
+            IsDefault = !hasProfiles, // first profile is default
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -63,13 +68,17 @@ public class ProfileService : IProfileService
         return MapToDto(profile);
     }
 
-    public async Task<ProfileDto> UpdateProfileAsync(Guid id, long userId, UpdateProfileDto dto, CancellationToken cancellationToken = default)
+    public async Task<ProfileDto> UpdateProfileAsync(Guid id, Guid accountId, UpdateProfileDto dto, CancellationToken cancellationToken = default)
     {
         var profile = await _dbContext.Profiles
-            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == id && p.AccountId == accountId, cancellationToken);
 
         if (profile == null)
             throw new KeyNotFoundException("Profile not found.");
+
+        var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
+        if (account?.ActiveProfileId != id)
+            throw new InvalidOperationException("Only the active profile can be renamed.");
 
         profile.Name = dto.Name;
         profile.Color = dto.Color ?? profile.Color;
@@ -84,21 +93,40 @@ public class ProfileService : IProfileService
         return MapToDto(profile);
     }
 
-    public async Task DeleteProfileAsync(Guid id, long userId, CancellationToken cancellationToken = default)
+    public async Task DeleteProfileAsync(Guid id, Guid accountId, CancellationToken cancellationToken = default)
     {
         var profile = await _dbContext.Profiles
-            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == id && p.AccountId == accountId, cancellationToken);
 
         if (profile == null) return;
 
+        var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
+        if (account?.ActiveProfileId == id)
+            throw new InvalidOperationException("The active profile cannot be deleted.");
+
         _dbContext.Profiles.Remove(profile);
+        if (account?.ActiveProfileId == id)
+        {
+            var fallbackProfile = await _dbContext.Profiles
+                .Where(p => p.AccountId == accountId && p.Id != id)
+                .OrderByDescending(p => p.IsDefault)
+                .ThenByDescending(p => p.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            account.ActiveProfileId = fallbackProfile?.Id;
+            if (fallbackProfile != null)
+            {
+                fallbackProfile.IsDefault = true;
+            }
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task SetDefaultProfileAsync(Guid id, long userId, CancellationToken cancellationToken = default)
+    public async Task SetDefaultProfileAsync(Guid id, Guid accountId, CancellationToken cancellationToken = default)
     {
         var profiles = await _dbContext.Profiles
-            .Where(p => p.UserId == userId)
+            .Where(p => p.AccountId == accountId)
             .ToListAsync(cancellationToken);
 
         var targetProfile = profiles.FirstOrDefault(p => p.Id == id);
@@ -110,22 +138,27 @@ public class ProfileService : IProfileService
             p.IsDefault = p.Id == id;
         }
 
+        var account = await _dbContext.Accounts
+            .FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
+
+        if (account != null)
+        {
+            account.ActiveProfileId = id;
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private static ProfileDto MapToDto(Profile profile)
-    {
-        return new ProfileDto(
-            profile.Id,
-            profile.Name,
-            profile.Color,
-            profile.IsActive,
-            profile.IsDefault,
-            profile.Keywords,
-            profile.NegativeKeywords,
-            profile.MinBudget,
-            profile.LanguageFilter,
-            profile.CreatedAt
-        );
-    }
+    private static ProfileDto MapToDto(Profile profile) => new(
+        profile.Id,
+        profile.Name,
+        profile.Color,
+        profile.IsActive,
+        profile.IsDefault,
+        profile.Keywords,
+        profile.NegativeKeywords,
+        profile.MinBudget,
+        profile.LanguageFilter,
+        profile.CreatedAt
+    );
 }

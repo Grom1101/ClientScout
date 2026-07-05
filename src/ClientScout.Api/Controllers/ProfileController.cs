@@ -1,4 +1,8 @@
-﻿using System.Security.Claims;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 using ClientScout.Application.Profiles;
 using ClientScout.Application.Profiles.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +12,7 @@ namespace ClientScout.Api.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/profiles")]
 public class ProfileController : ControllerBase
 {
     private readonly IProfileService _profileService;
@@ -18,38 +22,66 @@ public class ProfileController : ControllerBase
         _profileService = profileService;
     }
 
-    private long UserId => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+    private Guid? AccountId
+    {
+        get
+        {
+            var sub = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                   ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return Guid.TryParse(sub, out var id) ? id : null;
+        }
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetProfiles(CancellationToken cancellationToken)
     {
-        var profiles = await _profileService.GetProfilesAsync(UserId, cancellationToken);
+        if (AccountId == null) return Unauthorized();
+        var profiles = await _profileService.GetProfilesAsync(AccountId.Value, cancellationToken);
         return Ok(profiles);
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetProfile(Guid id, CancellationToken cancellationToken)
-    {
-        var profile = await _profileService.GetProfileAsync(id, UserId, cancellationToken);
-        if (profile == null) return NotFound();
-        
-        return Ok(profile);
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateProfile([FromBody] CreateProfileDto dto, CancellationToken cancellationToken)
     {
-        var profile = await _profileService.CreateProfileAsync(UserId, dto, cancellationToken);
-        return CreatedAtAction(nameof(GetProfile), new { id = profile.Id }, profile);
+        if (AccountId == null) return Unauthorized();
+        try
+        {
+            var profile = await _profileService.CreateProfileAsync(AccountId.Value, dto, cancellationToken);
+            return Ok(profile);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateProfile(Guid id, [FromBody] UpdateProfileDto dto, CancellationToken cancellationToken)
     {
+        if (AccountId == null) return Unauthorized();
         try
         {
-            var profile = await _profileService.UpdateProfileAsync(id, UserId, dto, cancellationToken);
+            var profile = await _profileService.UpdateProfileAsync(id, AccountId.Value, dto, cancellationToken);
             return Ok(profile);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id}/activate")]
+    public async Task<IActionResult> SetDefault(Guid id, CancellationToken cancellationToken)
+    {
+        if (AccountId == null) return Unauthorized();
+        try
+        {
+            await _profileService.SetDefaultProfileAsync(id, AccountId.Value, cancellationToken);
+            return NoContent();
         }
         catch (KeyNotFoundException)
         {
@@ -60,21 +92,15 @@ public class ProfileController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProfile(Guid id, CancellationToken cancellationToken)
     {
-        await _profileService.DeleteProfileAsync(id, UserId, cancellationToken);
-        return NoContent();
-    }
-
-    [HttpPost("{id}/default")]
-    public async Task<IActionResult> SetDefaultProfile(Guid id, CancellationToken cancellationToken)
-    {
+        if (AccountId == null) return Unauthorized();
         try
         {
-            await _profileService.SetDefaultProfileAsync(id, UserId, cancellationToken);
+            await _profileService.DeleteProfileAsync(id, AccountId.Value, cancellationToken);
             return NoContent();
         }
-        catch (KeyNotFoundException)
+        catch (InvalidOperationException ex)
         {
-            return NotFound();
+            return BadRequest(new { message = ex.Message });
         }
     }
 }

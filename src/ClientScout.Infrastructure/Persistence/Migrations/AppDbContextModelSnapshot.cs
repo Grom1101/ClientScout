@@ -23,11 +23,108 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ClientScout.Domain.Entities.Account", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ActiveProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Subscription")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TelegramAvatarBase64")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TelegramName")
+                        .HasColumnType("text");
+
+                    b.Property<long?>("TelegramUserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Accounts");
+                });
+
+            modelBuilder.Entity("ClientScout.Domain.Entities.ExchangeConnection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EncryptedSession")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ExchangeType")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsConnected")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastCheckedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("RequiresReconnect")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProfileId", "ExchangeType")
+                        .IsUnique();
+
+                    b.ToTable("ExchangeConnections");
+                });
+
             modelBuilder.Entity("ClientScout.Domain.Entities.JobLead", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("AiCategory")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("AiConfidence")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("AiReason")
+                        .HasColumnType("text");
+
+                    b.Property<int>("AiStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("AiSummary")
+                        .HasColumnType("text");
 
                     b.Property<string>("AuthorUrl")
                         .HasColumnType("text");
@@ -38,6 +135,9 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ExternalId")
                         .IsRequired()
@@ -50,6 +150,10 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text[]");
 
+                    b.PrimitiveCollection<List<string>>("MatchedTerms")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.Property<string>("OriginalUrl")
                         .IsRequired()
                         .HasColumnType("text");
@@ -57,8 +161,18 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ProfileId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("Score")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("SourceId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("SourceName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SourceType")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -68,7 +182,7 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProfileId");
+                    b.HasIndex("ProfileId", "FoundAt");
 
                     b.HasIndex("SourceId", "ExternalId")
                         .IsUnique();
@@ -81,6 +195,10 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.PrimitiveCollection<string[]>("AttachmentUrls")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -127,8 +245,24 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("FinishedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("NextRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PeriodicityMinutes")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("ProfileId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ScheduleEndTime")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ScheduleMode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ScheduleStartTime")
+                        .HasColumnType("text");
 
                     b.Property<int>("SentCount")
                         .HasColumnType("integer");
@@ -145,6 +279,9 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("TemplateId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("TimezoneOffsetMinutes")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -173,6 +310,9 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
                     b.Property<string>("ErrorMessage")
                         .HasColumnType("text");
 
+                    b.Property<string>("MessageContent")
+                        .HasColumnType("text");
+
                     b.Property<DateTimeOffset>("SentAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -190,6 +330,9 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Color")
@@ -223,14 +366,84 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text[]");
 
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("Profiles");
+                });
+
+            modelBuilder.Entity("ClientScout.Domain.Entities.SearchSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<string[]>("ExpandedIntentTerms")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("ExpandedPositiveTerms")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<int>("IntervalMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastAiExpandedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<string[]>("MustIncludeSignals")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<bool>("NeedsAiExpansion")
+                        .HasColumnType("boolean");
+
+                    b.PrimitiveCollection<string[]>("NegativeKeywords")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<bool>("NotificationsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("uuid");
+
+                    b.PrimitiveCollection<string[]>("RejectSignals")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<string>("SearchProfileSummary")
+                        .HasColumnType("text");
+
+                    b.PrimitiveCollection<string[]>("SoftSignals")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("StrongTerms")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<string[]>("UserKeywords")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ProfileId")
+                        .IsUnique();
 
-                    b.ToTable("Profiles");
+                    b.ToTable("SearchSettings");
                 });
 
             modelBuilder.Entity("ClientScout.Domain.Entities.Source", b =>
@@ -290,10 +503,6 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Subscription")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("text");
@@ -334,6 +543,17 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserbotSessions");
+                });
+
+            modelBuilder.Entity("ClientScout.Domain.Entities.ExchangeConnection", b =>
+                {
+                    b.HasOne("ClientScout.Domain.Entities.Profile", "Profile")
+                        .WithMany("ExchangeConnections")
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Profile");
                 });
 
             modelBuilder.Entity("ClientScout.Domain.Entities.JobLead", b =>
@@ -398,13 +618,24 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("ClientScout.Domain.Entities.Profile", b =>
                 {
-                    b.HasOne("ClientScout.Domain.Entities.User", "User")
+                    b.HasOne("ClientScout.Domain.Entities.Account", "Account")
                         .WithMany("Profiles")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("ClientScout.Domain.Entities.SearchSettings", b =>
+                {
+                    b.HasOne("ClientScout.Domain.Entities.Profile", "Profile")
+                        .WithOne("SearchSettings")
+                        .HasForeignKey("ClientScout.Domain.Entities.SearchSettings", "ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Profile");
                 });
 
             modelBuilder.Entity("ClientScout.Domain.Entities.Source", b =>
@@ -429,6 +660,11 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ClientScout.Domain.Entities.Account", b =>
+                {
+                    b.Navigation("Profiles");
+                });
+
             modelBuilder.Entity("ClientScout.Domain.Entities.MessageTemplate", b =>
                 {
                     b.Navigation("Campaigns");
@@ -443,7 +679,11 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
                 {
                     b.Navigation("Campaigns");
 
+                    b.Navigation("ExchangeConnections");
+
                     b.Navigation("Leads");
+
+                    b.Navigation("SearchSettings");
 
                     b.Navigation("Sources");
 
@@ -457,8 +697,6 @@ namespace ClientScout.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("ClientScout.Domain.Entities.User", b =>
                 {
-                    b.Navigation("Profiles");
-
                     b.Navigation("UserbotSessions");
                 });
 #pragma warning restore 612, 618

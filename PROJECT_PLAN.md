@@ -2,6 +2,19 @@
 
 ---
 
+## Codex Tooling Rules — 2026-06-29
+
+При работе над ClientScout использовать доступные плагины/инструменты прагматично:
+
+- **Build/Web App workflow**: для frontend-задач всегда проверять сборку (`npm.cmd run build`) и, когда меняется UI, по возможности проверять приложение в браузере/скриншотом.
+- **Chrome / Browser automation**: для визуальных правок, Telegram Mini App UI, свайпов, модалок и адаптива использовать браузерную проверку через доступные browser/Chrome-инструменты или Playwright/node_repl.
+- **node_repl**: использовать для быстрых JS/Playwright-проверок, DOM-инспекции, скриншотов и автоматизации браузера, когда это быстрее обычных shell-команд.
+- **Codex Security / GitHub**: использовать для security-review, проверки подозрительных изменений, CI/GitHub Actions/PR-задач и потенциально опасных мест: auth, tokens, cookies, sessions, Telegram/Kwork credentials.
+- **Computer Use**: использовать только когда обычные shell/browser/API-инструменты не дают результата или нужно вручную пройти локальный UI/браузерный flow.
+- **Cloudflare Quick Tunnel**: когда пользователь просит ссылку для Telegram Mini App, запускать/проверять `cloudflared tunnel --url http://localhost:5173`; если QUIC/TCP edge заблокирован, явно сообщать, что tunnel не установил соединение.
+
+Не вызывать плагины механически перед каждым промптом. Инструменты должны применяться там, где они реально улучшают проверку, диагностику или качество ответа.
+
 # 🟢 ПРОСТЫМ ЯЗЫКОМ (ДЛЯ МЕНЯ)
 
 ## Что мы делаем?
@@ -39,6 +52,96 @@
 - Откроем для других (SaaS с тарифами)
 - Добавим Upwork, Viber, WhatsApp и другие источники
 - Переедем на нормальный платный сервер
+
+---
+
+## Search MVP — Decisions From 2026-06-27
+
+### Search cadence
+- User can choose scan interval: 5, 10, 15, 20, 25, or 30 minutes.
+- The interval is profile-level and shared across search sources.
+- Source scanning should be queued and jittered to avoid bursts:
+  - Telegram can run slightly before the selected interval.
+  - Kwork can run slightly after the selected interval.
+  - Found leads are processed and notifications are sent through a queue.
+
+### Search sources
+- Search chats and outreach chats are separate lists.
+- Search sources use `purpose = 0`.
+- Outreach sources use `purpose = 1`.
+- The same chat may exist in both lists.
+- Search chats can be read-only. Search only needs read access, not write access.
+- Telegram search reads:
+  - channel posts;
+  - group messages;
+  - admin/bot messages if they look like real job posts.
+- Telegram search does not read comments for MVP.
+- On first source scan:
+  - read only the latest 20 Telegram messages/posts;
+  - read only the latest 20 Kwork orders;
+  - show matching old leads;
+  - send notifications for matching old leads.
+
+### Lead storage and UI
+- Found leads are stored for 7 days.
+- Leads older than 7 days are physically deleted from DB.
+- Search screen shows the latest 10 leads.
+- A "show all" / arrow action opens a separate lead history screen with all leads from the 7-day retention window.
+- Lead list sorting is by found time only.
+- Lead statuses for MVP: `New`, `Viewed`.
+- Viewed leads remain in the list and move down only when newer leads arrive.
+
+### Keywords and negative keywords
+- User keywords describe the intended search domain, not necessarily exact text to match.
+- ClientScout search is universal: keywords may describe any domain or service, including software, repair work, local services, design, content, legal help, marketing, tutoring, hardware repair, construction, or anything else.
+- When keywords/negative keywords are saved, AI expansion builds a hidden search profile from those words: what the user is actually looking for, related terms and synonyms, common client wording for that exact domain, strong domain markers, and bilingual equivalents.
+- This hidden profile is not shown to the user in MVP, but it is used by the deterministic pre-filter and AI classifier.
+- Negative keywords are required in MVP.
+- Negative keywords filter out otherwise relevant leads.
+- Negative keywords are also domain-neutral: they exclude whatever the user explicitly does not want for the current search profile.
+
+### AI matching approach
+- AI is used as a classifier, not as an unlimited web scanner.
+- Pipeline:
+  1. Normalize raw post/order text.
+  2. Apply cheap deterministic pre-filter using user keywords, strong keyword phrases, cached AI-expanded terms, and broad intent phrases.
+  3. Apply user negative keyword filtering.
+  4. Send only candidate texts to AI.
+  5. AI returns structured JSON with relevance, category, summary, and confidence.
+  6. Save and notify only if confidence is >= 70%.
+- AI must not check every raw message/post.
+- AI is called when search settings are saved only if user keywords or negative keywords changed.
+- Changing interval or notification toggle must not call AI.
+- When keywords/negative keywords change, send the old expanded dictionary plus the exact diff to AI and ask it to rewrite/update the expanded dictionary instead of regenerating from scratch.
+- User keywords limit: 20.
+- User negative keywords limit: 10.
+- Expanded AI terms are hidden from the user in MVP.
+- UI should still indicate that AI assistance is used near the keyword settings, for example a small label/badge such as "AI helps refine search".
+- If AI quota is unavailable:
+  - use the last cached expanded dictionary;
+  - save keyword-score matches to the lead list;
+  - do not send Telegram notifications for non-AI-confirmed leads.
+- Pre-AI candidate threshold for MVP:
+  - at least 2 ordinary keyword/expanded-term matches, or
+  - 1 strong domain marker from the hidden search profile.
+- Do not require both intent and domain matches before AI. This avoids missing useful leads.
+- Negative keywords are user-defined only in MVP. AI may suggest negative keywords later, but this is not part of MVP.
+
+### Telegram bot notifications
+- Notifications are sent immediately per found lead, not batched.
+- MVP notification contains a short summary only.
+- Later feature: add inline buttons to notification, for example "Open lead", "Hide", "Favorite".
+- Later feature: "Open lead" should deep-link into the Mini App and focus the exact found lead/card.
+
+### AI provider strategy
+- MVP can start with an admin-provided Gemini API key.
+- Future architecture should support an AI provider pool:
+  - multiple provider adapters;
+  - multiple configured API keys/accounts only where allowed by provider terms;
+  - quota tracking;
+  - automatic fallback from one provider/model to another;
+  - no hard dependency on one AI vendor.
+- Do not design the system around bypassing free-tier provider limits. Use paid quotas, local models, or compliant provider fallbacks for scale.
 
 ## Про бесплатный сервер
 
@@ -536,3 +639,304 @@ HANGFIRE_DB=Host=localhost;Database=clientscout_hangfire;Username=postgres;Passw
 - [ ] Рассылка по чатам работает с задержками
 - [ ] Приложение открывается в Telegram и работает
 - [ ] Данные твои — никто другой их не видит
+
+---
+
+## Search MVP — Kwork Debug Findings From 2026-06-27
+
+### Что проверили
+
+Для Kwork были добавлены debug-логи:
+
+- `debug/kwork-scans`
+- `debug/kwork-candidates`
+- `debug/search-ai-expansions`
+
+По свежему scan-логу Kwork:
+
+```text
+ProjectsStatus: 200 OK
+HasSession: True
+IsConnected: True
+RequiresReconnect: False
+ProjectsHtmlContainsLoginPassword: False
+ProjectsHtmlContains3183617: False
+ProjectsHtmlContains3163214: False
+ParsedProjectLinksCount: 0
+CandidatesQueuedCount: 0
+```
+
+### Вывод
+
+Kwork connection/session формально работает:
+
+- сессия есть;
+- Kwork не возвращает форму логина;
+- `GET https://kwork.ru/projects` отвечает `200 OK`.
+
+Но текущий `HttpClient`-scanner не получает реальные карточки заказов:
+
+- в HTML нет ссылок вида `/projects/{id}/view`;
+- в HTML нет тестовых заказов `3183617` и `3163214`;
+- parser находит `0` project links;
+- кандидаты не создаются;
+- pre-filter не запускается;
+- AI classifier не запускается;
+- лиды не сохраняются;
+- UI правильно показывает `0`, потому что backend реально не получил кандидатов.
+
+То есть текущая проблема не в Gemini, не в фильтре и не во frontend-карточках. Проблема в источнике данных Kwork: обычный HTTP-запрос получает shell/общую страницу, а реальные заказы, вероятно, подгружаются через JavaScript/XHR после открытия страницы в браузере.
+
+### Что нужно сделать дальше
+
+Текущий Kwork scanner через `HttpClient` нужно заменить или дополнить browser-based scanner:
+
+1. Использовать Playwright для Kwork scanning.
+2. Открывать Kwork в браузерной сессии пользователя.
+3. Использовать сохранённую login/session state.
+4. Ждать загрузки страницы проектов.
+5. Собирать ссылки заказов из DOM после JS-render.
+6. При необходимости слушать network/XHR и найти API endpoint, который отдаёт заказы.
+7. Для каждого заказа открывать detail page.
+8. Читать не только title, но и полное описание заказа.
+9. Передавать `title + description` в deterministic pre-filter.
+10. Только кандидатов отправлять в Gemini classifier.
+11. Сохранять confirmed leads в `JobLeads`.
+12. После сохранения лид должен появляться в последних 10 заказах frontend.
+
+### Важная техническая правка
+
+Нельзя использовать `lastKworkHash` как marker времени. Hash не упорядочен по времени, поэтому часть заказов может пропускаться навсегда.
+
+Правильный MVP-подход:
+
+- dedup по `SourceId + ExternalId`;
+- `ExternalId` для Kwork брать из URL: `kwork:{projectId}`;
+- первый проход может обработать все видимые заказы;
+- повторные проходы пропускают уже сохранённые `ExternalId`.
+
+### Как диагностировать после следующей реализации
+
+После внедрения browser-based scanner в `debug/kwork-scans` должно быть видно:
+
+```text
+BrowserScan: true
+DomProjectLinksCount: N
+NetworkProjectApi: <url если найден>
+ProjectsHtmlContains3183617: true/false
+ProjectsHtmlContains3163214: true/false
+CandidatesQueuedCount: N
+```
+
+Если `DomProjectLinksCount > 0`, но лиды всё ещё не появляются, смотреть:
+
+- `debug/kwork-candidates`;
+- `PrefilterIsCandidate`;
+- `PrefilterMatchedTerms`;
+- `LEAD_SAVED` / `LEAD_NOT_SAVED`;
+- AI confidence в `JobLeads`.
+
+---
+
+## Search MVP — Kwork Browser Scanner Implementation From 2026-06-28
+
+Kwork scanner переведён с обычного `HttpClient GET /projects` на Playwright/browser-based scan.
+
+Что реализовано:
+
+- используется сохранённая Kwork session/cookies из `ExchangeConnections.EncryptedSession`;
+- запускается headless Chromium через `Microsoft.Playwright`;
+- создаётся browser context с Kwork cookies;
+- открывается `https://kwork.ru/projects`;
+- scanner ждёт DOM и JS/network activity;
+- ссылки заказов читаются из уже отрендеренного DOM по `/projects/{id}/view`;
+- detail page каждого заказа открывается в той же authenticated browser-сессии;
+- читаются `h1`, `og:description`, meta description и `document.body.innerText`;
+- в pre-filter отправляется `title + full rendered body/description`, а не только title;
+- dedup идёт по `SourceId + ExternalId`;
+- Kwork `ExternalId` берётся из URL как `kwork:{projectId}`.
+
+Новые diagnostic-файлы:
+
+- `debug/kwork-scans`
+  - `BrowserScan: true`
+  - `BrowserProjectsStatus`
+  - `BrowserProjectsUrl`
+  - `BrowserCookiesAdded`
+  - `BrowserHtmlLength`
+  - `BrowserBodyTextLength`
+  - `BrowserBodyContains3183617`
+  - `BrowserBodyContains3163214`
+  - `DomProjectLinksCount`
+  - `BrowserTotalProjectLinksCount`
+  - `CandidatesQueuedCount`
+- `debug/kwork-candidates`
+  - `PROCESS_START`
+  - `LEAD_SAVED` / `LEAD_NOT_SAVED`
+  - pre-filter score
+  - matched terms
+  - content actually sent into ingestion
+
+Если после browser scan всё ещё будет `DomProjectLinksCount: 0`, следующий шаг — смотреть browser network/XHR и найти внутренний endpoint Kwork, который отдаёт карточки заказов.
+
+---
+
+## Search MVP — Kwork All Rubrics Fix From 2026-06-28
+
+Проблема после первого browser scanner:
+
+- Kwork открывался с валидной сессией;
+- scanner видел только любимые рубрики пользователя;
+- в логах были в основном `Игры`, `Unity`, `GameDev`;
+- нужные заказы из общих рубрик не попадали в скан;
+- `element.click()` по тексту `Все` был недостаточен или падал при десериализации координат.
+
+Исправление:
+
+- scanner после открытия `https://kwork.ru/projects` ищет переключатель рубрик `Все`;
+- клик выполняется доверенным Playwright mouse-click по координатам, а не synthetic `element.click()`;
+- после клика scanner ждёт network idle и дополнительную паузу перед чтением DOM;
+- DOM links фильтруются только как реальные project URLs `/projects/{id}` или `/projects/{id}/view`;
+- ссылки покупателя `/projects/list/...` больше не попадают в candidates;
+- стоп-слова в deterministic pre-filter теперь проверяются по границам слова, поэтому `бот` больше не матчится внутри `работоспособный`.
+
+Подтверждение в diagnostics:
+
+```text
+RubricsAllClickResult: trusted_mouse_click
+BrowserBodySnippet: ... Дизайн(87) Разработка и IT(135) Тексты и переводы(12) ...
+ParsedLink: https://kwork.ru/projects/3206496 | title='Дизайн сайта'
+PrefilterIsCandidate: True
+PrefilterMatchedTerms: сайт, лендинг
+Status: LEAD_SAVED
+```
+
+Текущее поведение:
+
+- Kwork сканирует все рубрики, а не только любимые;
+- scanner читает title + description/detail body;
+- найденные candidates пишутся в `debug/kwork-candidates`;
+- confirmed leads сохраняются в `JobLeads`;
+- frontend последние 10 лидов должен обновлять через уже существующий polling.
+
+## Search MVP — Kwork Access Block Handling From 2026-06-29
+
+Kwork может временно блокировать автоматический доступ и переводить сессию на `/not_access.php`, если scanner слишком часто или слишком долго листает страницы.
+
+Что изменено:
+
+- при `KWORK_ACCESS_BLOCKED` поиск профиля автоматически останавливается (`SearchSettings.IsEnabled = false`);
+- Kwork connection помечается как `RequiresReconnect`;
+- пользователю отправляется Telegram bot notification о том, что поиск остановлен из-за антибот-проверки;
+- scanner больше не листает все страницы Kwork одним burst;
+- страницы 1, 2 и 3 проверяются каждый запуск, потому что там горячая зона свежих заказов;
+- старые страницы проходятся маленькими порциями через cursor `kworkNextPage` в source credentials;
+- это сохраняет покрытие всех страниц со временем, но резко снижает риск повторной блокировки.
+
+Правка от 2026-06-29 после проверки логов:
+
+- повторный клик по вкладке `Все` после перехода на `page=N` сбрасывал Kwork обратно на первую страницу;
+- scanner теперь открывает страницы напрямую как `https://kwork.ru/projects?c=all&page=N` и не кликает `Все` повторно на каждой странице;
+- Kwork list pre-filter больше не отбрасывает карточку, если есть хотя бы одно совпадение: detail page открывается, а финальное решение всё равно принимает общий pre-filter + AI classifier;
+- общий pre-filter теперь пропускает один keyword match, если рядом есть buyer intent (`нужно`, `требуется`, `создать`, `разработать`, `доработать`, etc.).
+
+## Search MVP — AI Classifier Precision Fix From 2026-06-29
+
+Проблема:
+
+- после расширения Kwork coverage в ленту попадали смежные, но нецелевые задачи;
+- старый classifier prompt спрашивал слишком широко: “это платная задача вообще?”, а не “это задача соответствует скрытому профилю поиска пользователя?”;
+- предыдущая формулировка ошибочно описывала отдельные домены через `если ...`, хотя ClientScout должен работать с любыми ключевыми словами и любым типом услуг;
+- если Gemini возвращал null/error, код мог сохранить lead как keyword/error match.
+
+Исправление:
+
+- ClientScout search является полностью универсальным: пользователь может искать любые услуги, работы или заказы, не только IT;
+- при сохранении keywords/negative keywords Gemini expansion строит скрытый профиль поиска в existing hidden arrays:
+  - `ExpandedPositiveTerms`;
+  - `ExpandedIntentTerms`;
+  - `StrongTerms`;
+  - normalized negative terms;
+- скрытый профиль должен описывать смысл поиска: что пользователь ищет, какие формулировки могут использовать клиенты, какие синонимы/переводы относятся к этому домену, какие маркеры особенно сильные;
+- classifier prompt теперь не содержит доменных `if`-правил и не привязан к сайтам, backend, Unity, дизайну или любой другой конкретной области;
+- classifier должен реконструировать скрытый профиль поиска из keywords + expanded terms + strong terms + negative keywords, затем семантически сравнить с ним описание заказа;
+- простое совпадение слова недостаточно: Gemini должен понять, совпадает ли реальная услуга/работа/результат заказа с тем, что пользователь искал;
+- adjacent-but-different задачи должны отклоняться, даже если в тексте есть одно похожее слово;
+- если Gemini доступен, но classification result is null/error, lead не сохраняется и сможет быть проверен повторно позже;
+- 4 уже сохранённых false-positive Kwork лида были скрыты через `LeadStatus.Hidden`, чтобы не висели в UI, но dedup остался.
+
+Рекомендация:
+
+- для ручного теста допустимо 5 минут;
+- для production минимальный интервал по Kwork лучше держать 15 минут;
+- если аккаунт снова ловит антибот, поднять минимум до 30 минут и уменьшить количество старых страниц за один scan.
+
+### Search MVP — Hidden Search Profile Upgrade From 2026-06-29
+
+Решение:
+
+- ClientScout search остаётся универсальным: пользователь может искать любые услуги или заказы, не только IT;
+- при сохранении keywords/negative keywords Gemini теперь строит отдельный скрытый профиль поиска:
+  - `SearchProfileSummary` — смысловое описание того, что пользователь ищет;
+  - `MustIncludeSignals` — сильные признаки попадания в нужный домен;
+  - `SoftSignals` — мягкие синонимы, переводы и связанные формулировки;
+  - `RejectSignals` — смежные, но неподходящие темы, которые часто дают false-positive;
+- deterministic pre-filter остаётся дешёвым:
+  - сначала ищет user keywords + hidden signals + expanded terms;
+  - учитывает buyer intent;
+  - слабые совпадения с reject signals отбрасывает до AI;
+- Gemini classifier получает `SearchProfileSummary` и сравнивает заказ с ним семантически, а не по одному слову;
+- это должно уменьшить false-positive вроде SEO, публикаций на площадках или Unity/WebGL, если скрытый профиль поиска был про сайты/верстку;
+- buyer intent расширен словами уровня “доделать”, “починить”, “пофиксить”, “реализовать”, “сверстать”, “настроить”, “integrate”, “configure”, “finish”, “debug”, etc.;
+- AI всё ещё вызывается только:
+  - при изменении keywords/negative keywords для expansion;
+  - для candidates, прошедших deterministic pre-filter;
+- каждое сырое сообщение/заказ в AI не отправляется.
+
+### Search MVP — Gemini Quota Handling From 2026-06-29
+
+Диагностика:
+
+- Kwork scanner работал нормально: `debug/kwork-scans` показывал страницы, ссылки и candidates;
+- хорошие Kwork candidates вроде “Доработать сайт”, “Верстка и интеграция сайта в WordPress”, “Создание 5 сайтов на Тильда” проходили deterministic pre-filter;
+- лиды не сохранялись, потому что Gemini API вернул `429 RESOURCE_EXHAUSTED`;
+- текущий бесплатный лимит для `gemini-2.5-flash-lite` был исчерпан (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`);
+- значит проблема была не в Kwork и не в БД, а в AI quota.
+
+Исправление:
+
+- `GeminiJsonClient` теперь отличает `QuotaExceeded` от других ошибок;
+- если classifier получает 429/quota exceeded, candidate сохраняется как `AiUnavailable`;
+- Telegram-уведомление для такого лида не отправляется;
+- пользователь всё равно видит keyword-score кандидаты в UI и может вручную оценить качество pre-filter;
+- если Gemini возвращает битый JSON или другую непонятную ошибку, candidate пока не сохраняется, чтобы не засорять список мусором.
+
+## Search MVP — AI Logic Update & Kwork Parser Fix (Session Antigravity, 2026-06-29)
+
+### Что было сделано и почему это важно:
+В этой сессии (29 июня 2026) мы решили комплекс проблем, связанных со сканером Kwork и логикой AI-классификации, из-за которых новые заказы не отображались в интерфейсе. 
+
+**Для Кодекса или следующего агента — внимательно изучи этот блок, здесь описана актуальная архитектура парсинга и обработки заказов.**
+
+#### 1. Очистка входных данных парсера (Kwork)
+* **Проблема:** Kwork-парсер (JavaScript-инъекция в SearchJobService.cs) отправлял нейросети весь контент карточки заказа, включая боковую панель (категории, статистику продавца, желаемый бюджет и т.д.). Этот "мусор" сбивал нейросеть с толку, и она отклоняла хорошие лиды, занижая уверенность.
+* **Решение:** Мы обновили JS-код в SearchJobService.cs (ReadKworkItemsFromCurrentPageAsync), добавив удаление блоков с классом .m-project-view__info перед извлечением текста (el.remove()). Теперь нейросеть получает **исключительно заголовок и чистый текст описания задачи**.
+* **Логи:** Из логов сканирования (папка debug/kwork-scans/) был удален BrowserBodySnippet (строка 513 в SearchJobService.cs), так как он создавал огромный визуальный шум, который путал разработчика при дебаггинге.
+
+#### 2. Фикс блокировки лидов при отсутствии токенов AI (Изящная деградация)
+* **Проблема:** Ранее в SearchIngestionService.cs стояло жесткое условие: если settings.NeedsAiExpansion == true или скрытый профиль пуст, метод ProcessCandidateAsync немедленно возвращал 
+ull. Из-за этого, если у пользователя заканчивались токены Gemini (ошибка 429), скрытый профиль не генерировался, и **все последующие заказы полностью игнорировались**, даже не попадая в БД! Интерфейс при этом пустовал.
+* **Решение:** Блокировка была убрана. Если профиль еще не расширен (NeedsAiExpansion = true), заказ всё равно проходит через базовый фильтр ключевых слов (Prefilter). Если ключевые слова совпали, заказ сохраняется в базу (JobLeads) со статусом AiStatus = KeywordOnly. Таким образом, при падении нейросети приложение не ломается, а переходит на резервный механизм работы — по ключевым словам.
+
+#### 3. Генерализация и универсальность промпта AI
+* **Проблема:** Пользователь указал, что приложение ClientScout является универсальным (можно искать заказы на дизайн, поклейку обоев, строительство и т.д.), хотя 90% пользователей — из IT. При отсутствии скрытого профиля нейросеть могла теряться или быть слишком IT-центричной.
+* **Решение:** Промпт в AiLeadClassifier.cs был серьезно переработан.
+    * Добавлено правило: *"Пользователь может искать любые услуги (IT, дизайн, маркетинг, строительство и т.д.). И хотя 90% пользователей — это IT, нейросеть должна строго следовать ключевым словам"*.
+    * Добавлен fallback-сценарий: если SearchProfileSummary пуст, нейросеть должна использовать сырые массивы UserKeywords, ExpandedPositiveTerms, и StrongTerms как основной ориентир для классификации.
+    * Нейросеть обучена оценивать **конечный результат работы (deliverable)**. Например, если слово "сайт" фигурирует в заказе "Сделать фото товаров с инфографикой для сайта", нейросеть поймет, что суть работы — картинки, а не программирование, и отсеет заказ (если пользователь ищет разработку). Первый фильтр пропустит этот заказ по слову "сайт", но AI успешно его заблокирует.
+
+### Рекомендации Кодексу (Codex) на будущее:
+1. **Не возвращай жесткие блокировки в SearchIngestionService.** Никогда не блокируй сохранение LeadStatus.New, если нейросеть недоступна, иначе интерфейс приложения будет казаться пользователю "мертвым".
+2. При добавлении новых бирж (например, FL, Freelance.ru) применяй ту же логику парсинга — отправляй в AI только **суть задачи**, вырезая боковые панели, отзывы и бюджет.
+3. Логика Fallback на KeywordOnly работает отлично, сохраняй этот подход при дальнейшей разработке AI-функционала.
+

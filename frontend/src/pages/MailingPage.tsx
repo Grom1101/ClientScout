@@ -1,149 +1,267 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, ChevronRight, Play, Square, Loader2 } from 'lucide-react';
+import { ChevronRight, Loader2, Play, Square, Send, Check, X, RefreshCw } from 'lucide-react';
 import MailingIntervalModal from '../components/MailingIntervalModal';
 import MailingMessagesModal from '../components/MailingMessagesModal';
 import { useOutreachStore } from '../store/useOutreachStore';
 import { useSourcesStore } from '../store/useSourcesStore';
-import { HARDCODED_PROFILE_ID } from '../api/client';
+import { getActiveProfileId } from '../api/client';
+
+const splitSourceTopic = (value?: string) => {
+  if (!value) return null;
+  const parts = value
+    .split(/\s*(?:›|>|->|→|вЂє)\s*/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length < 2) {
+    return { source: value, topic: null };
+  }
+
+  return { source: parts[0], topic: parts.slice(1).join(' › ') };
+};
+
+const ChatNameLabel = ({ value }: { value: string }) => {
+  const label = splitSourceTopic(value);
+  if (!label) {
+    return <p className="text-[15px] font-semibold text-slate-200 truncate mb-0.5">{value}</p>;
+  }
+
+  return (
+    <p className="text-[15px] font-semibold truncate mb-0.5 inline-flex max-w-full items-center gap-1.5 text-slate-200">
+      <span className="truncate">{label.source}</span>
+      {label.topic && (
+        <>
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-500" strokeWidth={3} />
+          <span className="truncate font-bold" style={{ color: '#A5B4FC' }}>{label.topic}</span>
+        </>
+      )}
+    </p>
+  );
+};
 
 export default function MailingPage() {
   const navigate = useNavigate();
-  const { activeCampaign, isLoading: isOutreachLoading, fetchActiveCampaign, fetchTemplates, startCampaign, stopCampaign, templates } = useOutreachStore();
+  const {
+    activeCampaign,
+    isLoading: isOutreachLoading,
+    isStatsLoading,
+    fetchActiveCampaign,
+    fetchTemplates,
+    startCampaign,
+    stopCampaign,
+    templates,
+    periodicityMinutes,
+    scheduleMode,
+    scheduleStartTime,
+    scheduleEndTime,
+    stats,
+    fetchStats
+  } = useOutreachStore();
   const { sources, fetchSources } = useSourcesStore();
-  
+
   const [showInterval, setShowInterval] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
 
   useEffect(() => {
-    fetchActiveCampaign(HARDCODED_PROFILE_ID);
-    fetchTemplates(HARDCODED_PROFILE_ID);
-    fetchSources(1); // purpose=1 for Outreach
-  }, [fetchActiveCampaign, fetchTemplates, fetchSources]);
+    const profileId = getActiveProfileId();
+    fetchActiveCampaign(profileId);
+    fetchTemplates(profileId);
+    fetchSources(1);
+    fetchStats(profileId, 'today');
+    const timer = window.setInterval(() => fetchStats(profileId, 'today'), 15000);
+    return () => window.clearInterval(timer);
+  }, [fetchActiveCampaign, fetchTemplates, fetchSources, fetchStats]);
 
-  const selectedChats = sources.filter(s => s.checked);
+  const selectedChats = sources.filter((source) => source.checked);
   const isRunning = activeCampaign?.status === 1;
+  const attachmentCount = templates[0]?.attachmentUrls?.length || 0;
+  const messagePreviewText = templates[0]?.content
+    ? templates[0].content.trim().slice(0, 40) + (templates[0].content.length > 40 ? '...' : '')
+    : 'Текст сообщения';
+  const intervalLabel = scheduleMode === 'custom'
+    ? `${scheduleStartTime}-${scheduleEndTime}, каждые ${periodicityMinutes} мин`
+    : `Круглосуточно, каждые ${periodicityMinutes} мин`;
 
   const handleStart = async () => {
     if (templates.length === 0) {
-      alert("Сначала создайте шаблон сообщения.");
+      alert('Сначала создайте шаблон сообщения.');
       return;
     }
     if (selectedChats.length === 0) {
-      alert("Выберите хотя бы один чат для рассылки.");
+      alert('Выберите хотя бы один чат для рассылки.');
       return;
     }
-    await startCampaign(templates[0].id, selectedChats.map(c => c.id));
+    await startCampaign(templates[0].id, selectedChats.map((chat) => chat.id));
   };
 
+  const cardWidth = '100%';
+  const actionWidth = 'min(380px, calc(100% - 64px))';
+
   return (
-    <div className="px-4 pt-4 pb-4">
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-6 relative">
+    <div className="min-h-full w-full px-5 pt-5 pb-6">
+      <div className="relative mx-auto flex flex-col items-center" style={{ width: '100%', marginBottom: 8, paddingTop: 8 }}>
         {isOutreachLoading && (
-          <div className="absolute -top-2 -left-2 z-10 bg-white/10 backdrop-blur-md p-1.5 rounded-full shadow-lg">
-            <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#A78BFA' }} />
+          <div className="absolute left-0 top-1 z-10 rounded-full bg-white/10 p-1.5 shadow-lg backdrop-blur-md">
+            <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#8B5CF6' }} />
           </div>
         )}
-        <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 tracking-tight flex items-center gap-3">
-          Рассылка
-          {isRunning && (
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-[0_0_12px_#10B981]"></span>
-            </span>
-          )}
-        </h1>
-        <button
-          onClick={() => setShowInterval(true)}
-          className="w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer transition-all hover:bg-white/10 active:scale-95"
-          style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(12px)'
-          }}
-        >
-          <Settings className="w-5 h-5" style={{ color: '#CBD5E1' }} />
-        </button>
+
+        <h1 className="text-[22px] font-black leading-tight text-white">Рассылка</h1>
+        
+        {isRunning && (
+          <div className="flex items-center justify-center gap-2.5" style={{ marginTop: '8px' }}>
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)]" />
+            <span className="text-[14px] font-black uppercase tracking-wide" style={{ color: '#34D399' }}>запущена</span>
+          </div>
+        )}
       </div>
 
-      {/* ── Sections ── */}
-      <div className="flex flex-col gap-3 mb-8">
+      <div className="mx-auto flex flex-col gap-4" style={{ width: cardWidth }}>
         <button
           onClick={() => navigate('/mailing/chats')}
-          className="flex items-center justify-between w-full p-4.5 rounded-2xl transition-all hover:bg-white/5 active:scale-[0.98]"
-          style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.03)', 
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(12px)',
-            boxShadow: '0 4px 24px -1px rgba(0,0,0,0.2)'
-          }}
+          className="mail-card mail-card-pressed flex min-h-[74px] w-full items-center justify-between py-4 text-left transition-all active:scale-[0.99]"
+          style={{ borderRadius: 12, paddingLeft: '15px', paddingRight: '15px' }}
         >
-          <div>
-            <p className="text-[15px] font-bold text-white text-left tracking-wide">Чаты</p>
+          <div className="min-w-0">
+            <p className="text-[16px] font-extrabold text-white">Чаты</p>
+            <p className="mt-1 text-[13px] font-medium" style={{ color: '#7F8CA0' }}>
+              Выбрано чатов для отправки
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <span
-              className="text-xs font-bold px-3 py-1 rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
-              style={{ backgroundColor: 'rgba(124,58,237,0.25)', color: '#A78BFA' }}
+              className="min-w-8 rounded-lg px-2.5 py-1 text-center text-sm font-black"
+              style={{ backgroundColor: 'rgba(124,58,237,0.18)', color: '#B794F6' }}
             >
               {selectedChats.length}
             </span>
-            <ChevronRight className="w-5 h-5" style={{ color: '#64748B' }} />
+            <ChevronRight className="h-6 w-6" style={{ color: '#708096' }} />
           </div>
         </button>
 
         <button
           onClick={() => setShowMessages(true)}
-          className="flex items-center justify-between w-full p-4.5 rounded-2xl transition-all hover:bg-white/5 active:scale-[0.98]"
-          style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.03)', 
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(12px)',
-            boxShadow: '0 4px 24px -1px rgba(0,0,0,0.2)'
-          }}
+          className="mail-card flex min-h-[74px] w-full items-center justify-between py-4 text-left transition-all active:scale-[0.99]"
+          style={{ borderRadius: 12, paddingLeft: '15px', paddingRight: '15px' }}
         >
-          <div>
-            <p className="text-[15px] font-bold text-white text-left tracking-wide">Сообщения</p>
-            <p className="text-[13px] text-left mt-0.5" style={{ color: '#94A3B8' }}>
-              Текст сообщения + {templates[0]?.attachmentUrls?.length || 0} файл(ов)
+          <div className="min-w-0">
+            <p className="text-[16px] font-extrabold text-white">Сообщения</p>
+            <p className="mt-1 truncate text-[13px] font-medium" style={{ color: '#7F8CA0' }}>
+              {messagePreviewText}{attachmentCount > 0 ? ` + ${attachmentCount} файл(ов)` : ''}
             </p>
           </div>
-          <ChevronRight className="w-5 h-5" style={{ color: '#64748B' }} />
-        </button>
-      </div>
-
-      {/* ── Action buttons ── */}
-      <div className="flex flex-col gap-3.5">
-        <button
-          onClick={handleStart}
-          disabled={isRunning || isOutreachLoading}
-          className="relative w-full py-4 rounded-2xl text-[15px] font-black text-white flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 overflow-hidden group"
-          style={{ 
-            background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-            boxShadow: '0 8px 32px -8px rgba(16,185,129,0.5), inset 0 1px 1px rgba(255,255,255,0.2)'
-          }}
-        >
-          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-          <Play className="w-5 h-5 relative z-10" fill="white" />
-          <span className="relative z-10 tracking-wider">НАЧАТЬ РАССЫЛКУ</span>
+          <ChevronRight className="h-6 w-6 shrink-0" style={{ color: '#708096' }} />
         </button>
 
         <button
-          onClick={() => stopCampaign()}
-          disabled={!isRunning || isOutreachLoading}
-          className="w-full py-4 rounded-2xl text-[15px] font-black text-white flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-30 disabled:active:scale-100"
-          style={{ 
-            background: 'linear-gradient(135deg, #B91C1C 0%, #EF4444 100%)',
-            boxShadow: isRunning ? '0 8px 32px -8px rgba(239,68,68,0.5), inset 0 1px 1px rgba(255,255,255,0.2)' : 'none'
-          }}
+          onClick={() => setShowInterval(true)}
+          className="mail-card flex min-h-[74px] w-full items-center justify-between py-4 text-left transition-all active:scale-[0.99]"
+          style={{ borderRadius: 12, paddingLeft: '15px', paddingRight: '15px' }}
         >
-          <Square className="w-5 h-5" fill="white" />
-          <span className="tracking-wider">СТОП</span>
+          <div className="min-w-0">
+            <p className="text-[16px] font-extrabold text-white">Настройки рассылки</p>
+            <p className="mt-1 truncate text-[13px] font-medium" style={{ color: '#7F8CA0' }}>
+              {intervalLabel}
+            </p>
+          </div>
+          <ChevronRight className="h-6 w-6 shrink-0" style={{ color: '#708096' }} />
         </button>
       </div>
 
-      {/* ── Modals ── */}
+      <div className="flex w-full flex-col items-center gap-4" style={{ marginTop: 24 }}>
+        {!isRunning ? (
+          <button
+            onClick={handleStart}
+            disabled={isOutreachLoading}
+            className="relative flex h-[58px] items-center justify-center gap-3 overflow-hidden rounded-[10px] text-[14px] font-black uppercase tracking-wide text-white transition-all disabled:opacity-50"
+            style={{
+              width: actionWidth,
+              background: 'linear-gradient(135deg, #2CCB86 0%, #22B873 100%)',
+              boxShadow: '0 14px 32px rgba(34,184,115,0.28)',
+            }}
+          >
+            <Play className="relative z-10 h-5 w-5" fill="white" />
+            <span className="relative z-10">Начать рассылку</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => stopCampaign()}
+            disabled={isOutreachLoading}
+            className="flex h-[58px] items-center justify-center gap-3 rounded-[10px] text-[14px] font-black uppercase tracking-wide text-white transition-all disabled:opacity-35"
+            style={{
+              width: actionWidth,
+              background: 'linear-gradient(135deg, #EF232A 0%, #D51F26 100%)',
+              boxShadow: '0 14px 32px rgba(239,35,42,0.24)',
+            }}
+          >
+            <Square className="h-5 w-5" fill="white" />
+            <span>Остановить рассылку</span>
+          </button>
+        )}
+      </div>
+
+      <div className="mx-auto flex flex-col gap-3" style={{ width: cardWidth, marginTop: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2, paddingLeft: 12, paddingRight: 12 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF' }}>Последние рассылки:</p>
+          <button
+            onClick={() => fetchStats(getActiveProfileId(), 'today')}
+            disabled={isStatsLoading}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#6D28D9', fontSize: 12, fontWeight: 600, opacity: isStatsLoading ? 0.5 : 1 }}
+          >
+            <RefreshCw style={{ width: 13, height: 13 }} className={isStatsLoading ? 'animate-spin' : ''} />
+            Обновить
+          </button>
+        </div>
+        
+        {(!stats?.recentLogs || stats.recentLogs.length === 0) && (
+          <div className="flex flex-col items-center justify-center py-6 text-center rounded-2xl" style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="w-12 h-12 rounded-full mb-3 flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
+              <Send className="w-5 h-5 text-slate-600" />
+            </div>
+            <p className="text-[14px]" style={{ color: '#64748B' }}>Пока нет отправленных сообщений</p>
+          </div>
+        )}
+
+        {stats?.recentLogs && stats.recentLogs.length > 0 && (
+          <div className="flex flex-col gap-4 rounded-2xl py-5" style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)' }}>
+            {stats.recentLogs.map((entry, index) => (
+              <div key={entry.id} className="flex items-center gap-4 group" style={{ 
+                paddingLeft: 20, 
+                paddingRight: 20,
+                paddingTop: index === 0 ? 20 : 0,
+                paddingBottom: index === stats.recentLogs.length - 1 ? 20 : 0
+              }}>
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-active:scale-95 shadow-sm" style={{ backgroundColor: entry.status === 0 ? 'rgba(139, 92, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: entry.status === 0 ? '1px solid rgba(139, 92, 246, 0.15)' : '1px solid rgba(239, 68, 68, 0.15)' }}>
+                  <Send className="w-5 h-5" style={{ color: entry.status === 0 ? '#A78BFA' : '#F87171' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <ChatNameLabel value={entry.chatName} />
+                  <div className="flex items-center gap-1.5 text-[13px] truncate" style={{ color: '#94A3B8' }}>
+                    <span className="truncate max-w-[100px]">{entry.messagePreview}</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-600 shrink-0"></span>
+                    <span className="truncate" style={{ color: entry.errorMessage ? '#F87171' : '#94A3B8' }}>
+                      {entry.errorMessage || entry.profileName}
+                    </span>
+                    {entry.matchedKeyword && (
+                      <>
+                        <span className="text-slate-600 shrink-0">→</span>
+                        <span className="font-semibold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 shrink-0 border border-purple-500/20">{entry.matchedKeyword}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="text-[12px] font-medium shrink-0 flex flex-col items-end gap-1">
+                  <span style={{ color: '#64748B' }}>{new Date(entry.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  {entry.status === 0 && <Check className="w-3.5 h-3.5 text-emerald-500" />}
+                  {entry.status !== 0 && <X className="w-3.5 h-3.5 text-red-500" />}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <MailingIntervalModal isOpen={showInterval} onClose={() => setShowInterval(false)} />
       <MailingMessagesModal isOpen={showMessages} onClose={() => setShowMessages(false)} />
     </div>

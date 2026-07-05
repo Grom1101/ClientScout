@@ -13,19 +13,19 @@ export default function SubPage({ title, backTo, children, rightAction }: SubPag
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       <header
-        className="flex items-center px-4 py-3 shrink-0 gap-3"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        className="flex shrink-0 items-center gap-3 px-6 py-5"
+        style={{ borderBottom: '1px solid rgba(148,163,184,0.10)', backgroundColor: 'rgba(7, 13, 22, 0.72)' }}
       >
         <button
           onClick={() => navigate(backTo)}
-          className="w-9 h-9 flex items-center justify-center rounded-full transition-colors hover:bg-white/10 shrink-0"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-white/10"
           style={{ color: '#94A3B8' }}
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-lg font-semibold text-white flex-1 min-w-0 truncate">{title}</h1>
+        <h1 className="min-w-0 flex-1 truncate text-xl font-black text-white">{title}</h1>
         {rightAction && <div className="shrink-0">{rightAction}</div>}
       </header>
       <div className="flex-1 overflow-y-auto">{children}</div>
