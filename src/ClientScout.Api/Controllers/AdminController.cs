@@ -61,6 +61,7 @@ public class AdminController : ControllerBase
                 providerName = g.Key.ProviderName,
                 modelName = g.Key.ModelName,
                 calls = g.Count(),
+                successfulCalls = g.Count(l => l.StatusCode >= 200 && l.StatusCode < 300),
                 cost = g.Sum(l => l.CostUsd),
                 inputTokens = g.Sum(l => l.InputTokens),
                 outputTokens = g.Sum(l => l.OutputTokens),

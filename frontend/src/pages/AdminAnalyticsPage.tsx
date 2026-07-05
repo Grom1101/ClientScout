@@ -19,6 +19,7 @@ interface AdminStats {
     providerName: string;
     modelName: string;
     calls: number;
+    successfulCalls: number;
     cost: number;
     inputTokens: number;
     outputTokens: number;
@@ -36,6 +37,14 @@ function formatTokens(num: number): string {
   if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
   return num.toString();
 }
+
+const FIXED_MODELS = [
+  { providerName: 'BluesMinds', modelName: 'gpt-4o-mini' },
+  { providerName: 'BluesMinds', modelName: 'mimo-v2.5' },
+  { providerName: 'Groq', modelName: 'llama3-8b-8192' },
+  { providerName: 'Groq', modelName: 'llama3-70b-8192' },
+  { providerName: 'OpenRouter', modelName: 'google/gemini-1.5-flash' },
+];
 
 export default function AdminAnalyticsPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -153,26 +162,47 @@ export default function AdminAnalyticsPage() {
             Детализация по Моделям
           </h2>
           <div className="space-y-3">
-            {stats.modelStats.length === 0 && <div className="text-gray-500 italic">Нет данных</div>}
-            {stats.modelStats.map(m => (
-              <div key={`${m.providerName}-${m.modelName}`} className="bg-[#2a2a2a] p-3 rounded-xl border border-white/5 shadow-sm">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <div className="font-semibold text-sm">{m.modelName}</div>
-                    <div className="text-xs text-gray-500">{m.providerName}</div>
+            {(() => {
+              const mergedStats = [...FIXED_MODELS];
+              
+              // Add any models that are in stats but not in FIXED_MODELS
+              stats.modelStats.forEach(stat => {
+                if (!mergedStats.some(m => m.providerName === stat.providerName && m.modelName === stat.modelName)) {
+                  mergedStats.push({ providerName: stat.providerName, modelName: stat.modelName });
+                }
+              });
+
+              return mergedStats.map(m => {
+                const stat = stats.modelStats.find(s => s.providerName === m.providerName && s.modelName === m.modelName) || {
+                  calls: 0,
+                  successfulCalls: 0,
+                  cost: 0,
+                  inputTokens: 0,
+                  outputTokens: 0,
+                  errors429: 0
+                };
+
+                return (
+                  <div key={`${m.providerName}-${m.modelName}`} className="bg-[#2a2a2a] p-3 rounded-xl border border-white/5 shadow-sm">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <div className="font-semibold text-sm">{m.modelName}</div>
+                        <div className="text-xs text-gray-500">{m.providerName}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-primary font-mono text-sm">${stat.cost.toFixed(4)}</div>
+                        <div className="text-xs text-gray-400">Успешно: <span className="text-white font-medium">{stat.successfulCalls}</span> / {stat.calls} reqs</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 text-xs mt-2 pt-2 border-t border-white/5">
+                      <span className="text-gray-400">In: <span className="text-white">{formatTokens(stat.inputTokens)}</span></span>
+                      <span className="text-gray-400">Out: <span className="text-white">{formatTokens(stat.outputTokens)}</span></span>
+                      {stat.errors429 > 0 && <span className="text-orange-400 ml-auto">Err: {stat.errors429}</span>}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-primary font-mono text-sm">${m.cost.toFixed(4)}</div>
-                    <div className="text-xs text-gray-400">{m.calls} reqs</div>
-                  </div>
-                </div>
-                <div className="flex gap-4 text-xs mt-2 pt-2 border-t border-white/5">
-                  <span className="text-gray-400">In: <span className="text-white">{formatTokens(m.inputTokens)}</span></span>
-                  <span className="text-gray-400">Out: <span className="text-white">{formatTokens(m.outputTokens)}</span></span>
-                  {m.errors429 > 0 && <span className="text-orange-400 ml-auto">Err: {m.errors429}</span>}
-                </div>
-              </div>
-            ))}
+                );
+              });
+            })()}
           </div>
         </div>
       </div>
