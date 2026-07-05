@@ -62,6 +62,8 @@ public class AdminController : ControllerBase
                 modelName = g.Key.ModelName,
                 calls = g.Count(),
                 cost = g.Sum(l => l.CostUsd),
+                inputTokens = g.Sum(l => l.InputTokens),
+                outputTokens = g.Sum(l => l.OutputTokens),
                 errors429 = g.Count(l => l.StatusCode == 429)
             })
             .ToListAsync();
