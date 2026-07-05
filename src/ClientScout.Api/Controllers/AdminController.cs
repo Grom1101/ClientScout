@@ -49,7 +49,8 @@ public class AdminController : ControllerBase
                 cost = g.Sum(l => l.CostUsd),
                 inputTokens = g.Sum(l => l.InputTokens),
                 outputTokens = g.Sum(l => l.OutputTokens),
-                errors429 = g.Count(l => l.StatusCode == 429)
+                errors429 = g.Count(l => l.StatusCode == 429),
+                fatalErrors = g.Count(l => l.StatusCode >= 400 && l.StatusCode != 429)
             })
             .ToListAsync();
 
@@ -65,7 +66,8 @@ public class AdminController : ControllerBase
                 cost = g.Sum(l => l.CostUsd),
                 inputTokens = g.Sum(l => l.InputTokens),
                 outputTokens = g.Sum(l => l.OutputTokens),
-                errors429 = g.Count(l => l.StatusCode == 429)
+                errors429 = g.Count(l => l.StatusCode == 429),
+                fatalErrors = g.Count(l => l.StatusCode >= 400 && l.StatusCode != 429)
             })
             .ToListAsync();
 

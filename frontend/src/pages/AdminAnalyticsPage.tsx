@@ -24,6 +24,7 @@ interface AdminStats {
     inputTokens: number;
     outputTokens: number;
     errors429: number;
+    fatalErrors: number;
   }[];
 }
 
@@ -194,18 +195,24 @@ export default function AdminAnalyticsPage() {
                   cost: 0,
                   inputTokens: 0,
                   outputTokens: 0,
-                  errors429: 0
+                  errors429: 0,
+                  fatalErrors: 0
                 };
 
+                const isDead = stat.fatalErrors > 0;
+
                 return (
-                  <div key={`${m.providerName}-${m.modelName}`} className="bg-[#2a2a2a] p-3 rounded-xl border border-white/5 shadow-sm">
-                    <div className="flex justify-between items-start mb-2">
+                  <div key={`${m.providerName}-${m.modelName}`} className={`bg-[#2a2a2a] p-3 rounded-xl border ${isDead ? 'border-red-500/50' : 'border-white/5'} shadow-sm relative overflow-hidden`}>
+                    {isDead && (
+                      <div className="absolute inset-0 bg-red-950/20 pointer-events-none" />
+                    )}
+                    <div className="flex justify-between items-start mb-2 relative z-10">
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-gray-300">
+                        <div className={`flex items-center justify-center w-6 h-6 rounded-full ${isDead ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-gray-300'} text-xs font-bold`}>
                           {index + 1}
                         </div>
                         <div>
-                          <div className="font-semibold text-sm">{m.modelName}</div>
+                          <div className={`font-semibold text-sm ${isDead ? 'line-through text-gray-500' : ''}`}>{m.modelName}</div>
                           <div className="text-xs text-gray-500">{m.providerName}</div>
                         </div>
                       </div>
@@ -214,19 +221,31 @@ export default function AdminAnalyticsPage() {
                         <div className="text-xs text-gray-400">Успешно: <span className="text-white font-medium">{stat.successfulCalls}</span> / {stat.calls} reqs</div>
                       </div>
                     </div>
-                    <div className="flex gap-4 items-center text-xs mt-3 pt-3 border-t border-white/5">
+                    {isDead && (
+                      <div className="text-xs text-red-400 font-bold mb-2 relative z-10">
+                        ⚠ ОШИБКА ДОСТУПА ИЛИ КЛЮЧА ({stat.fatalErrors})
+                      </div>
+                    )}
+                    <div className="flex gap-4 items-center text-xs mt-3 pt-3 border-t border-white/5 relative z-10">
                       <span className="text-gray-400">In: <span className="text-white">{formatTokens(stat.inputTokens)}</span></span>
                       <span className="text-gray-400">Out: <span className="text-white">{formatTokens(stat.outputTokens)}</span></span>
-                      {stat.errors429 > 0 && (
-                        <div className="ml-auto bg-red-500/20 text-red-400 px-2 py-1 rounded-md border border-red-500/20 font-medium">
-                          Ошибок 429: {stat.errors429}
-                        </div>
-                      )}
+                      
+                      <div className={`ml-auto px-2 py-1 rounded-md border font-medium ${stat.errors429 > 0 ? 'bg-orange-500/20 text-orange-400 border-orange-500/20' : 'bg-white/5 text-gray-400 border-white/5'}`}>
+                        Ошибок 429: {stat.errors429}
+                      </div>
                     </div>
                   </div>
                 );
               });
             })()}
+          </div>
+          <div className="mt-6 pt-4 border-t border-white/10 flex justify-between items-center text-sm">
+             <div className="text-gray-400">
+               Общий In: <span className="text-white font-bold">{formatTokens(stats.providerStats.reduce((sum, p) => sum + p.inputTokens, 0))}</span>
+             </div>
+             <div className="text-gray-400">
+               Общий Out: <span className="text-white font-bold">{formatTokens(stats.providerStats.reduce((sum, p) => sum + p.outputTokens, 0))}</span>
+             </div>
           </div>
         </div>
       </div>
