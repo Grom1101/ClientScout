@@ -109,7 +109,7 @@ export function TelegramAuthModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-sm bg-[#0B0E18] rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+      <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl border border-indigo-400/15" style={{ background: 'linear-gradient(180deg, #1A1E36 0%, #10142A 100%)' }}>
         <div className="p-6">
           <h2 className="text-xl font-bold text-white mb-2">Авторизация Telegram</h2>
           <p className="text-sm text-gray-400 mb-6">
@@ -130,14 +130,14 @@ export function TelegramAuthModal({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+375291234567"
-                className="w-full bg-white/5 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#7C3AED] transition-all border border-white/10"
+                className="w-full bg-white/5 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#6366F1] transition-all border border-white/10"
               />
               <div className="flex gap-3 mt-6">
                 <button className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-white/10 hover:bg-white/20" onClick={handleClose}>
                   Отмена
                 </button>
                 <button
-                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-[#6366F1] hover:bg-[#4F46E5] disabled:opacity-50"
                   onClick={handleSendCode}
                   disabled={!phone.trim() || loading}
                 >
@@ -155,14 +155,14 @@ export function TelegramAuthModal({
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="12345"
-                className="w-full bg-white/5 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#7C3AED] transition-all border border-white/10"
+                className="w-full bg-white/5 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#6366F1] transition-all border border-white/10"
               />
               <div className="flex gap-3 mt-6">
                 <button className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-white/10 hover:bg-white/20" onClick={() => setStep('phone')}>
                   Назад
                 </button>
                 <button
-                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-[#6366F1] hover:bg-[#4F46E5] disabled:opacity-50"
                   onClick={handleVerifyCode}
                   disabled={!code.trim() || loading}
                 >
@@ -180,14 +180,14 @@ export function TelegramAuthModal({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Введите пароль 2FA"
-                className="w-full bg-white/5 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#7C3AED] transition-all border border-white/10"
+                className="w-full bg-white/5 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#6366F1] transition-all border border-white/10"
               />
               <div className="flex gap-3 mt-6">
                 <button className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-white/10 hover:bg-white/20" onClick={() => setStep('code')}>
                   Назад
                 </button>
                 <button
-                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-[#6366F1] hover:bg-[#4F46E5] disabled:opacity-50"
                   onClick={handleVerifyPassword}
                   disabled={!password || loading}
                 >

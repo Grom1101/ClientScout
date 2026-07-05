@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Modal from './Modal';
 import { useSearchRuntimeStore, type KworkLoginFlowStatus } from '../store/useSearchRuntimeStore';
 import { CheckCircle, AlertCircle, Loader2, Wifi, WifiOff } from 'lucide-react';
@@ -189,7 +189,7 @@ export default function SearchExchangesModal({ isOpen, onClose }: Props) {
                   gap: 6,
                   background: needsReconnect
                     ? 'linear-gradient(135deg, #D97706 0%, #B45309 100%)'
-                    : 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)',
+                    : 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
                 }}
               >
                 {(isStarting || isFlowPending) && (

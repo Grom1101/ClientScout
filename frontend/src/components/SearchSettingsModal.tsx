@@ -195,7 +195,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
               className="min-w-0 flex-1 rounded-xl bg-black/20 px-3 text-sm text-white outline-none placeholder:text-slate-500"
               style={{ border: '1px solid rgba(255,255,255,0.08)' }}
             />
-            <button onClick={handleAddKeyword} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style={{ backgroundColor: '#7C3AED' }} type="button">
+            <button onClick={handleAddKeyword} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style={{ backgroundColor: '#6366F1' }} type="button">
               <Plus className="h-5 w-5" />
             </button>
           </div>
@@ -223,7 +223,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
               className="min-w-0 flex-1 rounded-xl bg-black/20 px-3 text-sm text-white outline-none placeholder:text-slate-500"
               style={{ border: '1px solid rgba(255,255,255,0.08)' }}
             />
-            <button onClick={handleAddNegative} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style={{ backgroundColor: '#7C3AED' }} type="button">
+            <button onClick={handleAddNegative} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style={{ backgroundColor: '#6366F1' }} type="button">
               <Plus className="h-5 w-5" />
             </button>
           </div>
@@ -241,7 +241,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
         <button
           onClick={handleSave}
           className="flex h-[52px] w-full items-center justify-center rounded-[14px] text-[14px] font-black uppercase tracking-widest text-white transition-all active:scale-[0.98]"
-          style={{ background: 'linear-gradient(135deg, #7C3AED, #315DF4)', boxShadow: '0 8px 24px rgba(99,102,241,0.25)' }}
+          style={{ background: 'linear-gradient(135deg, #6366F1, #4F46E5)', boxShadow: '0 8px 24px rgba(99,102,241,0.3)' }}
         >
           Сохранить
         </button>

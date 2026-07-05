@@ -21,9 +21,9 @@ export default function Modal({ isOpen, onClose, onBack, title, children }: Moda
       <div
         className="w-full max-w-[360px] rounded-[24px] animate-scale-in"
         style={{
-          background: 'linear-gradient(180deg, #132031 0%, #0F1825 100%)',
-          border: '1px solid rgba(148,163,184,0.14)',
-          boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
+          background: 'linear-gradient(180deg, #1A1E36 0%, #10142A 100%)',
+          border: '1px solid rgba(129,140,248,0.16)',
+          boxShadow: '0 25px 60px rgba(5,8,18,0.6)',
           padding: '24px 30px 32px 30px'
         }}
         onClick={(e) => e.stopPropagation()}
