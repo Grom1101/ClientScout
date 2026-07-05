@@ -61,14 +61,16 @@ Decision target:
 - Treat UserKeywords as a combined intent/context, not as independent OR filters. When the user provides several keywords, one isolated technical word is not enough to confirm relevance.
 - Technical keywords such as C#, Python, React, Unity, Figma, or Photoshop can be stack/context constraints. They do not make a lead relevant unless the requested deliverable also matches the broader profile intent.
 - Decide by requested deliverable/profession/result, not simple keyword presence.
-- First decide whether the text is a concrete request from a buyer/client to perform work. It must ask for a deliverable such as develop, build, create, implement, fix, debug, finish, integrate, configure, or help with a specific task.
+- Hard gate: if the text is not a concrete request/order from a buyer/client to perform work, return isRelevant=false even if it contains perfect profile keywords.
+- A valid lead must ask for a deliverable such as develop, build, create, implement, fix, debug, finish, integrate, configure, or help with a specific task.
+- Reject informational content: news, reports, analytics, market reviews, rankings, top charts, benchmarks, articles, announcements, research, platform reports, and "top grossing/downloaded" posts. Example: "top grossing mobile games in May 2026" is not a lead.
 - Reject job vacancies, job ads, full-time/part-time hiring posts, resumes, CVs, candidate profiles, and "looking for work" posts. Words like "job", "work", "vacancy", "position", and "resume" are not positive signals by themselves.
 - Reject adjacent non-matching deliverables even when they contain profile keywords. A domain word is not enough: the requested deliverable must match the user's actual profile intent.
 - Examples: if the profile is about software development, reject video editing/marketing/articles/news even when they mention that domain; if the profile is about video editing, accept video editing requests and reject software-development-only requests. Apply this logic to every niche, not only gamedev.
 - If the text only mentions a profile keyword but the requested deliverable belongs to a different service category than the profile intent, set isRelevant=false.
 - Example: if UserKeywords are "C#, gamedev, Unity, game", a generic C# desktop app is not relevant because it misses the gamedev/Unity/game context.
 - Respect NegativeKeywords and RejectSignals strictly.
-- Reject spam, tutorials, news, discussions, portfolios, resumes, and adjacent work with a different deliverable.
+- Reject spam, tutorials, news, reports, analytics, discussions, portfolios, resumes, and adjacent work with a different deliverable.
 - Reject service-provider/self-promotion messages like "я разработчик", "предлагаю услуги", "портфолио", "коротко обо мне", unless the text also clearly asks to hire someone for a concrete task.
 - Short Telegram-style requests can be relevant. Do NOT reject only because the message is short if it clearly contains buyer intent and a matching deliverable, for example "нужно разработать сайт", "ищу frontend-разработчика", "требуется доработать React".
 - Use isRelevant=true only for paid/service work matching the profile.
@@ -141,14 +143,16 @@ Decision target:
 - Technical keywords such as C#, Python, React, Unity, Figma, or Photoshop can be stack/context constraints. They do not make a lead relevant unless the requested deliverable also matches the broader profile intent.
 - Compare each candidate independently by requested deliverable/profession/result.
 - Do not classify by simple keyword presence.
-- First decide whether each text is a concrete request from a buyer/client to perform work. It must ask for a deliverable such as develop, build, create, implement, fix, debug, finish, integrate, configure, or help with a specific task.
+- Hard gate: if a text is not a concrete request/order from a buyer/client to perform work, return isRelevant=false even if it contains perfect profile keywords.
+- A valid lead must ask for a deliverable such as develop, build, create, implement, fix, debug, finish, integrate, configure, or help with a specific task.
+- Reject informational content: news, reports, analytics, market reviews, rankings, top charts, benchmarks, articles, announcements, research, platform reports, and "top grossing/downloaded" posts. Example: "top grossing mobile games in May 2026" is not a lead.
 - Reject job vacancies, job ads, full-time/part-time hiring posts, resumes, CVs, candidate profiles, and "looking for work" posts. Words like "job", "work", "vacancy", "position", and "resume" are not positive signals by themselves.
 - Reject adjacent non-matching deliverables even when they contain profile keywords. A domain word is not enough: the requested deliverable must match the user's actual profile intent.
 - Examples: if the profile is about software development, reject video editing/marketing/articles/news even when they mention that domain; if the profile is about video editing, accept video editing requests and reject software-development-only requests. Apply this logic to every niche, not only gamedev.
 - If the text only mentions a profile keyword but the requested deliverable belongs to a different service category than the profile intent, set isRelevant=false.
 - Example: if UserKeywords are "C#, gamedev, Unity, game", a generic C# desktop app is not relevant because it misses the gamedev/Unity/game context.
 - Respect NegativeKeywords and RejectSignals strictly.
-- Reject spam, tutorials, news, discussions, portfolios, resumes, and adjacent work with a different deliverable.
+- Reject spam, tutorials, news, reports, analytics, discussions, portfolios, resumes, and adjacent work with a different deliverable.
 - Reject service-provider/self-promotion messages like "я разработчик", "предлагаю услуги", "портфолио", "коротко обо мне", unless the text also clearly asks to hire someone for a concrete task.
 - Short Telegram-style requests can be relevant. Do NOT reject only because the message is short if it clearly contains buyer intent and a matching deliverable, for example "нужно разработать сайт", "ищу frontend-разработчика", "требуется доработать React".
 - Use isRelevant=true only for paid/service work matching the profile.
