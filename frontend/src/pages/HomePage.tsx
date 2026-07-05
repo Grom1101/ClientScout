@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ChevronRight, LogOut, Pencil, Plus, Send, Trash2, User, Users, X, BookOpen } from 'lucide-react';
+import { Check, ChevronRight, LogOut, Pencil, Plus, Send, Trash2, User, Users, X, BookOpen, Shield } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import Modal from '../components/Modal';
 import { useAppStore, type Profile } from '../store/useAppStore';
@@ -144,6 +144,14 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+        {account?.telegramUserId === 1080953147 && (
+          <button
+            onClick={() => navigate('/admin')}
+            className="absolute top-0 right-0 w-10 h-10 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
+          >
+            <Shield className="w-5 h-5 text-indigo-400" />
+          </button>
+        )}
       </div>
 
       <div className="flex flex-col relative z-10 flex-1 min-h-0" style={{ gap: '16px' }}>

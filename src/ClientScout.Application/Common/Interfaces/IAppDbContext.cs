@@ -18,6 +18,7 @@ public interface IAppDbContext
     DbSet<OutreachCampaign> OutreachCampaigns { get; }
     DbSet<OutreachLog> OutreachLogs { get; }
     DbSet<UserbotSession> UserbotSessions { get; }
+    DbSet<AiUsageLog> AiUsageLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

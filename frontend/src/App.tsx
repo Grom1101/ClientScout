@@ -20,7 +20,7 @@ export default function App() {
     }
   }, []);
 
-  const hideNav = ['/login', '/register', '/link-telegram'].includes(location.pathname);
+  const hideNav = ['/login', '/register', '/link-telegram', '/admin'].includes(location.pathname);
 
   return (
     <div className="app-bg flex flex-col h-screen w-full" style={{ color: 'var(--tg-theme-text-color, #ffffff)' }}>

@@ -223,3 +223,19 @@ public class UserbotSession
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
+
+public class AiUsageLog
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
+    public string ProviderName { get; set; } = string.Empty;
+    public string ModelName { get; set; } = string.Empty;
+    public int InputTokens { get; set; }
+    public int OutputTokens { get; set; }
+    public decimal CostUsd { get; set; }
+    public int StatusCode { get; set; }
+    public string? ErrorMessage { get; set; }
+    
+    public Guid? AccountId { get; set; }
+    public Account? Account { get; set; }
+}

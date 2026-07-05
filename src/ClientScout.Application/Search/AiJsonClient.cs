@@ -6,6 +6,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ClientScout.Application.Search;
 
@@ -25,17 +26,20 @@ public sealed class AiJsonClient
     private readonly IConfiguration _configuration;
     private readonly AiProviderPoolOptions _options;
     private readonly ILogger<AiJsonClient> _logger;
+    private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
 
     public AiJsonClient(
         HttpClient httpClient,
         IConfiguration configuration,
         IOptions<AiProviderPoolOptions> options,
-        ILogger<AiJsonClient> logger)
+        ILogger<AiJsonClient> logger,
+        Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory)
     {
         _httpClient = httpClient;
         _configuration = configuration;
         _options = options.Value;
         _logger = logger;
+        _scopeFactory = scopeFactory;
     }
 
     public bool IsAvailable => GetProviders(AiTaskKind.LeadClassification).Any();
@@ -147,8 +151,12 @@ public sealed class AiJsonClient
                     candidate.Model.Id,
                     response.StatusCode,
                     Truncate(body, 800));
+                
+                await LogUsageAsync(candidate, (int)response.StatusCode, body, Truncate(body, 800), cancellationToken);
                 return default;
             }
+
+            await LogUsageAsync(candidate, (int)response.StatusCode, body, null, cancellationToken);
 
             using var document = JsonDocument.Parse(body);
             var text = document.RootElement
@@ -174,7 +182,70 @@ public sealed class AiJsonClient
             LastFailureKind = AiFailureKind.InvalidResponse;
             LastFailureCooldownSeconds = candidate.Provider.CooldownSeconds;
             _logger.LogWarning(ex, "AI JSON generation failed for provider {Provider}/{Model}", candidate.Provider.Name, candidate.Model.Id);
+            await LogUsageAsync(candidate, 0, string.Empty, ex.Message, cancellationToken);
             return default;
+        }
+    }
+
+    private async Task LogUsageAsync(AiProviderModelCandidate candidate, int statusCode, string body, string? errorMessage, CancellationToken cancellationToken)
+    {
+        try
+        {
+            int inputTokens = 0;
+            int outputTokens = 0;
+            decimal costUsd = 0m;
+
+            if (!string.IsNullOrEmpty(body))
+            {
+                try
+                {
+                    using var document = JsonDocument.Parse(body);
+                    if (document.RootElement.TryGetProperty("usage", out var usageElem))
+                    {
+                        if (usageElem.TryGetProperty("prompt_tokens", out var pTokens))
+                            inputTokens = pTokens.GetInt32();
+                        if (usageElem.TryGetProperty("completion_tokens", out var cTokens))
+                            outputTokens = cTokens.GetInt32();
+                    }
+                }
+                catch
+                {
+                    // Ignore parse errors for logging
+                }
+            }
+
+            if (candidate.Provider.Name == "BluesMinds")
+            {
+                if (candidate.Model.Id == "gpt-4o-mini")
+                {
+                    costUsd = (inputTokens / 1_000_000m * 0.30m) + (outputTokens / 1_000_000m * 0.18m);
+                }
+                else if (candidate.Model.Id == "mimo-v2.5")
+                {
+                    costUsd = (inputTokens / 1_000_000m * 0.10m) + (outputTokens / 1_000_000m * 0.28m);
+                }
+            }
+
+            using var scope = _scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ClientScout.Application.Common.Interfaces.IAppDbContext>();
+            
+            var log = new ClientScout.Domain.Entities.AiUsageLog
+            {
+                ProviderName = candidate.Provider.Name,
+                ModelName = candidate.Model.Id,
+                InputTokens = inputTokens,
+                OutputTokens = outputTokens,
+                CostUsd = costUsd,
+                StatusCode = statusCode,
+                ErrorMessage = errorMessage
+            };
+
+            dbContext.AiUsageLogs.Add(log);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save AI usage log for {Provider}/{Model}", candidate.Provider.Name, candidate.Model.Id);
         }
     }
 

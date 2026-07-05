@@ -11,6 +11,7 @@ import MailingChatsPage from '../pages/MailingChatsPage';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import TelegramLinkPage from '../pages/TelegramLinkPage';
+import AdminAnalyticsPage from '../pages/AdminAnalyticsPage';
 import AuthGuard from './AuthGuard';
 
 const variants = {
@@ -73,6 +74,7 @@ export default function AnimatedRoutes() {
               <Route path="/search/leads" element={<SearchLeadHistoryPage />} />
               <Route path="/mailing" element={<MailingPage />} />
               <Route path="/mailing/chats" element={<MailingChatsPage />} />
+              <Route path="/admin" element={<AdminAnalyticsPage />} />
             </Route>
           </Routes>
         </motion.div>

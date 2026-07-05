@@ -19,6 +19,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<OutreachCampaign> OutreachCampaigns => Set<OutreachCampaign>();
     public DbSet<OutreachLog> OutreachLogs => Set<OutreachLog>();
     public DbSet<UserbotSession> UserbotSessions => Set<UserbotSession>();
+    public DbSet<AiUsageLog> AiUsageLogs => Set<AiUsageLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

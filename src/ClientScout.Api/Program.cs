@@ -26,6 +26,7 @@ builder.Services.AddControllers();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScrapers();
+builder.Services.AddHostedService<ClientScout.Api.Services.TelegramBotHostedService>();
 
 // Configure JWT Authentication (real tokens only — no more fake-token hack)
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
