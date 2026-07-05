@@ -152,7 +152,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
                 className="h-11 rounded-xl text-[13px] font-black transition-all active:scale-95"
                 style={{
                   backgroundColor: draftInterval === option ? 'rgba(0, 120, 212,0.24)' : 'rgba(255,255,255,0.04)',
-                  color: draftInterval === option ? '#FFFFFF' : '#94A3B8',
+                  color: draftInterval === option ? '#FFFFFF' : '#ADADAD',
                   border: draftInterval === option ? '1px solid rgba(76, 194, 255,0.45)' : '1px solid rgba(255,255,255,0.08)',
                 }}
               >
@@ -179,7 +179,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
                 AI
               </span>
             </div>
-            <span className="text-xs" style={{ color: '#64748B' }}>{keywordsLeft} осталось</span>
+            <span className="text-xs" style={{ color: '#8A8A8A' }}>{keywordsLeft} осталось</span>
           </div>
           <div className="flex gap-2">
             <input
@@ -192,7 +192,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
                 }
               }}
               placeholder="React, сайт, Unity..."
-              className="min-w-0 flex-1 rounded-xl bg-black/20 px-3 text-sm text-white outline-none placeholder:text-slate-500"
+              className="min-w-0 flex-1 rounded-xl bg-black/20 px-3 text-sm text-white outline-none placeholder:text-neutral-500"
               style={{ border: '1px solid rgba(255,255,255,0.08)' }}
             />
             <button onClick={handleAddKeyword} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style={{ backgroundColor: '#0078D4' }} type="button">
@@ -207,7 +207,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-[15px] font-extrabold text-white">Стоп-слова</h3>
-            <span className="text-xs" style={{ color: '#64748B' }}>{negativeLeft} осталось</span>
+            <span className="text-xs" style={{ color: '#8A8A8A' }}>{negativeLeft} осталось</span>
           </div>
           <div className="flex gap-2">
             <input
@@ -220,7 +220,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
                 }
               }}
               placeholder="UE5, вакансии..."
-              className="min-w-0 flex-1 rounded-xl bg-black/20 px-3 text-sm text-white outline-none placeholder:text-slate-500"
+              className="min-w-0 flex-1 rounded-xl bg-black/20 px-3 text-sm text-white outline-none placeholder:text-neutral-500"
               style={{ border: '1px solid rgba(255,255,255,0.08)' }}
             />
             <button onClick={handleAddNegative} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style={{ backgroundColor: '#0078D4' }} type="button">
@@ -234,7 +234,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
 
         {error && <p className="text-xs font-semibold text-red-400">{error}</p>}
 
-        <div className="rounded-xl px-3 py-2 text-xs" style={{ backgroundColor: 'rgba(255,255,255,0.03)', color: '#7F8CA0', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="rounded-xl px-3 py-2 text-xs" style={{ backgroundColor: 'rgba(255,255,255,0.03)', color: '#9A9A9A', border: '1px solid rgba(255,255,255,0.06)' }}>
           {summary}. Расширенный AI-словарь скрыт и обновится после сохранения, если менялись слова.
         </div>
 

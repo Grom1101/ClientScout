@@ -146,7 +146,7 @@ export default function HomePage() {
             Привет, {account?.telegramName || 'Пользователь'}! 👋
           </p>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-[13px] font-medium" style={{ color: '#7F8CA0' }}>Активный профиль:</span>
+            <span className="text-[13px] font-medium" style={{ color: '#9A9A9A' }}>Активный профиль:</span>
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md" style={{ backgroundColor: 'rgba(0, 120, 212,0.1)' }}>
               <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#10B981' }}></div>
               <span className="text-[12px] font-bold" style={{ color: '#9ECBFF' }}>{activeProfile?.name || 'Не выбран'}</span>
@@ -193,7 +193,7 @@ export default function HomePage() {
                   className="flex-1 text-[10px] text-center uppercase tracking-wider py-1.5 rounded-full transition-all font-extrabold"
                   style={{
                     backgroundColor: leadsPeriod === period ? 'rgba(16, 185, 129, 0.25)' : 'transparent',
-                    color: leadsPeriod === period ? '#10B981' : '#64748B',
+                    color: leadsPeriod === period ? '#10B981' : '#8A8A8A',
                   }}
                 >
                   {period === 'today' ? 'Сегодня' : 'Месяц'}
@@ -213,16 +213,16 @@ export default function HomePage() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
                 <XAxis 
                   dataKey="label" 
-                  tick={{ fill: '#64748B', fontSize: 11 }} 
+                  tick={{ fill: '#8A8A8A', fontSize: 11 }} 
                   axisLine={false} 
                   tickLine={false} 
                   dy={10} 
                   ticks={leadsPeriod === 'today' ? ['00:00', '06:00', '12:00', '18:00', '23:00'] : undefined}
                   minTickGap={leadsPeriod === 'today' ? undefined : 20}
                 />
-                <YAxis tick={{ fill: '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, maxLeadsDomain]} allowDecimals={false} dx={-10} width={40} />
+                <YAxis tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, maxLeadsDomain]} allowDecimals={false} dx={-10} width={40} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: 'rgba(28, 32, 56, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#F1F5F9', fontSize: 13, backdropFilter: 'blur(8px)' }}
+                  contentStyle={{ backgroundColor: 'rgba(40, 40, 40, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#F1F5F9', fontSize: 13, backdropFilter: 'blur(8px)' }}
                   itemStyle={{ color: '#fff', fontWeight: 600 }}
                 />
                 <Area 
@@ -254,7 +254,7 @@ export default function HomePage() {
                   className="flex-1 text-[10px] text-center uppercase tracking-wider py-1.5 rounded-full transition-all font-extrabold"
                   style={{
                     backgroundColor: sentPeriod === period ? 'rgba(76, 194, 255, 0.25)' : 'transparent',
-                    color: sentPeriod === period ? '#4CC2FF' : '#64748B',
+                    color: sentPeriod === period ? '#4CC2FF' : '#8A8A8A',
                   }}
                 >
                   {period === 'today' ? 'Сегодня' : 'Месяц'}
@@ -274,16 +274,16 @@ export default function HomePage() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
                 <XAxis 
                   dataKey="label" 
-                  tick={{ fill: '#64748B', fontSize: 11 }} 
+                  tick={{ fill: '#8A8A8A', fontSize: 11 }} 
                   axisLine={false} 
                   tickLine={false} 
                   dy={10} 
                   ticks={sentPeriod === 'today' ? ['00:00', '06:00', '12:00', '18:00', '23:00'] : undefined}
                   minTickGap={sentPeriod === 'today' ? undefined : 20}
                 />
-                <YAxis tick={{ fill: '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, maxSentDomain]} allowDecimals={false} dx={-10} width={40} />
+                <YAxis tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, maxSentDomain]} allowDecimals={false} dx={-10} width={40} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: 'rgba(28, 32, 56, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#F1F5F9', fontSize: 13, backdropFilter: 'blur(8px)' }}
+                  contentStyle={{ backgroundColor: 'rgba(40, 40, 40, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#F1F5F9', fontSize: 13, backdropFilter: 'blur(8px)' }}
                   itemStyle={{ color: '#fff', fontWeight: 600 }}
                 />
                 <Area 
@@ -326,7 +326,7 @@ export default function HomePage() {
               </div>
               <div className="min-w-0">
                 <p className="font-bold text-white text-[19px] truncate">{account?.telegramName || account?.email}</p>
-                <p className="text-sm truncate mt-0.5" style={{ color: '#94A3B8' }}>ID: {account?.id}</p>
+                <p className="text-sm truncate mt-0.5" style={{ color: '#ADADAD' }}>ID: {account?.id}</p>
               </div>
             </div>
 
@@ -345,10 +345,10 @@ export default function HomePage() {
                 }}
               >
                 <div className="flex items-center gap-3">
-                  <User className="w-5 h-5" style={{ color: '#94A3B8' }} />
+                  <User className="w-5 h-5" style={{ color: '#ADADAD' }} />
                   <span className="text-[15px] font-medium text-white">Профили</span>
                 </div>
-                <ChevronRight className="w-5 h-5" style={{ color: '#64748B' }} />
+                <ChevronRight className="w-5 h-5" style={{ color: '#8A8A8A' }} />
               </button>
 
               <button
@@ -407,7 +407,7 @@ export default function HomePage() {
                         <button onClick={saveRenameProfile} className="w-8 h-8 flex items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
                           <Check className="w-4 h-4" />
                         </button>
-                        <button onClick={() => setEditingProfileId(null)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-slate-400">
+                        <button onClick={() => setEditingProfileId(null)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-neutral-400">
                           <X className="w-4 h-4" />
                         </button>
                       </>
@@ -418,7 +418,7 @@ export default function HomePage() {
                           {isCurrent && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md" style={{ color: '#10B981', backgroundColor: 'rgba(16,185,129,0.1)' }}>Активен</span>}
                         </div>
                         {isCurrent ? (
-                          <button onClick={() => startRenameProfile(p)} className="w-8 h-8 flex items-center justify-center rounded-xl transition-colors hover:bg-white/10 text-slate-300">
+                          <button onClick={() => startRenameProfile(p)} className="w-8 h-8 flex items-center justify-center rounded-xl transition-colors hover:bg-white/10 text-neutral-300">
                             <Pencil className="w-4 h-4" />
                           </button>
                         ) : (
@@ -450,9 +450,9 @@ export default function HomePage() {
                   }}
                 >
                   <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
-                    <Plus className="w-4 h-4 text-slate-300" />
+                    <Plus className="w-4 h-4 text-neutral-300" />
                   </div>
-                  <span className="text-[15px] font-medium text-slate-300">Создать новый профиль</span>
+                  <span className="text-[15px] font-medium text-neutral-300">Создать новый профиль</span>
                 </button>
               )}
           </div>
@@ -463,7 +463,7 @@ export default function HomePage() {
             style={{ paddingTop: '10px' }}
           >
             <div>
-                <label className="text-[13px] font-medium mb-1.5 block px-1" style={{ color: '#94A3B8' }}>Имя профиля</label>
+                <label className="text-[13px] font-medium mb-1.5 block px-1" style={{ color: '#ADADAD' }}>Имя профиля</label>
                 <input
                   type="text"
                   value={newProfileName}

@@ -106,16 +106,16 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
             className="w-full h-48 bg-transparent text-[15px] text-white resize-none leading-relaxed placeholder:text-white/30"
             style={{ outline: 'none' }}
           />
-          <p className="text-[13px] mt-0 font-medium" style={{ color: '#94A3B8' }}>
+          <p className="text-[13px] mt-0 font-medium" style={{ color: '#ADADAD' }}>
             Текст отправляется как подпись к файлу, если файл прикреплен.
           </p>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-xs" style={{ color: '#64748B' }}>
+          <span className="text-xs" style={{ color: '#8A8A8A' }}>
             Файл {attachmentUrls.length} / {MAX_ATTACHMENT_COUNT}
           </span>
-          <span className="text-xs" style={{ color: '#64748B' }}>
+          <span className="text-xs" style={{ color: '#8A8A8A' }}>
             {message.length} / {MAX_MESSAGE_LENGTH}
           </span>
         </div>
@@ -142,12 +142,12 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-white truncate">{fileName}</p>
-                    <p className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>Загружено</p>
+                    <p className="text-xs mt-0.5" style={{ color: '#ADADAD' }}>Загружено</p>
                   </div>
                   <button
                     onClick={() => removeFile(url)}
                     className="w-8 h-8 flex items-center justify-center rounded-full shrink-0 transition-all hover:bg-red-500/20 hover:text-red-400 active:scale-95"
-                    style={{ color: '#64748B' }}
+                    style={{ color: '#8A8A8A' }}
                   >
                     <X className="w-4 h-4" />
                   </button>

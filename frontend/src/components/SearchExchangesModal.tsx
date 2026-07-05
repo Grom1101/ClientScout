@@ -116,15 +116,15 @@ export default function SearchExchangesModal({ isOpen, onClose }: Props) {
               <p style={{ color: 'white', fontSize: 14, fontWeight: 800, lineHeight: 1 }}>Kwork</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
                 {isLoading
-                  ? <Loader2 style={{ width: 11, height: 11, color: '#64748B' }} className="animate-spin" />
+                  ? <Loader2 style={{ width: 11, height: 11, color: '#8A8A8A' }} className="animate-spin" />
                   : isConnected
                     ? <Wifi style={{ width: 11, height: 11, color: '#10B981' }} />
-                    : <WifiOff style={{ width: 11, height: 11, color: needsReconnect ? '#F59E0B' : '#64748B' }} />
+                    : <WifiOff style={{ width: 11, height: 11, color: needsReconnect ? '#F59E0B' : '#8A8A8A' }} />
                 }
                 <span style={{
                   fontSize: 11,
                   fontWeight: 600,
-                  color: isLoading ? '#64748B' : isConnected ? '#10B981' : needsReconnect ? '#F59E0B' : '#64748B',
+                  color: isLoading ? '#8A8A8A' : isConnected ? '#10B981' : needsReconnect ? '#F59E0B' : '#8A8A8A',
                 }}>
                   {isLoading ? 'Проверка...' : isConnected ? 'Подключено' : needsReconnect ? 'Нужно переподключить' : 'Не подключено'}
                 </span>
@@ -142,7 +142,7 @@ export default function SearchExchangesModal({ isOpen, onClose }: Props) {
               height: 7,
               borderRadius: '50%',
               flexShrink: 0,
-              backgroundColor: isConnected ? '#10B981' : needsReconnect ? '#F59E0B' : '#1F2937',
+              backgroundColor: isConnected ? '#10B981' : needsReconnect ? '#F59E0B' : '#2A2A2A',
               boxShadow: isConnected ? '0 0 8px rgba(16,185,129,0.8)' : needsReconnect ? '0 0 8px rgba(245,158,11,0.6)' : 'none',
             }} />
           </div>
@@ -215,8 +215,8 @@ export default function SearchExchangesModal({ isOpen, onClose }: Props) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 6,
-                  background: 'linear-gradient(135deg, #334155 0%, #1F2937 100%)',
-                  border: '1px solid rgba(148,163,184,0.16)',
+                  background: 'linear-gradient(135deg, #3A3A3A 0%, #2A2A2A 100%)',
+                  border: '1px solid rgba(255,255,255,0.10)',
                 }}
               >
                 {isDisconnecting && (
@@ -241,12 +241,12 @@ export default function SearchExchangesModal({ isOpen, onClose }: Props) {
                   ? <AlertCircle style={{ width: 12, height: 12, color: '#F87171', flexShrink: 0, marginTop: 1 }} />
                   : currentFlow.isDone
                     ? <CheckCircle style={{ width: 12, height: 12, color: '#10B981', flexShrink: 0, marginTop: 1 }} />
-                    : <Loader2 style={{ width: 12, height: 12, color: '#94A3B8', flexShrink: 0, marginTop: 1 }} className="animate-spin" />
+                    : <Loader2 style={{ width: 12, height: 12, color: '#ADADAD', flexShrink: 0, marginTop: 1 }} className="animate-spin" />
                 }
                 <p style={{
                   fontSize: 11,
                   lineHeight: 1.4,
-                  color: currentFlow.isError ? '#F87171' : currentFlow.isDone ? '#34D399' : '#94A3B8',
+                  color: currentFlow.isError ? '#F87171' : currentFlow.isDone ? '#34D399' : '#ADADAD',
                 }}>
                   {currentFlow.text}
                 </p>

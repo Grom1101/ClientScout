@@ -2,18 +2,19 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #1B1B1B;
-  --color-surface: #2B2B2B;
-  --color-surface-light: #333333;
-  --color-primary: #0078D4;
-  --color-primary-light: #60CDFF;
+  --color-bg: #1A1A1A;
+  --color-surface: #262626;
+  --color-surface-light: #2E2E2E;
+  --color-primary: #0F6CBD;
+  --color-primary-light: #4CC2FF;
   --color-success: #6CCB5F;
   --color-success-dark: #4B9B41;
   --color-danger: #F85149;
   --color-warning: #FCE100;
   --color-text: #FFFFFF;
-  --color-text-muted: #969696;
+  --color-text-muted: #9A9A9A;
   --color-text-secondary: #C7C7C7;
+  --color-text-tertiary: #7A7A7A;
   --color-border: rgba(255, 255, 255, 0.08);
   --font-sans: 'Segoe UI Variable', 'Segoe UI', 'Open Sans', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
   --font-display: 'Segoe UI Variable Display', 'Segoe UI Variable', 'Segoe UI', 'Open Sans', system-ui, sans-serif;
@@ -33,6 +34,7 @@ html, body, #root {
 body {
   background-color: #141414;
   color: var(--color-text);
+  overscroll-behavior: none;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -52,8 +54,8 @@ h1, h2, h3,
   position: relative;
   background-color: var(--color-bg);
   background-image:
-    radial-gradient(140% 90% at 50% -20%, rgba(0, 120, 212, 0.10), transparent 55%),
-    linear-gradient(180deg, #202020 0%, #1B1B1B 100%);
+    radial-gradient(120% 80% at 50% -10%, rgba(255, 255, 255, 0.035), transparent 60%),
+    linear-gradient(180deg, #1E1E1E 0%, #161616 100%);
   background-attachment: fixed;
   min-height: 100vh;
   width: 100%;
@@ -62,19 +64,45 @@ h1, h2, h3,
 }
 
 .app-bg {
-  background: #1B1B1B;
+  background: #1A1A1A;
 }
 
 /* Fluent card: subtle elevated layer, hairline stroke, 8px radius */
 .mail-card {
-  background: rgba(255, 255, 255, 0.045);
+  background: rgba(255, 255, 255, 0.038);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 8px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 2px 6px rgba(0, 0, 0, 0.32);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.035), 0 2px 8px rgba(0, 0, 0, 0.36);
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mail-card:active {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.11);
 }
 
 .mail-card-pressed {
-  background: rgba(255, 255, 255, 0.085);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* Fluent accent action button: subtle top sheen + hover/press states */
+.fluent-accent-btn {
+  position: relative;
+  isolation: isolate;
+  transition: filter 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.fluent-accent-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0) 45%);
+  pointer-events: none;
+  z-index: 0;
+}
+.fluent-accent-btn:active {
+  transform: scale(0.985);
+  filter: brightness(0.94);
 }
 
 ::-webkit-scrollbar {

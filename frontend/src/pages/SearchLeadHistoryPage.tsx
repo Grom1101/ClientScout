@@ -103,8 +103,8 @@ export default function SearchLeadHistoryPage() {
             width: 36,
             height: 36,
             borderRadius: '50%',
-            backgroundColor: '#111827',
-            color: '#94A3B8',
+            backgroundColor: '#1F1F1F',
+            color: '#ADADAD',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -135,7 +135,7 @@ export default function SearchLeadHistoryPage() {
             fontSize: 13,
             fontWeight: 700,
             cursor: 'pointer',
-            color: aiFilter === 'confirmed' ? '#FFFFFF' : '#64748B',
+            color: aiFilter === 'confirmed' ? '#FFFFFF' : '#8A8A8A',
             border: aiFilter === 'confirmed'
               ? '1px solid rgba(0, 120, 212,0.5)'
               : '1px solid rgba(255,255,255,0.06)',
@@ -162,7 +162,7 @@ export default function SearchLeadHistoryPage() {
             fontSize: 13,
             fontWeight: 700,
             cursor: 'pointer',
-            color: aiFilter === 'unverified' ? '#FFFFFF' : '#64748B',
+            color: aiFilter === 'unverified' ? '#FFFFFF' : '#8A8A8A',
             border: aiFilter === 'unverified'
               ? '1px solid rgba(0, 120, 212,0.5)'
               : '1px solid rgba(255,255,255,0.06)',
@@ -187,7 +187,7 @@ export default function SearchLeadHistoryPage() {
 
       {/* РџСѓСЃС‚Рѕ */}
       {!isHistoryLoading && history.length === 0 && (
-        <div style={{ backgroundColor: '#2B2B2B', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, color: '#7F8CA0', fontSize: 14 }}>
+        <div style={{ backgroundColor: '#2B2B2B', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, color: '#9A9A9A', fontSize: 14 }}>
           История пока пустая.
         </div>
       )}
@@ -241,7 +241,7 @@ export default function SearchLeadHistoryPage() {
                   {/* РСЃС‚РѕС‡РЅРёРє + РІСЂРµРјСЏ */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 5 }}>
                     <SourceLabel order={order} />
-                    <span style={{ color: '#64748B', fontSize: 12, flexShrink: 0 }}>{order.timeAgo}</span>
+                    <span style={{ color: '#8A8A8A', fontSize: 12, flexShrink: 0 }}>{order.timeAgo}</span>
                   </div>
 
                   {/* Р—Р°РіРѕР»РѕРІРѕРє + NEW */}
@@ -266,7 +266,7 @@ export default function SearchLeadHistoryPage() {
 
                   {/* РћРїРёСЃР°РЅРёРµ */}
                   <p style={{
-                    color: '#94A3B8',
+                    color: '#ADADAD',
                     fontSize: 13,
                     lineHeight: '18px',
                     marginBottom: 6,
@@ -281,7 +281,7 @@ export default function SearchLeadHistoryPage() {
 
                   {/* РќРёР¶РЅСЏСЏ СЃС‚СЂРѕРєР°: РјРµС‚РєРё + РєРЅРѕРїРєР° */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 4 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#64748B' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#8A8A8A' }}>
                       {order.aiLabel && <span>{order.aiLabel}</span>}
                       {order.expiresIn && <span style={{ color: '#EF4444', fontWeight: 700 }}>-{order.expiresIn}</span>}
                     </div>

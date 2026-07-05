@@ -15,7 +15,7 @@ export default function OrderDetailModal({ isOpen, onClose, orderId }: Props) {
   if (!order) {
     return (
       <Modal isOpen={isOpen} onClose={onClose} title="Заказ">
-        <div className="py-8 text-center" style={{ color: '#64748B' }}>
+        <div className="py-8 text-center" style={{ color: '#8A8A8A' }}>
           Заказ не найден
         </div>
       </Modal>
@@ -38,7 +38,7 @@ export default function OrderDetailModal({ isOpen, onClose, orderId }: Props) {
           <span className="text-sm font-medium" style={{ color: order.sourceColor }}>
             {order.source === 'telegram' ? 'Telegram-чат' : order.source.charAt(0).toUpperCase() + order.source.slice(1)}
           </span>
-          <span className="text-xs" style={{ color: '#64748B' }}>{order.timeAgo}</span>
+          <span className="text-xs" style={{ color: '#8A8A8A' }}>{order.timeAgo}</span>
         </div>
 
         {/* ── Title ── */}
@@ -52,11 +52,11 @@ export default function OrderDetailModal({ isOpen, onClose, orderId }: Props) {
           {isTelegram && (
             <>
               <div className="flex justify-between">
-                <span className="text-xs" style={{ color: '#64748B' }}>Чат</span>
+                <span className="text-xs" style={{ color: '#8A8A8A' }}>Чат</span>
                 <span className="text-xs text-white">{order.chatName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-xs" style={{ color: '#64748B' }}>Автор</span>
+                <span className="text-xs" style={{ color: '#8A8A8A' }}>Автор</span>
                 <span className="text-xs text-white">{order.author}</span>
               </div>
             </>
@@ -64,19 +64,19 @@ export default function OrderDetailModal({ isOpen, onClose, orderId }: Props) {
           {!isTelegram && (
             <>
               <div className="flex justify-between">
-                <span className="text-xs" style={{ color: '#64748B' }}>Платформа</span>
+                <span className="text-xs" style={{ color: '#8A8A8A' }}>Платформа</span>
                 <span className="text-xs text-white">{order.source.charAt(0).toUpperCase() + order.source.slice(1)}</span>
               </div>
               {order.budget && (
                 <div className="flex justify-between">
-                  <span className="text-xs" style={{ color: '#64748B' }}>Бюджет</span>
+                  <span className="text-xs" style={{ color: '#8A8A8A' }}>Бюджет</span>
                   <span className="text-xs font-semibold" style={{ color: '#10B981' }}>{order.budget}</span>
                 </div>
               )}
             </>
           )}
           <div className="flex justify-between">
-            <span className="text-xs" style={{ color: '#64748B' }}>Дата</span>
+            <span className="text-xs" style={{ color: '#8A8A8A' }}>Дата</span>
             <span className="text-xs text-white">{order.date}</span>
           </div>
         </div>
@@ -89,7 +89,7 @@ export default function OrderDetailModal({ isOpen, onClose, orderId }: Props) {
           <h3 className="text-sm font-semibold text-white mb-2">
             {isTelegram ? 'Сообщение' : 'Описание'}
           </h3>
-          <p className="text-sm leading-relaxed" style={{ color: '#94A3B8' }}>
+          <p className="text-sm leading-relaxed" style={{ color: '#ADADAD' }}>
             {order.message || order.description}
           </p>
         </div>

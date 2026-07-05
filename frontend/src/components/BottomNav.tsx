@@ -21,9 +21,11 @@ export default function BottomNav() {
     <nav
       className="grid grid-cols-3 gap-2 px-5 pt-3 pb-[calc(14px+env(safe-area-inset-bottom))] border-t"
       style={{
-        borderColor: 'rgba(148,163,184,0.10)',
-        backgroundColor: 'rgba(7, 13, 22, 0.96)',
-        boxShadow: '0 -16px 34px rgba(0,0,0,0.28)',
+        borderColor: 'rgba(255,255,255,0.07)',
+        backgroundColor: 'rgba(24, 24, 24, 0.94)',
+        backdropFilter: 'blur(18px)',
+        WebkitBackdropFilter: 'blur(18px)',
+        boxShadow: '0 -16px 34px rgba(0,0,0,0.32)',
       }}
     >
       {tabs.map((tab) => {
@@ -33,13 +35,19 @@ export default function BottomNav() {
           <button
             key={tab.path}
             onClick={() => navigate(tab.path)}
-            className="h-[58px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all active:scale-[0.98]"
+            className="relative h-[58px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all duration-200 active:scale-[0.97]"
             style={{
-              backgroundColor: isActive ? 'rgba(0, 120, 212,0.16)' : 'transparent',
-              color: isActive ? '#60CDFF' : '#7A8798',
+              backgroundColor: isActive ? 'rgba(76, 194, 255, 0.12)' : 'transparent',
+              color: isActive ? '#4CC2FF' : '#9A9A9A',
             }}
           >
-            <Icon className="w-7 h-7" strokeWidth={isActive ? 2.4 : 2} />
+            {isActive && (
+              <span
+                className="absolute top-1 h-1 w-8 rounded-full"
+                style={{ backgroundColor: '#4CC2FF', boxShadow: '0 0 10px rgba(76,194,255,0.6)' }}
+              />
+            )}
+            <Icon className="w-6 h-6" strokeWidth={isActive ? 2.4 : 2} />
             <span className="text-[13px] font-semibold leading-none">{tab.label}</span>
           </button>
         );

@@ -24,15 +24,15 @@ const splitSourceTopic = (value?: string) => {
 const ChatNameLabel = ({ value }: { value: string }) => {
   const label = splitSourceTopic(value);
   if (!label) {
-    return <p className="text-[15px] font-semibold text-slate-200 truncate mb-0.5">{value}</p>;
+    return <p className="text-[15px] font-semibold text-neutral-200 truncate mb-0.5">{value}</p>;
   }
 
   return (
-    <p className="text-[15px] font-semibold truncate mb-0.5 inline-flex max-w-full items-center gap-1.5 text-slate-200">
+    <p className="text-[15px] font-semibold truncate mb-0.5 inline-flex max-w-full items-center gap-1.5 text-neutral-200">
       <span className="truncate">{label.source}</span>
       {label.topic && (
         <>
-          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-500" strokeWidth={3} />
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-neutral-500" strokeWidth={3} />
           <span className="truncate font-bold" style={{ color: '#60CDFF' }}>{label.topic}</span>
         </>
       )}
@@ -125,7 +125,7 @@ export default function MailingPage() {
         >
           <div className="min-w-0">
             <p className="text-[16px] font-extrabold text-white">Чаты</p>
-            <p className="mt-1 text-[13px] font-medium" style={{ color: '#7F8CA0' }}>
+            <p className="mt-1 text-[13px] font-medium" style={{ color: '#9A9A9A' }}>
               Выбрано чатов для отправки
             </p>
           </div>
@@ -136,7 +136,7 @@ export default function MailingPage() {
             >
               {selectedChats.length}
             </span>
-            <ChevronRight className="h-6 w-6" style={{ color: '#708096' }} />
+            <ChevronRight className="h-6 w-6" style={{ color: '#8A8A8A' }} />
           </div>
         </button>
 
@@ -147,11 +147,11 @@ export default function MailingPage() {
         >
           <div className="min-w-0">
             <p className="text-[16px] font-extrabold text-white">Сообщения</p>
-            <p className="mt-1 truncate text-[13px] font-medium" style={{ color: '#7F8CA0' }}>
+            <p className="mt-1 truncate text-[13px] font-medium" style={{ color: '#9A9A9A' }}>
               {messagePreviewText}{attachmentCount > 0 ? ` + ${attachmentCount} файл(ов)` : ''}
             </p>
           </div>
-          <ChevronRight className="h-6 w-6 shrink-0" style={{ color: '#708096' }} />
+          <ChevronRight className="h-6 w-6 shrink-0" style={{ color: '#8A8A8A' }} />
         </button>
 
         <button
@@ -161,11 +161,11 @@ export default function MailingPage() {
         >
           <div className="min-w-0">
             <p className="text-[16px] font-extrabold text-white">Настройки рассылки</p>
-            <p className="mt-1 truncate text-[13px] font-medium" style={{ color: '#7F8CA0' }}>
+            <p className="mt-1 truncate text-[13px] font-medium" style={{ color: '#9A9A9A' }}>
               {intervalLabel}
             </p>
           </div>
-          <ChevronRight className="h-6 w-6 shrink-0" style={{ color: '#708096' }} />
+          <ChevronRight className="h-6 w-6 shrink-0" style={{ color: '#8A8A8A' }} />
         </button>
       </div>
 
@@ -174,29 +174,33 @@ export default function MailingPage() {
           <button
             onClick={handleStart}
             disabled={isOutreachLoading}
-            className="relative flex h-[58px] items-center justify-center gap-3 overflow-hidden rounded-[10px] text-[14px] font-black uppercase tracking-wide text-white transition-all disabled:opacity-50"
+            className="fluent-accent-btn relative flex h-[60px] items-center justify-center gap-3 overflow-hidden rounded-[14px] text-[14px] font-bold uppercase tracking-wide text-white disabled:opacity-50"
             style={{
               width: actionWidth,
-              background: 'linear-gradient(135deg, #2CCB86 0%, #22B873 100%)',
-              boxShadow: '0 14px 32px rgba(34,184,115,0.28)',
+              background: 'linear-gradient(180deg, #2FCB88 0%, #16A968 100%)',
+              boxShadow: '0 10px 26px rgba(22,169,104,0.34), inset 0 0 0 1px rgba(255,255,255,0.12)',
             }}
           >
-            <Play className="relative z-10 h-5 w-5" fill="white" />
+            <span className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
+              <Play className="h-4 w-4" fill="white" />
+            </span>
             <span className="relative z-10">Начать рассылку</span>
           </button>
         ) : (
           <button
             onClick={() => stopCampaign()}
             disabled={isOutreachLoading}
-            className="flex h-[58px] items-center justify-center gap-3 rounded-[10px] text-[14px] font-black uppercase tracking-wide text-white transition-all disabled:opacity-35"
+            className="fluent-accent-btn relative flex h-[60px] items-center justify-center gap-3 overflow-hidden rounded-[14px] text-[14px] font-bold uppercase tracking-wide text-white disabled:opacity-35"
             style={{
               width: actionWidth,
-              background: 'linear-gradient(135deg, #EF232A 0%, #D51F26 100%)',
-              boxShadow: '0 14px 32px rgba(239,35,42,0.24)',
+              background: 'linear-gradient(180deg, #F04A44 0%, #C42B26 100%)',
+              boxShadow: '0 10px 26px rgba(196,43,38,0.30), inset 0 0 0 1px rgba(255,255,255,0.12)',
             }}
           >
-            <Square className="h-5 w-5" fill="white" />
-            <span>Остановить рассылку</span>
+            <span className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
+              <Square className="h-3.5 w-3.5" fill="white" />
+            </span>
+            <span className="relative z-10">Остановить рассылку</span>
           </button>
         )}
       </div>
@@ -217,9 +221,9 @@ export default function MailingPage() {
         {(!stats?.recentLogs || stats.recentLogs.length === 0) && (
           <div className="flex flex-col items-center justify-center py-6 text-center rounded-2xl" style={{ backgroundColor: '#2B2B2B', border: '1px solid rgba(255,255,255,0.06)' }}>
             <div className="w-12 h-12 rounded-full mb-3 flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
-              <Send className="w-5 h-5 text-slate-600" />
+              <Send className="w-5 h-5 text-neutral-600" />
             </div>
-            <p className="text-[14px]" style={{ color: '#64748B' }}>Пока нет отправленных сообщений</p>
+            <p className="text-[14px]" style={{ color: '#8A8A8A' }}>Пока нет отправленных сообщений</p>
           </div>
         )}
 
@@ -237,22 +241,22 @@ export default function MailingPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <ChatNameLabel value={entry.chatName} />
-                  <div className="flex items-center gap-1.5 text-[13px] truncate" style={{ color: '#94A3B8' }}>
+                  <div className="flex items-center gap-1.5 text-[13px] truncate" style={{ color: '#ADADAD' }}>
                     <span className="truncate max-w-[100px]">{entry.messagePreview}</span>
-                    <span className="w-1 h-1 rounded-full bg-slate-600 shrink-0"></span>
-                    <span className="truncate" style={{ color: entry.errorMessage ? '#F87171' : '#94A3B8' }}>
+                    <span className="w-1 h-1 rounded-full bg-neutral-600 shrink-0"></span>
+                    <span className="truncate" style={{ color: entry.errorMessage ? '#F87171' : '#ADADAD' }}>
                       {entry.errorMessage || entry.profileName}
                     </span>
                     {entry.matchedKeyword && (
                       <>
-                        <span className="text-slate-600 shrink-0">→</span>
+                        <span className="text-neutral-600 shrink-0">→</span>
                         <span className="font-semibold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-300 shrink-0 border border-sky-500/20">{entry.matchedKeyword}</span>
                       </>
                     )}
                   </div>
                 </div>
                 <div className="text-[12px] font-medium shrink-0 flex flex-col items-end gap-1">
-                  <span style={{ color: '#64748B' }}>{new Date(entry.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span style={{ color: '#8A8A8A' }}>{new Date(entry.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   {entry.status === 0 && <Check className="w-3.5 h-3.5 text-emerald-500" />}
                   {entry.status !== 0 && <X className="w-3.5 h-3.5 text-red-500" />}
                 </div>

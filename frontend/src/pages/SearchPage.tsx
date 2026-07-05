@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, RefreshCw, Send, Play, Square, Loader2 } from 'lucide-react';
+import { ChevronRight, RefreshCw, Play, Square, Loader2 } from 'lucide-react';
 import SearchSettingsModal from '../components/SearchSettingsModal';
 import SearchExchangesModal from '../components/SearchExchangesModal';
 import OrderDetailModal from '../components/OrderDetailModal';
@@ -11,24 +11,51 @@ import { useSearchSettingsStore } from '../store/useSearchSettingsStore';
 import { useSourcesStore } from '../store/useSourcesStore';
 import { useSearchRuntimeStore } from '../store/useSearchRuntimeStore';
 
-// Kwork SVG logo.
+// Kwork logo — dark-theme mark: rounded square with the brand "k" glyph.
 const KworkIcon = () => (
-  <svg viewBox="0 0 44 44" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="22" cy="22" r="22" fill="#FF7B00" />
-    <text
-      x="22" y="30"
-      textAnchor="middle"
-      fill="white"
-      fontSize="23"
-      fontWeight="900"
-      fontFamily="Arial Black, Arial, sans-serif"
-      fontStyle="italic"
-    >K</text>
+  <svg viewBox="0 0 44 44" width="44" height="44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="kworkBg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#333333" />
+        <stop offset="1" stopColor="#252525" />
+      </linearGradient>
+      <linearGradient id="kworkK" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#FF8A1E" />
+        <stop offset="1" stopColor="#FF6A00" />
+      </linearGradient>
+    </defs>
+    <rect x="1" y="1" width="42" height="42" rx="12" fill="url(#kworkBg)" stroke="rgba(255,255,255,0.10)" />
+    <path
+      d="M15.5 12.5v19M15.5 22.2l9-9.7M15.9 21.7l9.6 9.8"
+      stroke="url(#kworkK)"
+      strokeWidth="3.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+    <circle cx="30.5" cy="14.2" r="2.3" fill="#FF6A00" />
   </svg>
 );
 
+// Telegram logo — dark-theme mark: paper plane in a subtle dark disc.
 const TelegramIcon = () => (
-  <Send style={{ width: 18, height: 18 }} />
+  <svg viewBox="0 0 44 44" width="44" height="44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="tgBg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#333333" />
+        <stop offset="1" stopColor="#252525" />
+      </linearGradient>
+      <linearGradient id="tgPlane" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#4CC2FF" />
+        <stop offset="1" stopColor="#2AABEE" />
+      </linearGradient>
+    </defs>
+    <rect x="1" y="1" width="42" height="42" rx="12" fill="url(#tgBg)" stroke="rgba(255,255,255,0.10)" />
+    <path
+      d="M31.9 13.3 28.6 30c-.2 1-.9 1.3-1.8.8l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9.2-8.3c.4-.4-.1-.6-.6-.2l-11.3 7.1-4.9-1.5c-1-.3-1-1 .2-1.5l19.1-7.4c.9-.3 1.6.2 1.3 1.6Z"
+      fill="url(#tgPlane)"
+    />
+  </svg>
 );
 
 const openLeadLink = (link: string) => {
@@ -224,7 +251,7 @@ export default function SearchPage() {
         >
           <div className="min-w-0">
             <p className="text-[16px] font-extrabold text-white">Чаты</p>
-            <p className="mt-1 text-[13px] font-medium" style={{ color: '#7F8CA0' }}>
+            <p className="mt-1 text-[13px] font-medium" style={{ color: '#9A9A9A' }}>
               Выбрано чатов для отправки, read-only чаты разрешены
             </p>
           </div>
@@ -235,7 +262,7 @@ export default function SearchPage() {
             >
               {selectedSearchChats.length}
             </span>
-            <ChevronRight className="h-6 w-6" style={{ color: '#708096' }} />
+            <ChevronRight className="h-6 w-6" style={{ color: '#8A8A8A' }} />
           </div>
         </button>
 
@@ -246,11 +273,11 @@ export default function SearchPage() {
         >
           <div className="min-w-0">
             <p className="text-[16px] font-extrabold text-white">Настройки поиска</p>
-            <p className="mt-1 truncate text-[13px] font-medium" style={{ color: '#7F8CA0' }}>
+            <p className="mt-1 truncate text-[13px] font-medium" style={{ color: '#9A9A9A' }}>
               {settingsLabel}
             </p>
           </div>
-          <ChevronRight className="h-6 w-6 shrink-0" style={{ color: '#708096' }} />
+          <ChevronRight className="h-6 w-6 shrink-0" style={{ color: '#8A8A8A' }} />
         </button>
 
         <button
@@ -260,11 +287,11 @@ export default function SearchPage() {
         >
           <div className="min-w-0">
             <p className="text-[16px] font-extrabold text-white">Биржи</p>
-            <p className="mt-1 truncate text-[13px] font-medium" style={{ color: '#7F8CA0' }}>
+            <p className="mt-1 truncate text-[13px] font-medium" style={{ color: '#9A9A9A' }}>
               Kwork и другие источники позже
             </p>
           </div>
-          <ChevronRight className="h-6 w-6 shrink-0" style={{ color: '#708096' }} />
+          <ChevronRight className="h-6 w-6 shrink-0" style={{ color: '#8A8A8A' }} />
         </button>
       </div>
 
@@ -273,29 +300,33 @@ export default function SearchPage() {
           <button
             onClick={() => handleSearchToggle(true)}
             disabled={isToggling || settings?.needsAiExpansion}
-            className="relative flex h-[58px] items-center justify-center gap-3 overflow-hidden rounded-[10px] text-[14px] font-black uppercase tracking-wide text-white transition-all disabled:opacity-50"
+            className="fluent-accent-btn relative flex h-[60px] items-center justify-center gap-3 overflow-hidden rounded-[14px] text-[14px] font-bold uppercase tracking-wide text-white disabled:opacity-50"
             style={{
               width: actionWidth,
-              background: 'linear-gradient(135deg, #2CCB86 0%, #22B873 100%)',
-              boxShadow: '0 14px 32px rgba(34,184,115,0.28)',
+              background: 'linear-gradient(180deg, #2FCB88 0%, #16A968 100%)',
+              boxShadow: '0 10px 26px rgba(22,169,104,0.34), inset 0 0 0 1px rgba(255,255,255,0.12)',
             }}
           >
-            {isToggling ? <Loader2 className="relative z-10 h-5 w-5 animate-spin" fill="white" /> : <Play className="relative z-10 h-5 w-5" fill="white" />}
+            <span className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
+              {isToggling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" fill="white" />}
+            </span>
             <span className="relative z-10">Запустить поиск</span>
           </button>
         ) : (
           <button
             onClick={() => handleSearchToggle(false)}
             disabled={isToggling}
-            className="flex h-[58px] items-center justify-center gap-3 rounded-[10px] text-[14px] font-black uppercase tracking-wide text-white transition-all disabled:opacity-35"
+            className="fluent-accent-btn relative flex h-[60px] items-center justify-center gap-3 overflow-hidden rounded-[14px] text-[14px] font-bold uppercase tracking-wide text-white disabled:opacity-35"
             style={{
               width: actionWidth,
-              background: 'linear-gradient(135deg, #EF232A 0%, #D51F26 100%)',
-              boxShadow: '0 14px 32px rgba(239,35,42,0.24)',
+              background: 'linear-gradient(180deg, #F04A44 0%, #C42B26 100%)',
+              boxShadow: '0 10px 26px rgba(196,43,38,0.30), inset 0 0 0 1px rgba(255,255,255,0.12)',
             }}
           >
-            <Square className="h-5 w-5" fill="white" />
-            <span>Остановить поиск</span>
+            <span className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
+              <Square className="h-3.5 w-3.5" fill="white" />
+            </span>
+            <span className="relative z-10">Остановить поиск</span>
           </button>
         )}
       </div>
@@ -316,7 +347,7 @@ export default function SearchPage() {
 
       <div className="relative flex flex-col gap-3">
         {!isLoading && leads.length === 0 && (
-          <div className="rounded-2xl p-4 text-sm" style={{ backgroundColor: '#2B2B2B', color: '#7F8CA0', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="rounded-2xl p-4 text-sm" style={{ backgroundColor: '#2B2B2B', color: '#9A9A9A', border: '1px solid rgba(255,255,255,0.06)' }}>
             Пока нет найденных заказов.
           </div>
         )}
@@ -334,7 +365,7 @@ export default function SearchPage() {
                 paddingRight: 12,
               }}
             >
-              {/* Р’РµСЂС…РЅСЏСЏ СЃС‚СЂРѕРєР°: РёРєРѕРЅРєР° + РєРѕРЅС‚РµРЅС‚ */}
+              {/* Р’РµСЂС��РЅСЏСЏ СЃС‚СЂРѕРєР°: РёРєРѕРЅРєР° + РєРѕРЅС‚РµРЅС‚ */}
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
 
                 {/* РРєРѕРЅРєР° РёСЃС‚РѕС‡РЅРёРєР° */}
@@ -342,14 +373,10 @@ export default function SearchPage() {
                   style={{
                     width: 44,
                     height: 44,
-                    borderRadius: '50%',
-                    backgroundColor: order.source === 'kwork' ? 'transparent' : `${order.sourceColor}18`,
-                    color: order.sourceColor,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
-                    overflow: 'hidden',
                     marginTop: 2,
                   }}
                 >
@@ -362,7 +389,7 @@ export default function SearchPage() {
                   {/* РСЃС‚РѕС‡РЅРёРє + РІСЂРµРјСЏ */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 5 }}>
                     <SourceLabel order={order} />
-                    <span style={{ color: '#64748B', fontSize: 12, flexShrink: 0 }}>{order.timeAgo}</span>
+                    <span style={{ color: '#8A8A8A', fontSize: 12, flexShrink: 0 }}>{order.timeAgo}</span>
                   </div>
 
                   {/* Р—Р°РіРѕР»РѕРІРѕРє + Р±РµР№РґР¶ NEW */}
@@ -389,7 +416,7 @@ export default function SearchPage() {
 
                   {/* РћРїРёСЃР°РЅРёРµ */}
                   <p style={{
-                    color: '#94A3B8',
+                    color: '#ADADAD',
                     fontSize: 13,
                     lineHeight: '18px',
                     marginBottom: 6,
@@ -404,7 +431,7 @@ export default function SearchPage() {
 
                   {/* AI РјРµС‚РєР° + СЃСЂРѕРє + РєРЅРѕРїРєР° РґРµР№СЃС‚РІРёСЏ РІ РѕРґРЅРѕР№ СЃС‚СЂРѕРєРµ */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 4 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#64748B' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#8A8A8A' }}>
                       {order.aiLabel && <span>{order.aiLabel}</span>}
                       {order.expiresIn && <span style={{ color: '#EF4444', fontWeight: 700 }}>-{order.expiresIn}</span>}
                     </div>
@@ -445,7 +472,7 @@ export default function SearchPage() {
             marginTop: 12,
             marginBottom: 12,
             border: '1px solid rgba(0, 120, 212,0.28)',
-            background: 'linear-gradient(180deg, rgba(30,29,66,0.97), rgba(18,17,42,0.97))',
+            background: 'linear-gradient(180deg, rgba(40,40,40,0.97), rgba(28,28,28,0.97))',
           }}
         >
           <span style={{ color: '#9ECBFF', fontSize: 15, fontWeight: 700 }}>Показать все</span>

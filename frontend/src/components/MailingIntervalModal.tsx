@@ -60,7 +60,7 @@ export default function MailingIntervalModal({ isOpen, onClose }: Props) {
         border: selected ? '1px solid rgba(0, 120, 212,0.4)' : '1px solid rgba(255,255,255,0.04)',
       }}
     >
-      <span className="text-[14px] font-semibold" style={{ color: selected ? '#fff' : '#94A3B8' }}>
+      <span className="text-[14px] font-semibold" style={{ color: selected ? '#fff' : '#ADADAD' }}>
         {label}
       </span>
       <div
@@ -92,7 +92,7 @@ export default function MailingIntervalModal({ isOpen, onClose }: Props) {
                 className="h-11 rounded-xl text-[13px] font-black transition-all active:scale-95"
                 style={{
                   backgroundColor: draftPeriodicity === option.value ? 'rgba(0, 120, 212,0.24)' : 'rgba(255,255,255,0.04)',
-                  color: draftPeriodicity === option.value ? '#FFFFFF' : '#94A3B8',
+                  color: draftPeriodicity === option.value ? '#FFFFFF' : '#ADADAD',
                   border: draftPeriodicity === option.value ? '1px solid rgba(76, 194, 255,0.45)' : '1px solid rgba(255,255,255,0.08)',
                 }}
               >
@@ -108,7 +108,7 @@ export default function MailingIntervalModal({ isOpen, onClose }: Props) {
             <CalendarDays className="h-4 w-4" style={{ color: '#4CC2FF' }} />
             <h3 className="text-[15px] font-extrabold text-white">Промежуток времени</h3>
           </div>
-          <p className="px-1 text-[13px] leading-relaxed" style={{ color: '#64748B' }}>
+          <p className="px-1 text-[13px] leading-relaxed" style={{ color: '#8A8A8A' }}>
             Сообщения будут отправляться по вашему локальному времени.
           </p>
 
@@ -120,7 +120,7 @@ export default function MailingIntervalModal({ isOpen, onClose }: Props) {
           {draftTimeMode === 'custom' && (
             <div className="mt-2 grid grid-cols-2 gap-3 animate-slide-up">
               <div className="flex flex-col rounded-xl py-3" style={{ paddingLeft: '15px', paddingRight: '15px', backgroundColor: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <label className="mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>От</label>
+                <label className="mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: '#8A8A8A' }}>От</label>
                 <input
                   type="time"
                   value={draftStartTime}
@@ -130,7 +130,7 @@ export default function MailingIntervalModal({ isOpen, onClose }: Props) {
                 />
               </div>
               <div className="flex flex-col rounded-xl py-3" style={{ paddingLeft: '15px', paddingRight: '15px', backgroundColor: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <label className="mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>До</label>
+                <label className="mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: '#8A8A8A' }}>До</label>
                 <input
                   type="time"
                   value={draftEndTime}

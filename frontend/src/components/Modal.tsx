@@ -34,7 +34,7 @@ export default function Modal({ isOpen, onClose, onBack, title, children }: Moda
               <button
                 onClick={onBack}
                 className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors"
-                style={{ color: '#94A3B8', backgroundColor: 'rgba(255,255,255,0.05)' }}
+                style={{ color: '#ADADAD', backgroundColor: 'rgba(255,255,255,0.05)' }}
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -44,9 +44,9 @@ export default function Modal({ isOpen, onClose, onBack, title, children }: Moda
           <button
             onClick={onClose}
             className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors"
-            style={{ color: '#64748B' }}
+            style={{ color: '#8A8A8A' }}
             onMouseEnter={(e) => (e.currentTarget.style.color = '#F1F5F9')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#64748B')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#8A8A8A')}
           >
             <X className="w-5 h-5" />
           </button>

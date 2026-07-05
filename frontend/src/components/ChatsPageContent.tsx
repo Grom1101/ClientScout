@@ -277,13 +277,13 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
     >
       <div className="w-full px-3 pb-5" style={{ paddingTop: '15px' }}>
         <div className="mail-card flex min-h-[54px] items-center gap-3 rounded-xl px-5 py-3">
-          <Search className="h-5 w-5 shrink-0" style={{ color: '#7F8CA0' }} />
+          <Search className="h-5 w-5 shrink-0" style={{ color: '#9A9A9A' }} />
           <input
             type="text"
             placeholder="Поиск чатов"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="min-w-0 flex-1 bg-transparent text-[15px] text-white outline-none placeholder:text-slate-500"
+            className="min-w-0 flex-1 bg-transparent text-[15px] text-white outline-none placeholder:text-neutral-500"
           />
         </div>
         <div style={{ height: 15 }} />
@@ -316,7 +316,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
                     <span className="rounded-lg px-2 py-0.5 text-xs font-black" style={{ backgroundColor: 'rgba(0, 120, 212,0.18)', color: '#60CDFF' }}>
                       {platformEntries.length}
                     </span>
-                    {isCollapsed ? <ChevronDown className="h-4 w-4 text-slate-500" /> : <ChevronUp className="h-4 w-4 text-slate-500" />}
+                    {isCollapsed ? <ChevronDown className="h-4 w-4 text-neutral-500" /> : <ChevronUp className="h-4 w-4 text-neutral-500" />}
                   </div>
                 </button>
 
@@ -335,9 +335,9 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
                               {renderAvatar(entry)}
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-bold text-white">{entry.name}</p>
-                                <p className="mt-0.5 text-xs" style={{ color: '#7F8CA0' }}>{entry.topics.length} тем</p>
+                                <p className="mt-0.5 text-xs" style={{ color: '#9A9A9A' }}>{entry.topics.length} тем</p>
                               </div>
-                              {expanded ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
+                              {expanded ? <ChevronUp className="h-4 w-4 text-neutral-500" /> : <ChevronDown className="h-4 w-4 text-neutral-500" />}
                             </button>
 
                             {expanded && (
@@ -419,7 +419,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
 
           {!forumTopics ? (
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-200">Ссылка на чат</label>
+              <label className="mb-2 block text-sm font-semibold text-neutral-200">Ссылка на чат</label>
               <input
                 type="text"
                 value={newChatLink}
@@ -429,13 +429,13 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
                 }}
                 placeholder="https://t.me/your_chat_link"
                 className="w-full rounded-xl px-4 py-3 text-sm text-white transition-colors"
-                style={{ backgroundColor: '#101A26', border: addError ? '1px solid rgba(239,68,68,0.55)' : '1px solid rgba(148,163,184,0.12)' }}
+                style={{ backgroundColor: '#1F1F1F', border: addError ? '1px solid rgba(239,68,68,0.55)' : '1px solid rgba(255,255,255,0.08)' }}
               />
-              <p className="mt-2 text-xs leading-relaxed" style={{ color: '#7F8CA0' }}>Вставьте ссылку на Telegram-чат или форум.</p>
+              <p className="mt-2 text-xs leading-relaxed" style={{ color: '#9A9A9A' }}>Вставьте ссылку на Telegram-чат или форум.</p>
             </div>
           ) : (
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-200">Выберите темы</label>
+              <label className="mb-2 block text-sm font-semibold text-neutral-200">Выберите темы</label>
               <div className="flex max-h-60 flex-col gap-2 overflow-y-auto pr-1">
                 {forumTopics.map((topic, idx) => {
                   const disabled = (purpose !== 0 && topic.canWrite === false) || topic.alreadyAdded;
@@ -448,12 +448,12 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
                     >
                       <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: topic.checked ? '#0078D4' : 'transparent', border: topic.checked ? 'none' : '1px solid rgba(255,255,255,0.2)' }}>
                         {topic.checked && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
-                        {!topic.checked && showWriteLock && <Lock className="h-3 w-3 text-slate-400" />}
+                        {!topic.checked && showWriteLock && <Lock className="h-3 w-3 text-neutral-400" />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <span className="block truncate text-sm text-white">{topic.name}</span>
-                        {topic.alreadyAdded && <span className="text-xs text-slate-500">уже добавлена</span>}
-                        {showWriteLock && <span className="text-xs text-slate-500">писать нельзя</span>}
+                        {topic.alreadyAdded && <span className="text-xs text-neutral-500">уже добавлена</span>}
+                        {showWriteLock && <span className="text-xs text-neutral-500">писать нельзя</span>}
                       </div>
                       <input
                         type="checkbox"
