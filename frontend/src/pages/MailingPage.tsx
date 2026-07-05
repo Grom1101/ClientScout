@@ -101,12 +101,6 @@ export default function MailingPage() {
   return (
     <div className="min-h-full w-full px-5 pt-5 pb-6">
       <div className="relative mx-auto flex flex-col items-center" style={{ width: '100%', marginBottom: isRunning ? 12 : 24, paddingTop: 8 }}>
-        {isOutreachLoading && (
-          <div className="absolute left-0 top-1 z-10 rounded-full bg-white/10 p-1.5 shadow-lg backdrop-blur-md">
-            <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#4CC2FF' }} />
-          </div>
-        )}
-
         <h1 className="text-[22px] font-black leading-tight text-white" style={{ marginTop: 12 }}>Рассылка</h1>
         
         {isRunning && (
@@ -181,7 +175,7 @@ export default function MailingPage() {
               boxShadow: '0 8px 24px rgba(0, 120, 212,0.3)',
             }}
           >
-            <Play className="relative z-10 h-5 w-5" fill="white" />
+            {isOutreachLoading ? <Loader2 className="relative z-10 h-5 w-5 animate-spin" fill="white" /> : <Play className="relative z-10 h-5 w-5" fill="white" />}
             <span className="relative z-10">Начать рассылку</span>
           </button>
         ) : (

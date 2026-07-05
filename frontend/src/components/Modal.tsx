@@ -29,7 +29,7 @@ export default function Modal({ isOpen, onClose, onBack, title, children }: Moda
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex shrink-0 items-center justify-between mb-5">
+        <div className="flex shrink-0 items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             {onBack && (
               <button

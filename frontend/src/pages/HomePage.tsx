@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ChevronRight, LogOut, Pencil, Plus, Send, Trash2, User, Users, X } from 'lucide-react';
+import { Check, ChevronRight, LogOut, Pencil, Plus, Send, Trash2, User, Users, X, BookOpen } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import Modal from '../components/Modal';
 import { useAppStore, type Profile } from '../store/useAppStore';
@@ -18,15 +18,15 @@ export default function HomePage() {
   const { stats, fetchStats } = useOutreachStore();
   const { fetchHistory } = useLeadsStore();
 
+  const [showRecommendations, setShowRecommendations] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [profileView, setProfileView] = useState<'main' | 'list' | 'new'>('main');
   const [newProfileName, setNewProfileName] = useState('');
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
   const [editingProfileName, setEditingProfileName] = useState('');
   
-  const [leadsPeriod, setLeadsPeriod] = useState<StatsPeriod>('today');
-  const [sentPeriod, setSentPeriod] = useState<StatsPeriod>('today');
-  const [leadsChartData, setLeadsChartData] = useState<OutreachActivityPoint[]>([]);
+  const [chartPeriod, setChartPeriod] = useState<StatsPeriod>('today');
+  const [combinedChartData, setCombinedChartData] = useState<OutreachActivityPoint[]>([]);
   const [sentChartData, setSentChartData] = useState<OutreachActivityPoint[]>([]);
 
   useEffect(() => {
@@ -43,12 +43,8 @@ export default function HomePage() {
     const fetchLocalStats = async () => {
       try {
         const tz = -new Date().getTimezoneOffset();
-        const [resLeads, resSent] = await Promise.all([
-          apiClient.get(`/outreach/profiles/${profileId}/stats?period=${leadsPeriod}&timezoneOffsetMinutes=${tz}`),
-          apiClient.get(`/outreach/profiles/${profileId}/stats?period=${sentPeriod}&timezoneOffsetMinutes=${tz}`)
-        ]);
-        setLeadsChartData(resLeads.data.activity || []);
-        setSentChartData(resSent.data.activity || []);
+        const res = await apiClient.get(`/outreach/profiles/${profileId}/stats?period=${chartPeriod}&timezoneOffsetMinutes=${tz}`);
+        setCombinedChartData(res.data.activity || []);
       } catch (e) {
         console.error('Failed to fetch chart stats', e);
       }
@@ -62,7 +58,7 @@ export default function HomePage() {
         fetchLocalStats();
     }, 15000);
     return () => window.clearInterval(timer);
-  }, [activeProfile?.id, fetchStats, fetchHistory, leadsPeriod, sentPeriod]);
+  }, [activeProfile?.id, fetchStats, fetchHistory, chartPeriod]);
 
   const handleLogout = () => {
     logout();
@@ -107,198 +103,183 @@ export default function HomePage() {
     await deleteProfile(profile);
   };
 
-  const maxLeadsDomain = Math.max(5, ...leadsChartData.map((item) => item.leads));
-  const maxSentDomain = Math.max(5, ...sentChartData.map((item) => item.sent));
-
+  
   return (
-    <div className="min-h-full w-full px-5 pt-5 pb-24">
-      <div className="relative mx-auto flex flex-col items-center" style={{ width: '100%', marginBottom: 8, paddingTop: 8 }}>
-        {/* Header */}
-        <div className="flex w-full items-center justify-between mb-4 mt-2" style={{ paddingLeft: '15px', paddingRight: '15px' }}>
-          <h1 className="text-[22px] font-black leading-tight text-white">Главная страница</h1>
+                            <div 
+      className="relative flex flex-col" 
+      style={{ 
+        padding: '20px 20px 84px 20px',
+        boxSizing: 'border-box', 
+        height: '100%', 
+        width: '100%',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Header Area */}
+      <div className="flex items-center justify-between relative z-10 shrink-0" style={{ marginBottom: '20px' }}>
+        <div className="flex items-center gap-4">
           <button
             onClick={() => {
               setProfileView('main');
               setShowProfile(true);
             }}
-            className="rounded-full flex items-center justify-center overflow-hidden shrink-0 transition-transform active:scale-95"
-            style={{ 
-              width: '42px', 
-              height: '42px', 
-              backgroundColor: '#333333', 
-              border: '1px solid rgba(255,255,255,0.08)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }}
+            className="rounded-full flex items-center justify-center overflow-hidden shrink-0 transition-transform active:scale-95 ring-2 ring-[#4CC2FF]/60 shadow-[0_0_20px_rgba(76,194,255,0.4)]"
+            style={{ width: '52px', height: '52px', backgroundColor: '#1E293B' }}
           >
             {account?.telegramAvatarBase64 ? (
               <img src={account.telegramAvatarBase64} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
-              <div className="text-white text-sm font-bold">{account?.telegramName?.charAt(0) || 'U'}</div>
+              <div className="text-white text-xl font-bold">{account?.telegramName?.charAt(0) || 'U'}</div>
             )}
           </button>
+          <div className="flex flex-col">
+            <h1 className="font-black text-white tracking-tight leading-none" style={{ fontSize: '24px', marginBottom: '6px' }}>
+              Привет, {account?.telegramName || 'Пользователь'}! 👋
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#4CC2FF] shadow-[0_0_8px_rgba(76,194,255,0.8)]"></div>
+              <span className="text-[14px] font-bold text-slate-400">
+                {activeProfile?.name || 'Профиль не выбран'}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="mx-auto flex w-full flex-col gap-4">
-        {/* Welcome & Profile */}
-        <div className="mail-card flex flex-col gap-1 w-full text-left transition-all" style={{ borderRadius: 12, padding: '15px' }}>
-          <p className="text-[20px] font-extrabold text-white truncate">
-            Привет, {account?.telegramName || 'Пользователь'}! 👋
-          </p>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-[13px] font-medium" style={{ color: '#7F8CA0' }}>Активный профиль:</span>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md" style={{ backgroundColor: 'rgba(0, 120, 212,0.1)' }}>
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#10B981' }}></div>
-              <span className="text-[12px] font-bold" style={{ color: '#9ECBFF' }}>{activeProfile?.name || 'Не выбран'}</span>
-            </div>
-          </div>
+      <div className="flex flex-col relative z-10 flex-1 min-h-0" style={{ gap: '16px' }}>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-3 shrink-0">
+          <button 
+            onClick={() => navigate('/search')}
+            className="flex items-center justify-center gap-2 rounded-[20px] transition-all active:scale-[0.98]"
+            style={{ height: '52px', backgroundColor: '#10B981', boxShadow: '0 4px 20px rgba(16,185,129,0.2)' }}
+          >
+            <Users className="w-5 h-5 text-white" />
+            <span className="text-[16px] font-bold text-white">Искать</span>
+          </button>
+          <button 
+            onClick={() => navigate('/mailing')}
+            className="flex items-center justify-center gap-2 rounded-[20px] transition-all active:scale-[0.98]"
+            style={{ height: '52px', backgroundColor: '#0EA5E9', boxShadow: '0 4px 20px rgba(14,165,233,0.2)' }}
+          >
+            <Send className="w-5 h-5 text-white" />
+            <span className="text-[16px] font-bold text-white">Рассылка</span>
+          </button>
         </div>
 
-        {/* Stat Cards */}
-        <div className="grid grid-cols-2 gap-4 w-full">
-          <div className="mail-card relative overflow-hidden group" style={{ borderRadius: 12, padding: '15px' }}>
-            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full blur-[30px] transition-opacity" style={{ backgroundColor: 'rgba(16, 185, 129, 0.4)' }}></div>
-            <p className="text-[11px] font-bold mb-1 relative z-10 tracking-wider uppercase" style={{ color: '#10B981' }}>Заказов сегодня</p>
-            <div className="flex items-end justify-between relative z-10">
-              <span className="text-3xl font-extrabold text-white tracking-tight">{stats?.leadsToday ?? 0}</span>
-              <div className="p-1.5 rounded-xl bg-emerald-500/10">
-                <Users className="w-5 h-5 text-emerald-500" />
+        {/* Combined Stats Banner */}
+        <div className="flex items-center justify-between relative overflow-hidden rounded-[20px] shrink-0" 
+               style={{ 
+                 padding: '16px 20px',
+                 background: 'rgba(255,255,255,0.03)',
+                 backdropFilter: 'blur(20px)',
+                 border: '1px solid rgba(255,255,255,0.05)',
+                 boxSizing: 'border-box'
+               }}>
+            <div className="flex flex-col">
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Найдено (24ч)</span>
+              <div className="flex items-center gap-2">
+                <span className="leading-none font-black text-emerald-400 tracking-tight" style={{ fontSize: '32px' }}>{stats?.leadsToday ?? 0}</span>
               </div>
             </div>
-          </div>
-          <div className="mail-card relative overflow-hidden group" style={{ borderRadius: 12, padding: '15px' }}>
-            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full blur-[30px] transition-opacity" style={{ backgroundColor: 'rgba(76, 194, 255, 0.4)' }}></div>
-            <p className="text-[11px] font-bold mb-1 relative z-10 tracking-wider uppercase" style={{ color: '#4CC2FF' }}>Рассылок сегодня</p>
-            <div className="flex items-end justify-between relative z-10">
-              <span className="text-3xl font-extrabold text-white tracking-tight">{stats?.sentToday ?? 0}</span>
-              <div className="p-1.5 rounded-xl bg-sky-500/10">
-                <Send className="w-5 h-5 text-sky-500" />
+            <div className="w-[1px] h-10 bg-white/10 mx-3"></div>
+            <div className="flex flex-col items-end">
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Отправлено (24ч)</span>
+              <div className="flex items-center gap-2">
+                <span className="leading-none font-black text-sky-400 tracking-tight" style={{ fontSize: '32px' }}>{stats?.sentToday ?? 0}</span>
               </div>
             </div>
-          </div>
         </div>
 
-        {/* Chart 1: Заказы */}
-        <div className="mail-card relative overflow-hidden w-full" style={{ borderRadius: 12, padding: '15px' }}>
-          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none"></div>
-          <div className="flex items-center justify-between mb-4 relative z-10" style={{ paddingLeft: '15px', paddingRight: '15px' }}>
-            <div className="flex items-center gap-2">
-              <span className="text-[15px] text-white font-extrabold">График заказов</span>
-            </div>
-            <div className="flex rounded-full p-1 w-[150px]" style={{ backgroundColor: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              {(['today', 'month'] as StatsPeriod[]).map((period) => (
-                <button
-                  key={period}
-                  onClick={() => setLeadsPeriod(period)}
-                  className="flex-1 text-[10px] text-center uppercase tracking-wider py-1.5 rounded-full transition-all font-extrabold"
-                  style={{
-                    backgroundColor: leadsPeriod === period ? 'rgba(16, 185, 129, 0.25)' : 'transparent',
-                    color: leadsPeriod === period ? '#10B981' : '#64748B',
-                  }}
-                >
-                  {period === 'today' ? 'Сегодня' : 'Месяц'}
-                </button>
-              ))}
+        {/* Combined Chart */}
+        <div className="flex flex-col relative overflow-hidden rounded-[24px] flex-1 min-h-[160px]" 
+             style={{ 
+               paddingTop: '12px',
+               paddingBottom: '16px',
+               background: 'rgba(255,255,255,0.02)',
+               border: '1px solid rgba(255,255,255,0.05)',
+               boxSizing: 'border-box'
+             }}>
+          <div className="flex items-center justify-between shrink-0" style={{ paddingLeft: '24px', paddingRight: '24px', marginBottom: '10px' }}>
+            <span className="text-[17px] text-white font-black tracking-wide">Эффективность</span>
+            <div className="flex items-center rounded-[8px] bg-black/40 border border-white/[0.08]" style={{ padding: '2px', gap: '2px' }}>
+              {(['today', 'month'] as StatsPeriod[]).map((period) => {
+                const isActive = chartPeriod === period;
+                return (
+                  <button
+                    key={period}
+                    onClick={() => setChartPeriod(period)}
+                    className="inline-flex items-center justify-center rounded-[6px] text-[9px] font-black uppercase tracking-widest transition-all"
+                    style={{
+                      padding: '4px 10px',
+                      backgroundColor: isActive ? 'rgba(0, 120, 212, 0.25)' : 'transparent',
+                      color: isActive ? '#9ECBFF' : '#64748B',
+                      border: isActive ? '1px solid rgba(76, 194, 255, 0.3)' : '1px solid transparent',
+                      boxShadow: isActive ? '0 2px 10px rgba(0, 120, 212, 0.2)' : 'none'
+                    }}
+                  >
+                    {period === 'today' ? 'Сегодня' : 'Месяц'}
+                  </button>
+                );
+              })}
             </div>
           </div>
-          <div className="relative z-10 w-full" style={{ marginLeft: '-15px' }}>
-            <ResponsiveContainer width="100%" height={140}>
-              <AreaChart data={leadsChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <div className="w-full flex-1 min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartPeriod === 'today' ? combinedChartData.slice(3) : combinedChartData} margin={{ top: 15, right: 60, left: 60, bottom: 5 }}>
                 <defs>
-                  <linearGradient id="colorLeadsOnly" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                  <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10B981" stopOpacity={0.4}/>
+                    <stop offset="100%" stopColor="#10B981" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#0EA5E9" stopOpacity={0.4}/>
+                    <stop offset="100%" stopColor="#0EA5E9" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
                 <XAxis 
                   dataKey="label" 
-                  tick={{ fill: '#64748B', fontSize: 11 }} 
+                  tick={{ fill: '#64748B', fontSize: 11, fontWeight: 700 }} 
                   axisLine={false} 
                   tickLine={false} 
-                  dy={10} 
-                  ticks={leadsPeriod === 'today' ? ['00:00', '06:00', '12:00', '18:00', '23:00'] : undefined}
-                  minTickGap={leadsPeriod === 'today' ? undefined : 20}
+                  dy={12} 
+                  ticks={chartPeriod === 'today' ? ['03:00', '07:00', '11:00', '15:00', '19:00', '23:00'] : undefined}
+                  interval={chartPeriod === 'today' ? 0 : "preserveStartEnd"}
                 />
-                <YAxis tick={{ fill: '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, maxLeadsDomain]} allowDecimals={false} dx={-10} width={40} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: 'rgba(28, 32, 56, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#F1F5F9', fontSize: 13, backdropFilter: 'blur(8px)' }}
-                  itemStyle={{ color: '#fff', fontWeight: 600 }}
+                  cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#fff', fontSize: 13, boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}
+                  labelStyle={{ color: '#94A3B8', marginBottom: 4, fontWeight: 600 }}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="leads" 
-                  stroke="#10B981" 
-                  strokeWidth={2} 
-                  fillOpacity={1} 
-                  fill="url(#colorLeadsOnly)" 
-                  name="Найдено" 
-                />
+                <Area type="monotone" dataKey="leads" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorLeads)" name="Найдено" />
+                <Area type="monotone" dataKey="sent" stroke="#0EA5E9" strokeWidth={3} fillOpacity={1} fill="url(#colorSent)" name="Отправлено" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Chart 2: Рассылки */}
-        <div className="mail-card relative overflow-hidden w-full" style={{ borderRadius: 12, padding: '15px' }}>
-          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none"></div>
-          <div className="flex items-center justify-between mb-4 relative z-10" style={{ paddingLeft: '15px', paddingRight: '15px' }}>
-            <div className="flex items-center gap-2">
-              <span className="text-[15px] text-white font-extrabold">График рассылок</span>
+        {/* Recommendations Button */}
+        <button
+          onClick={() => setShowRecommendations(true)}
+          className="flex items-center justify-between w-full rounded-[20px] transition-all active:scale-[0.98] shrink-0"
+          style={{ 
+            padding: '20px',
+            backgroundColor: 'rgba(0, 120, 212, 0.1)',
+            border: '1px solid rgba(0, 120, 212, 0.2)',
+            backdropFilter: 'blur(12px)',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(0, 120, 212, 0.2)' }}>
+              <BookOpen className="w-5 h-5" style={{ color: '#60CDFF' }} />
             </div>
-            <div className="flex rounded-full p-1 w-[150px]" style={{ backgroundColor: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              {(['today', 'month'] as StatsPeriod[]).map((period) => (
-                <button
-                  key={period}
-                  onClick={() => setSentPeriod(period)}
-                  className="flex-1 text-[10px] text-center uppercase tracking-wider py-1.5 rounded-full transition-all font-extrabold"
-                  style={{
-                    backgroundColor: sentPeriod === period ? 'rgba(76, 194, 255, 0.25)' : 'transparent',
-                    color: sentPeriod === period ? '#4CC2FF' : '#64748B',
-                  }}
-                >
-                  {period === 'today' ? 'Сегодня' : 'Месяц'}
-                </button>
-              ))}
+            <div className="flex flex-col text-left">
+              <span className="text-[16px] font-bold text-white mb-0.5">Рекомендации</span>
+              <span className="text-[12px] font-medium" style={{ color: '#60CDFF', opacity: 0.7 }}>Как пользоваться приложением</span>
             </div>
           </div>
-          <div className="relative z-10 w-full" style={{ marginLeft: '-15px' }}>
-            <ResponsiveContainer width="100%" height={140}>
-              <AreaChart data={sentChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorSentOnly" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4CC2FF" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#4CC2FF" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
-                <XAxis 
-                  dataKey="label" 
-                  tick={{ fill: '#64748B', fontSize: 11 }} 
-                  axisLine={false} 
-                  tickLine={false} 
-                  dy={10} 
-                  ticks={sentPeriod === 'today' ? ['00:00', '06:00', '12:00', '18:00', '23:00'] : undefined}
-                  minTickGap={sentPeriod === 'today' ? undefined : 20}
-                />
-                <YAxis tick={{ fill: '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, maxSentDomain]} allowDecimals={false} dx={-10} width={40} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: 'rgba(28, 32, 56, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#F1F5F9', fontSize: 13, backdropFilter: 'blur(8px)' }}
-                  itemStyle={{ color: '#fff', fontWeight: 600 }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="sent" 
-                  stroke="#4CC2FF" 
-                  strokeWidth={2} 
-                  fillOpacity={1} 
-                  fill="url(#colorSentOnly)" 
-                  name="Отправлено" 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ChevronRight className="w-5 h-5" style={{ color: '#60CDFF', opacity: 0.5 }} />
+        </button>
       </div>
 
       <Modal 
@@ -310,7 +291,7 @@ export default function HomePage() {
         onBack={profileView !== 'main' ? () => setProfileView('main') : undefined}
         title={profileView === 'main' ? 'Аккаунт' : profileView === 'list' ? 'Профили' : 'Новый профиль'}
       >
-        <div className="relative w-full">
+        <div className="relative w-full" style={{ marginTop: '5px', paddingTop: '5px' }}>
           {/* Main View - Always in DOM to dictate exact modal height */}
           <div 
             className={`transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${profileView === 'main' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8 pointer-events-none'}`}
@@ -358,14 +339,14 @@ export default function HomePage() {
                   height: '56px',
                   paddingLeft: '15px',
                   paddingRight: '15px',
-                  backgroundColor: 'rgba(239, 68, 68, 0.05)',
-                  border: '1px solid rgba(239, 68, 68, 0.15)',
+                  backgroundColor: 'rgba(76, 194, 255, 0.05)',
+                  border: '1px solid rgba(76, 194, 255, 0.15)',
                   backdropFilter: 'blur(12px)',
                 }}
               >
                 <div className="flex items-center gap-3">
-                  <LogOut className="w-5 h-5" style={{ color: '#EF4444' }} />
-                  <span className="text-[15px] font-medium" style={{ color: '#EF4444' }}>Выйти из аккаунта</span>
+                  <LogOut className="w-5 h-5" style={{ color: '#4CC2FF' }} />
+                  <span className="text-[15px] font-medium" style={{ color: '#4CC2FF' }}>Выйти из аккаунта</span>
                 </div>
               </button>
             </div>

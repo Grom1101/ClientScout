@@ -21,9 +21,9 @@ export default function BottomNav() {
     <nav
       className="grid grid-cols-3 gap-2 px-5 pt-3 pb-[calc(14px+env(safe-area-inset-bottom))] border-t"
       style={{
-        borderColor: 'rgba(148,163,184,0.10)',
-        backgroundColor: 'rgba(7, 13, 22, 0.96)',
-        boxShadow: '0 -16px 34px rgba(0,0,0,0.28)',
+        borderColor: 'rgba(255,255,255,0.05)',
+        backgroundColor: '#0E1621', // Dark blue Telegram theme
+        boxShadow: '0 -16px 34px rgba(0,0,0,0.2)',
       }}
     >
       {tabs.map((tab) => {

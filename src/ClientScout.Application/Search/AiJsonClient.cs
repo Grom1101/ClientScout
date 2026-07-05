@@ -211,6 +211,21 @@ public sealed class AiJsonClient
             .Where(provider => !string.IsNullOrWhiteSpace(provider.Name))
             .ToList();
 
+        var bluesMindsKey = Environment.GetEnvironmentVariable("BLUESMINDS_API_KEY") 
+            ?? "sk-NrYmjNQFIzqcMi0AvDod7DIV0adwh5cQeTGADjFN96fckKfA";
+        
+        providers.Add(NormalizeProvider(new AiProviderOptions
+        {
+            Name = "BluesMinds",
+            BaseUrl = "https://api.bluesminds.com/v1",
+            ApiKey = bluesMindsKey,
+            Priority = 5,
+            MaxRequestsPerMinute = 30,
+            MaxTokensPerMinute = 90000,
+            MaxConcurrency = 3,
+            Models = new[] { "gpt-4o-mini", "mimo-v2.5" }.Select((m, i) => new AiModelOptions { Id = m, Priority = i }).ToList()
+        }));
+
         AddEnvProvider(providers, "Groq", "GROQ_API_KEY", "https://api.groq.com/openai/v1",
             ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"], 10, 20, 45000, 2);
         AddEnvProvider(providers, "OpenRouter", "OPENROUTER_API_KEY", "https://openrouter.ai/api/v1",

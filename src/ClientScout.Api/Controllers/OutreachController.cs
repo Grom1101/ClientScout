@@ -143,11 +143,11 @@ public class OutreachController : ControllerBase
         var hasAccess = await _dbContext.Profiles.AnyAsync(p => p.Id == profileId && p.AccountId == AccountId.Value, cancellationToken);
         if (!hasAccess) return Forbid();
 
-        var nowLocal = DateTimeOffset.UtcNow.AddMinutes(-timezoneOffsetMinutes);
+        var nowLocal = DateTimeOffset.UtcNow.AddMinutes(timezoneOffsetMinutes);
         var localStart = period.Equals("month", StringComparison.OrdinalIgnoreCase)
             ? new DateTimeOffset(nowLocal.Year, nowLocal.Month, 1, 0, 0, 0, nowLocal.Offset)
             : new DateTimeOffset(nowLocal.Year, nowLocal.Month, nowLocal.Day, 0, 0, 0, nowLocal.Offset);
-        var utcStart = localStart.AddMinutes(timezoneOffsetMinutes).ToUniversalTime();
+        var utcStart = localStart.AddMinutes(-timezoneOffsetMinutes).ToUniversalTime();
 
         var logs = await _dbContext.OutreachLogs
             .AsNoTracking()
@@ -163,20 +163,20 @@ public class OutreachController : ControllerBase
             .Select(l => new { l.Id, l.FoundAt })
             .ToListAsync(cancellationToken);
 
-        var todayUtcStart = new DateTimeOffset(nowLocal.Year, nowLocal.Month, nowLocal.Day, 0, 0, 0, nowLocal.Offset).AddMinutes(timezoneOffsetMinutes).ToUniversalTime();
+        var todayUtcStart = new DateTimeOffset(nowLocal.Year, nowLocal.Month, nowLocal.Day, 0, 0, 0, nowLocal.Offset).AddMinutes(-timezoneOffsetMinutes).ToUniversalTime();
         var sentToday = logs.Count(l => l.Status == LogStatus.Sent && l.SentAt >= todayUtcStart);
         var leadsToday = leads.Count(l => l.FoundAt >= todayUtcStart);
 
         var activity = period.Equals("month", StringComparison.OrdinalIgnoreCase)
             ? Enumerable.Range(1, DateTime.DaysInMonth(nowLocal.Year, nowLocal.Month))
                 .Select(day => BuildPoint(logs, leads, day.ToString("00"), 
-                    l => l.SentAt.AddMinutes(-timezoneOffsetMinutes).Day == day,
-                    l => l.FoundAt.AddMinutes(-timezoneOffsetMinutes).Day == day))
+                    l => l.SentAt.AddMinutes(timezoneOffsetMinutes).Day == day,
+                    l => l.FoundAt.AddMinutes(timezoneOffsetMinutes).Day == day))
                 .ToList()
             : Enumerable.Range(0, 24)
                 .Select(hour => BuildPoint(logs, leads, $"{hour:00}:00", 
-                    l => l.SentAt.AddMinutes(-timezoneOffsetMinutes).Hour == hour,
-                    l => l.FoundAt.AddMinutes(-timezoneOffsetMinutes).Hour == hour))
+                    l => l.SentAt.AddMinutes(timezoneOffsetMinutes).Hour == hour,
+                    l => l.FoundAt.AddMinutes(timezoneOffsetMinutes).Hour == hour))
                 .ToList();
 
         var recentLogs = await _dbContext.OutreachLogs
