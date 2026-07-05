@@ -100,19 +100,19 @@ export default function MailingPage() {
 
   return (
     <div className="min-h-full w-full px-5 pt-5 pb-6">
-      <div className="relative mx-auto flex flex-col items-center" style={{ width: '100%', marginBottom: 8, paddingTop: 8 }}>
+      <div className="relative mx-auto flex flex-col items-center" style={{ width: '100%', marginBottom: isRunning ? 12 : 24, paddingTop: 8 }}>
         {isOutreachLoading && (
           <div className="absolute left-0 top-1 z-10 rounded-full bg-white/10 p-1.5 shadow-lg backdrop-blur-md">
             <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#4CC2FF' }} />
           </div>
         )}
 
-        <h1 className="text-[22px] font-black leading-tight text-white">Рассылка</h1>
+        <h1 className="text-[22px] font-black leading-tight text-white" style={{ marginTop: 12 }}>Рассылка</h1>
         
         {isRunning && (
-          <div className="flex items-center justify-center gap-2.5" style={{ marginTop: '8px' }}>
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)]" />
-            <span className="text-[14px] font-black uppercase tracking-wide" style={{ color: '#34D399' }}>запущена</span>
+          <div className="flex items-center justify-center gap-2.5" style={{ marginTop: 8 }}>
+            <span className="h-2.5 w-2.5 rounded-full bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.9)]" />
+            <span className="text-[14px] font-black uppercase tracking-wide" style={{ color: '#38BDF8' }}>запущена</span>
           </div>
         )}
       </div>
@@ -131,7 +131,7 @@ export default function MailingPage() {
           </div>
           <div className="flex items-center gap-3">
             <span
-              className="min-w-8 rounded-lg px-2.5 py-1 text-center text-sm font-black"
+              className="flex min-w-[28px] h-[28px] items-center justify-center rounded-[8px] px-2 text-[13px] font-black"
               style={{ backgroundColor: 'rgba(0, 120, 212,0.18)', color: '#60CDFF' }}
             >
               {selectedChats.length}
@@ -169,7 +169,7 @@ export default function MailingPage() {
         </button>
       </div>
 
-      <div className="flex w-full flex-col items-center gap-4" style={{ marginTop: 24 }}>
+      <div className="flex w-full flex-col items-center gap-4" style={{ marginTop: 24, marginBottom: 24 }}>
         {!isRunning ? (
           <button
             onClick={handleStart}
@@ -177,8 +177,8 @@ export default function MailingPage() {
             className="relative flex h-[58px] items-center justify-center gap-3 overflow-hidden rounded-[10px] text-[14px] font-black uppercase tracking-wide text-white transition-all disabled:opacity-50"
             style={{
               width: actionWidth,
-              background: 'linear-gradient(135deg, #2CCB86 0%, #22B873 100%)',
-              boxShadow: '0 14px 32px rgba(34,184,115,0.28)',
+              background: 'linear-gradient(135deg, #0078D4, #005A9E)',
+              boxShadow: '0 8px 24px rgba(0, 120, 212,0.3)',
             }}
           >
             <Play className="relative z-10 h-5 w-5" fill="white" />

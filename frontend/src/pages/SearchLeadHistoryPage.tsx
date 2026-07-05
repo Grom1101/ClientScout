@@ -4,20 +4,13 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { getActiveProfileId } from '../api/client';
 import { useLeadsStore } from '../store/useLeadsStore';
 import SwipeableItem from '../components/SwipeableItem';
+import SubPage from '../components/SubPage';
 
-// Kwork SVG logo
+// Modern Kwork SVG logo
 const KworkIcon = () => (
-  <svg viewBox="0 0 44 44" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="22" cy="22" r="22" fill="#FF7B00" />
-    <text
-      x="22" y="30"
-      textAnchor="middle"
-      fill="white"
-      fontSize="23"
-      fontWeight="900"
-      fontFamily="Arial Black, Arial, sans-serif"
-      fontStyle="italic"
-    >K</text>
+  <svg viewBox="0 0 100 100" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="17,20 41,20 41,36 25,52 25,28 17,28" fill="#FF9900" />
+    <polygon points="25,62 25,80 41,80 41,54 67,80 83,80 53,50 83,20 67,20" fill="#FFFFFF" />
   </svg>
 );
 
@@ -93,32 +86,8 @@ export default function SearchLeadHistoryPage() {
   };
 
   return (
-    <div className="min-h-full w-full px-5 pt-5 pb-6">
-
-      {/* РЁР°РїРєР° */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <button
-          onClick={() => navigate('/search')}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            backgroundColor: '#111827',
-            color: '#94A3B8',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            cursor: 'pointer',
-          }}
-        >
-          <ArrowLeft style={{ width: 18, height: 18 }} />
-        </button>
-        <div>
-          <h1 style={{ color: 'white', fontSize: 20, fontWeight: 900, lineHeight: 1.2 }}>История заказов</h1>
-          <p style={{ color: '#4B5563', fontSize: 12, marginTop: 2 }}>Лиды хранятся 24 часа</p>
-        </div>
-      </div>
+    <SubPage title="История заказов" backTo="/search" hideDivider={true}>
+      <div className="px-5 pt-4 pb-6">
 
       {/* Р¤РёР»СЊС‚СЂ AI вЂ” РІ СЃС‚РёР»Рµ mail-card */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, paddingLeft: 12, paddingRight: 12 }}>
@@ -135,16 +104,11 @@ export default function SearchLeadHistoryPage() {
             fontSize: 13,
             fontWeight: 700,
             cursor: 'pointer',
-            color: aiFilter === 'confirmed' ? '#FFFFFF' : '#64748B',
+            color: aiFilter === 'confirmed' ? '#F8FAFC' : '#64748B',
             border: aiFilter === 'confirmed'
               ? '1px solid rgba(0, 120, 212,0.5)'
               : '1px solid rgba(255,255,255,0.06)',
-            background: aiFilter === 'confirmed'
-              ? 'linear-gradient(135deg, rgba(79,70,229,0.38), rgba(49,46,129,0.25))'
-              : undefined,
-            boxShadow: aiFilter === 'confirmed'
-              ? '0 0 0 1px rgba(0, 120, 212,0.2)'
-              : undefined,
+            backgroundColor: aiFilter === 'confirmed' ? '#1E293B' : 'transparent',
           }}
         >
           Проверено нейросетью
@@ -162,16 +126,11 @@ export default function SearchLeadHistoryPage() {
             fontSize: 13,
             fontWeight: 700,
             cursor: 'pointer',
-            color: aiFilter === 'unverified' ? '#FFFFFF' : '#64748B',
+            color: aiFilter === 'unverified' ? '#F8FAFC' : '#64748B',
             border: aiFilter === 'unverified'
               ? '1px solid rgba(0, 120, 212,0.5)'
               : '1px solid rgba(255,255,255,0.06)',
-            background: aiFilter === 'unverified'
-              ? 'linear-gradient(135deg, rgba(79,70,229,0.38), rgba(49,46,129,0.25))'
-              : undefined,
-            boxShadow: aiFilter === 'unverified'
-              ? '0 0 0 1px rgba(0, 120, 212,0.2)'
-              : undefined,
+            backgroundColor: aiFilter === 'unverified' ? '#1E293B' : 'transparent',
           }}
         >
           Не проверено нейросетью
@@ -195,7 +154,7 @@ export default function SearchLeadHistoryPage() {
       {/* РЎРїРёСЃРѕРє РєР°СЂС‚РѕС‡РµРє */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {history.map((order) => (
-          <SwipeableItem key={order.id} onDelete={() => hideLead(order.id)}>
+          <SwipeableItem key={order.id} onDelete={() => hideLead(order.id)} className="overflow-hidden rounded-[16px]">
             <div
               style={{
                 backgroundColor: '#2B2B2B',
@@ -378,6 +337,7 @@ export default function SearchLeadHistoryPage() {
           </button>
         </div>
       )}
-    </div>
+      </div>
+    </SubPage>
   );
 }

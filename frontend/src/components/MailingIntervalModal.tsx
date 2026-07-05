@@ -76,7 +76,7 @@ export default function MailingIntervalModal({ isOpen, onClose }: Props) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Настройки рассылки">
-      <div className="flex flex-col gap-5 px-1 pb-2 pt-6">
+      <div className="flex flex-col gap-5 px-1 pb-2 pt-6" style={{ marginTop: '5px' }}>
 
         {/* Блок 1: Периодичность рассылки */}
         <div className="flex flex-col gap-3">
@@ -119,23 +119,23 @@ export default function MailingIntervalModal({ isOpen, onClose }: Props) {
 
           {draftTimeMode === 'custom' && (
             <div className="mt-2 grid grid-cols-2 gap-3 animate-slide-up">
-              <div className="flex flex-col rounded-xl py-3" style={{ paddingLeft: '15px', paddingRight: '15px', backgroundColor: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <label className="mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>От</label>
+              <div className="flex items-center gap-3 rounded-xl h-[52px]" style={{ paddingLeft: '15px', paddingRight: '15px', backgroundColor: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <label className="text-[11px] font-bold uppercase tracking-wider shrink-0" style={{ color: '#64748B' }}>От</label>
                 <input
                   type="time"
                   value={draftStartTime}
                   onChange={(e) => setDraftStartTime(e.target.value)}
-                  className="bg-transparent text-[15px] font-bold text-white outline-none"
+                  className="bg-transparent text-[15px] font-bold text-white outline-none w-full"
                   style={{ colorScheme: 'dark' }}
                 />
               </div>
-              <div className="flex flex-col rounded-xl py-3" style={{ paddingLeft: '15px', paddingRight: '15px', backgroundColor: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <label className="mb-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>До</label>
+              <div className="flex items-center gap-3 rounded-xl h-[52px]" style={{ paddingLeft: '15px', paddingRight: '15px', backgroundColor: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <label className="text-[11px] font-bold uppercase tracking-wider shrink-0" style={{ color: '#64748B' }}>До</label>
                 <input
                   type="time"
                   value={draftEndTime}
                   onChange={(e) => setDraftEndTime(e.target.value)}
-                  className="bg-transparent text-[15px] font-bold text-white outline-none"
+                  className="bg-transparent text-[15px] font-bold text-white outline-none w-full"
                   style={{ colorScheme: 'dark' }}
                 />
               </div>

@@ -79,7 +79,7 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Сообщения">
-      <div className="flex flex-col gap-4 relative">
+      <div className="flex flex-col gap-4 relative" style={{ marginTop: '5px' }}>
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#1B1B1B]/50">
             <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#4CC2FF' }} />
@@ -106,17 +106,15 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
             className="w-full h-48 bg-transparent text-[15px] text-white resize-none leading-relaxed placeholder:text-white/30"
             style={{ outline: 'none' }}
           />
-          <p className="text-[13px] mt-0 font-medium" style={{ color: '#94A3B8' }}>
-            Текст отправляется как подпись к файлу, если файл прикреплен.
-          </p>
+
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-xs" style={{ color: '#64748B' }}>
-            Файл {attachmentUrls.length} / {MAX_ATTACHMENT_COUNT}
+          <span className="text-[14px]" style={{ color: '#64748B' }}>
+            Файл {attachmentUrls.length}/{MAX_ATTACHMENT_COUNT}
           </span>
-          <span className="text-xs" style={{ color: '#64748B' }}>
-            {message.length} / {MAX_MESSAGE_LENGTH}
+          <span className="text-[14px]" style={{ color: '#64748B' }}>
+            {message.length}/{MAX_MESSAGE_LENGTH}
           </span>
         </div>
 

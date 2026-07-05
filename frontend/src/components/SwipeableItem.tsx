@@ -5,9 +5,10 @@ import type { ReactNode } from 'react';
 interface SwipeableItemProps {
   onDelete: () => void;
   children: ReactNode;
+  className?: string;
 }
 
-export default function SwipeableItem({ onDelete, children }: SwipeableItemProps) {
+export default function SwipeableItem({ onDelete, children, className = '' }: SwipeableItemProps) {
   const [offset, setOffset] = useState(0);
   const [swiped, setSwiped] = useState(false);
   const startX = useRef(0);
@@ -76,7 +77,7 @@ export default function SwipeableItem({ onDelete, children }: SwipeableItemProps
   }, [swiped]);
 
   return (
-    <div className="relative overflow-hidden rounded-xl select-none">
+    <div className={`relative select-none ${className}`}>
       {/* Delete button behind the item */}
       <button
         onClick={onDelete}
@@ -91,7 +92,7 @@ export default function SwipeableItem({ onDelete, children }: SwipeableItemProps
         style={{
           transform: `translateX(-${offset}px)`,
           transition: isDragging.current ? 'none' : 'transform 0.3s ease',
-          backgroundColor: '#2B2B2B',
+          backgroundColor: '#242424',
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
