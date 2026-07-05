@@ -49,7 +49,7 @@ public class TelegramBotHostedService : BackgroundService
         {
             await _botClient.ReceiveAsync(
                 updateHandler: HandleUpdateAsync,
-                pollingErrorHandler: HandlePollingErrorAsync,
+                errorHandler: HandlePollingErrorAsync,
                 receiverOptions: receiverOptions,
                 cancellationToken: stoppingToken
             );
