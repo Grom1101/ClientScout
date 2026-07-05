@@ -28,9 +28,7 @@ interface AdminStats {
 
 const DEFAULT_PRICING: Record<string, { in: number, out: number }> = {
   'BluesMinds:gpt-4o-mini': { in: 0.30, out: 0.18 },
-  'Groq:llama3-8b-8192': { in: 0.05, out: 0.08 },
-  'Groq:llama3-70b-8192': { in: 0.59, out: 0.79 },
-  'OpenRouter:google/gemini-1.5-flash': { in: 0.075, out: 0.30 },
+  'BluesMinds:mimo-v2.5': { in: 0.10, out: 0.28 }
 };
 
 function formatTokens(num: number): string {
@@ -48,7 +46,7 @@ export default function AdminAnalyticsPage() {
 
   // Forecast State
   const [mau, setMau] = useState<number>(1000);
-  const [reqsPerUser, setReqsPerUser] = useState<number>(50);
+  const [reqsPerUser, setReqsPerUser] = useState<number>(5);
   const [selectedModel, setSelectedModel] = useState<string>('BluesMinds:gpt-4o-mini');
   const [avgInputTokens, setAvgInputTokens] = useState<number>(500);
   const [avgOutputTokens, setAvgOutputTokens] = useState<number>(300);
@@ -184,7 +182,7 @@ export default function AdminAnalyticsPage() {
   const renderForecast = () => {
     // Calculators
     const calcCost = (users: number) => {
-      const totalReqs = users * reqsPerUser;
+      const totalReqs = users * reqsPerUser * 30; // 30 days in a month
       const totalInTokens = totalReqs * avgInputTokens;
       const totalOutTokens = totalReqs * avgOutputTokens;
       const pricing = DEFAULT_PRICING[selectedModel] || { in: 0, out: 0 };
@@ -224,7 +222,7 @@ export default function AdminAnalyticsPage() {
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-xs text-gray-400 mb-1">Запросов на юзера в мес.</label>
+              <label className="block text-xs text-gray-400 mb-1">Запросов на юзера в день</label>
               <input 
                 type="number" 
                 value={reqsPerUser} 
@@ -278,7 +276,7 @@ export default function AdminAnalyticsPage() {
               : `Остаток бюджета: $${(budget - monthlyCost).toFixed(2)}`}
           </div>
           <div className="text-center mt-2 text-xs text-gray-500">
-            Итого запросов: {(mau * reqsPerUser).toLocaleString('ru')} в месяц
+            Итого запросов: {(mau * reqsPerUser * 30).toLocaleString('ru')} в месяц
           </div>
         </div>
 
