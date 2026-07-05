@@ -28,6 +28,11 @@ public partial class SearchCandidateFilter : ISearchCandidateFilter
             settings.SoftSignals,
             settings.ExpandedPositiveTerms,
             settings.ExpandedIntentTerms);
+        var profileContextTerms = Merge(
+            settings.UserKeywords,
+            settings.MustIncludeSignals,
+            settings.SoftSignals,
+            settings.ExpandedPositiveTerms);
         var strongTerms = Merge(settings.StrongTerms);
         var rejectSignalTerms = Merge(settings.RejectSignals);
 
@@ -37,6 +42,11 @@ public partial class SearchCandidateFilter : ISearchCandidateFilter
             .ToArray();
 
         var userKeywordMatches = Merge(settings.UserKeywords)
+            .Where(term => ContainsTerm(normalizedText, term))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var profileContextMatches = profileContextTerms
             .Where(term => ContainsTerm(normalizedText, term))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
@@ -79,6 +89,11 @@ public partial class SearchCandidateFilter : ISearchCandidateFilter
         if (!hasWorkRequest)
         {
             return new PrefilterResult(false, regularMatches, strongMatches, "NO_BUYER_REQUEST", 0);
+        }
+
+        if (profileContextMatches.Length == 0 && strongMatches.Length == 0)
+        {
+            return new PrefilterResult(false, regularMatches, strongMatches, "INTENT_ONLY_NO_PROFILE_MATCH", 0);
         }
 
         var hasMultiKeywordProfile = Merge(settings.UserKeywords).Length >= 3;
