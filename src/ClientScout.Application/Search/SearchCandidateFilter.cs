@@ -36,6 +36,11 @@ public partial class SearchCandidateFilter : ISearchCandidateFilter
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
+        var userKeywordMatches = Merge(settings.UserKeywords)
+            .Where(term => ContainsTerm(normalizedText, term))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
         var strongMatches = strongTerms
             .Where(term => ContainsTerm(normalizedText, term))
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -57,6 +62,15 @@ public partial class SearchCandidateFilter : ISearchCandidateFilter
         if (hasHiringOrResumeNoise && !HasConcreteDeliveryRequest(normalizedText))
         {
             return new PrefilterResult(false, regularMatches, strongMatches, "HIRING_OR_RESUME_NOISE", 0);
+        }
+
+        var hasMultiKeywordProfile = Merge(settings.UserKeywords).Length >= 3;
+        if (hasMultiKeywordProfile &&
+            userKeywordMatches.Length == 1 &&
+            regularMatches.Length <= 2 &&
+            strongMatches.Length == 0)
+        {
+            return new PrefilterResult(false, regularMatches, strongMatches, $"ISOLATED_KEYWORD:{userKeywordMatches[0]}", 0);
         }
 
         var isCandidate = regularMatches.Length >= 2 ||

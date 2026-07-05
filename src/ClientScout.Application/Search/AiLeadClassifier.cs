@@ -58,12 +58,15 @@ Return STRICT JSON only:
 
 Decision target:
 - The hidden profile is authoritative. UserKeywords are short hints, not the whole intent.
+- Treat UserKeywords as a combined intent/context, not as independent OR filters. When the user provides several keywords, one isolated technical word is not enough to confirm relevance.
+- Technical keywords such as C#, Python, React, Unity, Figma, or Photoshop can be stack/context constraints. They do not make a lead relevant unless the requested deliverable also matches the broader profile intent.
 - Decide by requested deliverable/profession/result, not simple keyword presence.
 - First decide whether the text is a concrete request from a buyer/client to perform work. It must ask for a deliverable such as develop, build, create, implement, fix, debug, finish, integrate, configure, or help with a specific task.
 - Reject job vacancies, job ads, full-time/part-time hiring posts, resumes, CVs, candidate profiles, and "looking for work" posts. Words like "job", "work", "vacancy", "position", and "resume" are not positive signals by themselves.
 - Reject adjacent non-matching deliverables even when they contain profile keywords. A domain word is not enough: the requested deliverable must match the user's actual profile intent.
 - Examples: if the profile is about software development, reject video editing/marketing/articles/news even when they mention that domain; if the profile is about video editing, accept video editing requests and reject software-development-only requests. Apply this logic to every niche, not only gamedev.
 - If the text only mentions a profile keyword but the requested deliverable belongs to a different service category than the profile intent, set isRelevant=false.
+- Example: if UserKeywords are "C#, gamedev, Unity, game", a generic C# desktop app is not relevant because it misses the gamedev/Unity/game context.
 - Respect NegativeKeywords and RejectSignals strictly.
 - Reject spam, tutorials, news, discussions, portfolios, resumes, and adjacent work with a different deliverable.
 - Reject service-provider/self-promotion messages like "я разработчик", "предлагаю услуги", "портфолио", "коротко обо мне", unless the text also clearly asks to hire someone for a concrete task.
@@ -134,6 +137,8 @@ Return STRICT JSON only:
 Decision target:
 - Return one result for every candidate externalId from the input.
 - The hidden profile is authoritative. UserKeywords are short hints, not the whole intent.
+- Treat UserKeywords as a combined intent/context, not as independent OR filters. When the user provides several keywords, one isolated technical word is not enough to confirm relevance.
+- Technical keywords such as C#, Python, React, Unity, Figma, or Photoshop can be stack/context constraints. They do not make a lead relevant unless the requested deliverable also matches the broader profile intent.
 - Compare each candidate independently by requested deliverable/profession/result.
 - Do not classify by simple keyword presence.
 - First decide whether each text is a concrete request from a buyer/client to perform work. It must ask for a deliverable such as develop, build, create, implement, fix, debug, finish, integrate, configure, or help with a specific task.
@@ -141,6 +146,7 @@ Decision target:
 - Reject adjacent non-matching deliverables even when they contain profile keywords. A domain word is not enough: the requested deliverable must match the user's actual profile intent.
 - Examples: if the profile is about software development, reject video editing/marketing/articles/news even when they mention that domain; if the profile is about video editing, accept video editing requests and reject software-development-only requests. Apply this logic to every niche, not only gamedev.
 - If the text only mentions a profile keyword but the requested deliverable belongs to a different service category than the profile intent, set isRelevant=false.
+- Example: if UserKeywords are "C#, gamedev, Unity, game", a generic C# desktop app is not relevant because it misses the gamedev/Unity/game context.
 - Respect NegativeKeywords and RejectSignals strictly.
 - Reject spam, tutorials, news, discussions, portfolios, resumes, and adjacent work with a different deliverable.
 - Reject service-provider/self-promotion messages like "я разработчик", "предлагаю услуги", "портфолио", "коротко обо мне", unless the text also clearly asks to hire someone for a concrete task.
