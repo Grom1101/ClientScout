@@ -84,6 +84,13 @@ public partial class SearchCandidateFilter : ISearchCandidateFilter
         var hasMultiKeywordProfile = Merge(settings.UserKeywords).Length >= 3;
         if (hasMultiKeywordProfile &&
             userKeywordMatches.Length == 1 &&
+            IsTechnicalStackOnlyTerm(userKeywordMatches[0]))
+        {
+            return new PrefilterResult(false, regularMatches, strongMatches, $"ISOLATED_STACK_KEYWORD:{userKeywordMatches[0]}", 0);
+        }
+
+        if (hasMultiKeywordProfile &&
+            userKeywordMatches.Length == 1 &&
             regularMatches.Length <= 2 &&
             strongMatches.Length == 0)
         {
@@ -479,6 +486,55 @@ public partial class SearchCandidateFilter : ISearchCandidateFilter
         };
 
         return profileTerms.Any(profileTerm => allowedTerms.Any(allowed => ContainsTerm(NormalizeText(profileTerm), allowed)));
+    }
+
+    private static bool IsTechnicalStackOnlyTerm(string term)
+    {
+        var normalized = NormalizeText(term);
+        var stackOnlyTerms = new[]
+        {
+            "c#",
+            "csharp",
+            "c sharp",
+            "c++",
+            "cpp",
+            "java",
+            "kotlin",
+            "swift",
+            "python",
+            "php",
+            "go",
+            "golang",
+            "rust",
+            "javascript",
+            "js",
+            "typescript",
+            "ts",
+            "react",
+            "vue",
+            "angular",
+            "svelte",
+            "node",
+            "node js",
+            "node.js",
+            "next",
+            "next js",
+            "next.js",
+            "nuxt",
+            "nuxt js",
+            "nuxt.js",
+            ".net",
+            "dotnet",
+            "asp.net",
+            "laravel",
+            "django",
+            "flask",
+            "fastapi",
+            "figma",
+            "photoshop"
+        };
+
+        return stackOnlyTerms.Any(stackTerm => normalized == NormalizeText(stackTerm));
     }
 
     private static string[] Merge(params IEnumerable<string>[] groups)

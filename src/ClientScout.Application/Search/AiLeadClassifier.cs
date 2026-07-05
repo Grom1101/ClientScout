@@ -58,6 +58,7 @@ Return STRICT JSON only:
 
 Decision target:
 - The hidden profile is authoritative. UserKeywords are short hints, not the whole intent.
+- SearchProfileSummary can start with an uppercase Russian profile type such as "ПРОФИЛЬ ..."; treat that inferred profile type as the main context.
 - Treat UserKeywords as a combined intent/context, not as independent OR filters. When the user provides several keywords, one isolated technical word is not enough to confirm relevance.
 - Technical keywords such as C#, Python, React, Unity, Figma, or Photoshop can be stack/context constraints. They do not make a lead relevant unless the requested deliverable also matches the broader profile intent.
 - Decide by requested deliverable/profession/result, not simple keyword presence.
@@ -69,7 +70,7 @@ Decision target:
 - Examples: if the profile is about software development, reject video editing/marketing/articles/news even when they mention that domain; if the profile is about video editing, accept video editing requests and reject software-development-only requests. Apply this logic to every niche, not only gamedev.
 - For gamedev/software profiles, reject video editing requests such as "монтаж игрового ролика", "смонтировать видео для YouTube", gameplay footage editing, trailers, shorts, reels, previews, or YouTube content unless the user's profile explicitly asks for video editing/montage.
 - If the text only mentions a profile keyword but the requested deliverable belongs to a different service category than the profile intent, set isRelevant=false.
-- Example: if UserKeywords are "C#, gamedev, Unity, game", a generic C# desktop app is not relevant because it misses the gamedev/Unity/game context.
+- Example: if UserKeywords combine a stack/tool with domain context, a candidate matching only the stack/tool is not relevant. For "C#, Unity, game", a generic C# desktop app is false; for "React, website, landing", a generic React vacancy/resume is false; apply the same rule to every niche.
 - Respect NegativeKeywords and RejectSignals strictly.
 - Reject spam, tutorials, news, reports, analytics, discussions, portfolios, resumes, and adjacent work with a different deliverable.
 - Reject service-provider/self-promotion messages like "я разработчик", "предлагаю услуги", "портфолио", "коротко обо мне", unless the text also clearly asks to hire someone for a concrete task.
@@ -140,6 +141,7 @@ Return STRICT JSON only:
 Decision target:
 - Return one result for every candidate externalId from the input.
 - The hidden profile is authoritative. UserKeywords are short hints, not the whole intent.
+- SearchProfileSummary can start with an uppercase Russian profile type such as "ПРОФИЛЬ ..."; treat that inferred profile type as the main context.
 - Treat UserKeywords as a combined intent/context, not as independent OR filters. When the user provides several keywords, one isolated technical word is not enough to confirm relevance.
 - Technical keywords such as C#, Python, React, Unity, Figma, or Photoshop can be stack/context constraints. They do not make a lead relevant unless the requested deliverable also matches the broader profile intent.
 - Compare each candidate independently by requested deliverable/profession/result.
@@ -152,7 +154,7 @@ Decision target:
 - Examples: if the profile is about software development, reject video editing/marketing/articles/news even when they mention that domain; if the profile is about video editing, accept video editing requests and reject software-development-only requests. Apply this logic to every niche, not only gamedev.
 - For gamedev/software profiles, reject video editing requests such as "монтаж игрового ролика", "смонтировать видео для YouTube", gameplay footage editing, trailers, shorts, reels, previews, or YouTube content unless the user's profile explicitly asks for video editing/montage.
 - If the text only mentions a profile keyword but the requested deliverable belongs to a different service category than the profile intent, set isRelevant=false.
-- Example: if UserKeywords are "C#, gamedev, Unity, game", a generic C# desktop app is not relevant because it misses the gamedev/Unity/game context.
+- Example: if UserKeywords combine a stack/tool with domain context, a candidate matching only the stack/tool is not relevant. For "C#, Unity, game", a generic C# desktop app is false; for "React, website, landing", a generic React vacancy/resume is false; apply the same rule to every niche.
 - Respect NegativeKeywords and RejectSignals strictly.
 - Reject spam, tutorials, news, reports, analytics, discussions, portfolios, resumes, and adjacent work with a different deliverable.
 - Reject service-provider/self-promotion messages like "я разработчик", "предлагаю услуги", "портфолио", "коротко обо мне", unless the text also clearly asks to hire someone for a concrete task.
