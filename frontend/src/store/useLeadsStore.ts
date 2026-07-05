@@ -134,7 +134,7 @@ export const useLeadsStore = create<LeadsState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const [leadsResponse, countResponse] = await Promise.all([
-        apiClient.get<BackendLead[]>('/leads/recent', { params: { profileId } }),
+        apiClient.get<BackendLead[]>('/leads', { params: { profileId, limit: 100, offset: 0, aiFilter: 'confirmed' } }),
         apiClient.get<{ count: number }>('/leads/count', { params: { profileId } }),
       ]);
       set({ leads: leadsResponse.data.map(mapToOrderItem), totalCount: countResponse.data.count, isLoading: false });
