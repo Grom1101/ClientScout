@@ -47,6 +47,9 @@ public class TelegramBotHostedService : BackgroundService
 
         try
         {
+            // Clear any webhook before starting polling, otherwise ReceiveAsync will fail
+            await _botClient.DeleteWebhookAsync(cancellationToken: stoppingToken);
+
             await _botClient.ReceiveAsync(
                 updateHandler: HandleUpdateAsync,
                 errorHandler: HandlePollingErrorAsync,

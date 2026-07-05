@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../api/axios';
+import { apiClient } from '../api/client';
 import { useNavigate } from 'react-router-dom';
 
 interface AdminStats {
@@ -31,7 +31,7 @@ export default function AdminAnalyticsPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get<AdminStats>('/admin/stats')
+    apiClient.get<AdminStats>('/admin/stats')
       .then(res => setStats(res.data))
       .catch(err => {
         if (err.response?.status === 403) {
