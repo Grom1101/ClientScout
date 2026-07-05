@@ -12,8 +12,8 @@ namespace ClientScout.Application.Search;
 
 public class SearchIngestionService : ISearchIngestionService
 {
-    private const int AiRetryBatchSize = 10;
-    private const int MaxAiRetryLeadsPerRun = 50;
+    private const int AiRetryBatchSize = 3;
+    private const int MaxAiRetryLeadsPerRun = 15;
     private static readonly SemaphoreSlim AiRetryLock = new(1, 1);
     private readonly IAppDbContext _dbContext;
     private readonly ISearchCandidateFilter _candidateFilter;

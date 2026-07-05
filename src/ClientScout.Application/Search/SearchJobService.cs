@@ -17,10 +17,10 @@ namespace ClientScout.Application.Search;
 
 public class SearchJobService : ISearchJobService
 {
-    private const int AiBatchSize = 10;
-    private static readonly TimeSpan CandidateFlushDelay = TimeSpan.FromSeconds(5);
+    private const int AiBatchSize = 4;
+    private static readonly TimeSpan CandidateFlushDelay = TimeSpan.FromSeconds(12);
     private static readonly TimeSpan KworkScanTimeout = TimeSpan.FromMinutes(20);
-    private static readonly SemaphoreSlim ClassifierThrottle = new(4, 4);
+    private static readonly SemaphoreSlim ClassifierThrottle = new(1, 1);
     private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> KworkScanLocks = new();
     private static readonly ConcurrentDictionary<Guid, List<SearchCandidateJobDto>> CandidateBuffers = new();
     private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> CandidateBufferLocks = new();
@@ -108,7 +108,7 @@ public class SearchJobService : ISearchJobService
         try
         {
             var marker = ReadMarker(source.Credentials, "lastMessageId");
-            var limit = 100;
+            var limit = 25;
             scanLog.AppendLine("ClientScout Telegram Scan Debug");
             scanLog.AppendLine($"StartedAtUtc: {scanStartedAt:O}");
             scanLog.AppendLine($"ProfileId: {source.ProfileId}");

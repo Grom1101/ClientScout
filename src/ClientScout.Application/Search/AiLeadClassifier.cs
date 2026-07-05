@@ -6,10 +6,10 @@ namespace ClientScout.Application.Search;
 
 public class AiLeadClassifier : IAiLeadClassifier
 {
-    private const int MaxBatchSize = 10;
-    private const int MaxBatchInputChars = 10000;
-    private const int MaxCandidateTextLength = 1200;
-    private const int MaxProfileSummaryLength = 2600;
+    private const int MaxBatchSize = 4;
+    private const int MaxBatchInputChars = 4200;
+    private const int MaxCandidateTextLength = 700;
+    private const int MaxProfileSummaryLength = 1200;
     private readonly AiJsonClient _ai;
 
     public AiLeadClassifier(AiJsonClient ai)
@@ -39,9 +39,9 @@ public class AiLeadClassifier : IAiLeadClassifier
             settings.UserKeywords,
             settings.NegativeKeywords,
             SearchProfileSummary = Trim(settings.SearchProfileSummary, MaxProfileSummaryLength),
-            MustIncludeSignals = settings.MustIncludeSignals.Take(16).ToArray(),
-            RejectSignals = settings.RejectSignals.Take(24).ToArray(),
-            StrongTerms = settings.StrongTerms.Take(24).ToArray(),
+            MustIncludeSignals = settings.MustIncludeSignals.Take(10).ToArray(),
+            RejectSignals = settings.RejectSignals.Take(14).ToArray(),
+            StrongTerms = settings.StrongTerms.Take(14).ToArray(),
             matchedTerms
         };
 
@@ -97,9 +97,9 @@ Input JSON:
             settings.UserKeywords,
             settings.NegativeKeywords,
             SearchProfileSummary = Trim(settings.SearchProfileSummary, MaxProfileSummaryLength),
-            MustIncludeSignals = settings.MustIncludeSignals.Take(16).ToArray(),
-            RejectSignals = settings.RejectSignals.Take(24).ToArray(),
-            StrongTerms = settings.StrongTerms.Take(24).ToArray(),
+            MustIncludeSignals = settings.MustIncludeSignals.Take(10).ToArray(),
+            RejectSignals = settings.RejectSignals.Take(14).ToArray(),
+            StrongTerms = settings.StrongTerms.Take(14).ToArray(),
             candidates = batch
                 .Select(candidate => new
                 {
