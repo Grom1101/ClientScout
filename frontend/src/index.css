@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -14,8 +15,8 @@
   --color-text-muted: #969696;
   --color-text-secondary: #C7C7C7;
   --color-border: rgba(255, 255, 255, 0.08);
-  --font-sans: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
-  --font-display: 'Segoe UI Variable Display', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-sans: 'Segoe UI Variable', 'Segoe UI', 'Open Sans', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+  --font-display: 'Segoe UI Variable Display', 'Segoe UI Variable', 'Segoe UI', 'Open Sans', system-ui, sans-serif;
 }
 
 * {

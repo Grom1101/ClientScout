@@ -62,12 +62,12 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3.5 bg-[#0078D4] hover:bg-[#0067B8] text-white font-semibold rounded-md transition-all active:scale-[0.99] shadow-lg shadow-[#0078D4]/30 disabled:opacity-50"
+            className="mt-2 w-full py-4 text-base bg-[#0078D4] hover:bg-[#0067B8] text-white font-semibold rounded-md transition-all active:scale-[0.99] shadow-lg shadow-[#0078D4]/30 disabled:opacity-50"
           >
             {isLoading ? 'Загрузка...' : 'Войти'}
           </button>
         </form>
-        <p className="mt-6 text-center text-white/50 text-sm">
+        <p className="mt-10 text-center text-white/50 text-sm">
           Нет аккаунта? <Link to="/register" className="text-[#4CC2FF] font-semibold hover:underline">Зарегистрироваться</Link>
         </p>
       </div>
