@@ -7,6 +7,8 @@ public interface IAiLeadClassifier
 {
     bool IsAvailable { get; }
     bool IsQuotaExceeded { get; }
+    int OptimalBatchSize { get; }
+
     Task<LeadClassificationResult?> ClassifyAsync(
         string rawText,
         Source source,

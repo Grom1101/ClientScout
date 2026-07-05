@@ -43,7 +43,13 @@ const FIXED_MODELS = [
   { providerName: 'BluesMinds', modelName: 'mimo-v2.5' },
   { providerName: 'Groq', modelName: 'llama3-8b-8192' },
   { providerName: 'Groq', modelName: 'llama3-70b-8192' },
+  { providerName: 'Groq', modelName: 'llama-3.1-8b-instant' },
+  { providerName: 'Groq', modelName: 'llama-3.3-70b-versatile' },
   { providerName: 'OpenRouter', modelName: 'google/gemini-1.5-flash' },
+  { providerName: 'OpenRouter', modelName: 'meta-llama/llama-3.1-8b-instruct:free' },
+  { providerName: 'OpenRouter', modelName: 'qwen/qwen-2.5-72b-instruct:free' },
+  { providerName: 'OpenRouter', modelName: 'nvidia/llama-3.1-nemotron-70b-instruct:free' },
+  { providerName: 'OpenRouter', modelName: 'google/gemini-2.0-flash-lite-preview-02-05:free' },
 ];
 
 export default function AdminAnalyticsPage() {

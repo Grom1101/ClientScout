@@ -6,8 +6,7 @@ namespace ClientScout.Application.Search;
 
 public class AiLeadClassifier : IAiLeadClassifier
 {
-    private const int MaxBatchSize = 4;
-    private const int MaxBatchInputChars = 4200;
+    private const int MaxBatchInputChars = 25000;
     private const int MaxCandidateTextLength = 700;
     private const int MaxProfileSummaryLength = 1200;
     private readonly AiJsonClient _ai;
@@ -19,6 +18,7 @@ public class AiLeadClassifier : IAiLeadClassifier
 
     public bool IsAvailable => _ai.IsAvailable;
     public bool IsQuotaExceeded => _ai.LastFailureKind == AiFailureKind.RateLimited;
+    public int OptimalBatchSize => _ai.GetOptimalBatchSize(AiTaskKind.LeadClassification);
 
     public async Task<LeadClassificationResult?> ClassifyAsync(
         string rawText,
@@ -181,10 +181,10 @@ Input JSON:
                 StringComparer.OrdinalIgnoreCase);
     }
 
-    private static IEnumerable<BatchLeadClassificationInput> BuildDynamicBatch(IReadOnlyCollection<BatchLeadClassificationInput> candidates)
+    private IEnumerable<BatchLeadClassificationInput> BuildDynamicBatch(IReadOnlyCollection<BatchLeadClassificationInput> candidates)
     {
         var totalChars = 0;
-        foreach (var candidate in candidates.Take(MaxBatchSize))
+        foreach (var candidate in candidates.Take(OptimalBatchSize))
         {
             var candidateChars = Math.Min(candidate.RawText.Length, MaxCandidateTextLength);
             if (totalChars > 0 && totalChars + candidateChars > MaxBatchInputChars)

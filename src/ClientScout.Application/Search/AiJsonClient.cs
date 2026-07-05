@@ -249,6 +249,14 @@ public sealed class AiJsonClient
         }
     }
 
+    public int GetOptimalBatchSize(AiTaskKind taskKind)
+    {
+        var primaryCandidate = GetProviderModelCandidates(taskKind, 0).FirstOrDefault();
+        if (primaryCandidate == null) return 4;
+        
+        return primaryCandidate.Model.MaxInputChars >= 35000 ? 15 : 4;
+    }
+
     private IEnumerable<AiProviderModelCandidate> GetProviderModelCandidates(AiTaskKind taskKind, int promptChars)
     {
         foreach (var provider in GetProviders(taskKind))
@@ -294,7 +302,7 @@ public sealed class AiJsonClient
             MaxRequestsPerMinute = 30,
             MaxTokensPerMinute = 90000,
             MaxConcurrency = 3,
-            Models = new[] { "gpt-4o-mini", "mimo-v2.5" }.Select((m, i) => new AiModelOptions { Id = m, Priority = i }).ToList()
+            Models = new[] { "gpt-4o-mini", "mimo-v2.5" }.Select((m, i) => new AiModelOptions { Id = m, Priority = i, MaxInputChars = 60000 }).ToList()
         }));
 
         AddEnvProvider(providers, "Groq", "GROQ_API_KEY", "https://api.groq.com/openai/v1",
@@ -438,7 +446,7 @@ public sealed class AiJsonClient
             {
                 Id = model,
                 Priority = index + 1,
-                MaxInputChars = 16000
+                MaxInputChars = 60000
             }).ToList()
         }));
     }

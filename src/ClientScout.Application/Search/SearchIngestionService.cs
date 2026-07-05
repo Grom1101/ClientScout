@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using ClientScout.Application.Common.Interfaces;
@@ -12,8 +12,7 @@ namespace ClientScout.Application.Search;
 
 public class SearchIngestionService : ISearchIngestionService
 {
-    private const int AiRetryBatchSize = 3;
-    private const int MaxAiRetryLeadsPerRun = 15;
+    private const int MaxAiRetryLeadsPerRun = 25;
     private static readonly SemaphoreSlim AiRetryLock = new(1, 1);
     private readonly IAppDbContext _dbContext;
     private readonly ISearchCandidateFilter _candidateFilter;
@@ -250,7 +249,7 @@ public class SearchIngestionService : ISearchIngestionService
                 }
 
                 var source = group.First().Source!;
-                foreach (var batch in group.Chunk(AiRetryBatchSize))
+                foreach (var batch in group.Chunk(_classifier.OptimalBatchSize))
                 {
                     var classifications = await _classifier.ClassifyBatchAsync(
                         batch.Select(lead => new BatchLeadClassificationInput(

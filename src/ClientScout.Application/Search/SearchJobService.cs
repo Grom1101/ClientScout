@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Collections.Concurrent;
@@ -17,7 +17,6 @@ namespace ClientScout.Application.Search;
 
 public class SearchJobService : ISearchJobService
 {
-    private const int AiBatchSize = 4;
     private static readonly TimeSpan CandidateFlushDelay = TimeSpan.FromSeconds(12);
     private static readonly TimeSpan KworkScanTimeout = TimeSpan.FromMinutes(20);
     private static readonly SemaphoreSlim ClassifierThrottle = new(1, 1);
@@ -29,6 +28,7 @@ public class SearchJobService : ISearchJobService
     private readonly ITelegramClientManager _telegramClientManager;
     private readonly ISearchIngestionService _ingestionService;
     private readonly ISearchCandidateFilter _candidateFilter;
+    private readonly IAiLeadClassifier _classifier;
     private readonly IExchangeConnectionService _exchangeConnectionService;
     private readonly ILeadNotificationService _notificationService;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -40,6 +40,7 @@ public class SearchJobService : ISearchJobService
         ITelegramClientManager telegramClientManager,
         ISearchIngestionService ingestionService,
         ISearchCandidateFilter candidateFilter,
+        IAiLeadClassifier classifier,
         IExchangeConnectionService exchangeConnectionService,
         ILeadNotificationService notificationService,
         IHttpClientFactory httpClientFactory,
@@ -50,6 +51,7 @@ public class SearchJobService : ISearchJobService
         _telegramClientManager = telegramClientManager;
         _ingestionService = ingestionService;
         _candidateFilter = candidateFilter;
+        _classifier = classifier;
         _exchangeConnectionService = exchangeConnectionService;
         _notificationService = notificationService;
         _httpClientFactory = httpClientFactory;
@@ -324,7 +326,7 @@ public class SearchJobService : ISearchJobService
         {
             var buffer = CandidateBuffers.GetOrAdd(profileId, _ => []);
             buffer.AddRange(candidates);
-            shouldFlushNow = buffer.Count >= AiBatchSize;
+            shouldFlushNow = buffer.Count >= _classifier.OptimalBatchSize;
         }
         finally
         {
@@ -390,7 +392,7 @@ public class SearchJobService : ISearchJobService
             .GroupBy(candidate => candidate.SourceId)
             .OrderByDescending(group => sourceTypes.TryGetValue(group.Key, out var type) && type == SourceType.Kwork)
             .ThenByDescending(group => group.Count())
-            .SelectMany(group => group.OrderBy(candidate => candidate.ExternalId, StringComparer.OrdinalIgnoreCase).Chunk(AiBatchSize))
+            .SelectMany(group => group.OrderBy(candidate => candidate.ExternalId, StringComparer.OrdinalIgnoreCase).Chunk(_classifier.OptimalBatchSize))
             .Select(batch => batch.ToArray())
             .ToList();
     }
