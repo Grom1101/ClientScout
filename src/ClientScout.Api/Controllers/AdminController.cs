@@ -39,29 +39,46 @@ public class AdminController : ControllerBase
         var totalLogs = await _context.AiUsageLogs.CountAsync();
         var errorCount = await _context.AiUsageLogs.CountAsync(l => l.StatusCode >= 400);
         
-        var logsByModel = await _context.AiUsageLogs
-            .GroupBy(l => l.ModelName)
+        // Calculate provider stats
+        var providerStats = await _context.AiUsageLogs
+            .GroupBy(l => l.ProviderName)
             .Select(g => new
             {
-                Model = g.Key,
-                Count = g.Count(),
-                TotalCost = g.Sum(l => l.CostUsd),
-                TotalInputTokens = g.Sum(l => l.InputTokens),
-                TotalOutputTokens = g.Sum(l => l.OutputTokens)
+                providerName = g.Key,
+                calls = g.Count(),
+                cost = g.Sum(l => l.CostUsd),
+                inputTokens = g.Sum(l => l.InputTokens),
+                outputTokens = g.Sum(l => l.OutputTokens),
+                errors429 = g.Count(l => l.StatusCode == 429)
             })
             .ToListAsync();
 
-        var totalCost = logsByModel.Sum(x => x.TotalCost);
-        var remainingBalance = 100.0m - totalCost;
+        // Calculate model stats
+        var modelStats = await _context.AiUsageLogs
+            .GroupBy(l => new { l.ProviderName, l.ModelName })
+            .Select(g => new
+            {
+                providerName = g.Key.ProviderName,
+                modelName = g.Key.ModelName,
+                calls = g.Count(),
+                cost = g.Sum(l => l.CostUsd),
+                errors429 = g.Count(l => l.StatusCode == 429)
+            })
+            .ToListAsync();
+
+        var totalCostUsd = providerStats.Sum(x => x.cost);
+        var remainingBudgetUsd = 100.0m - totalCostUsd;
+        var totalCalls = providerStats.Sum(x => x.calls);
+        var total429Errors = providerStats.Sum(x => x.errors429);
 
         return Ok(new
         {
-            success = true,
-            totalRequests = totalLogs,
-            errors = errorCount,
-            totalCost,
-            remainingBalance,
-            usageByModel = logsByModel
+            totalCalls,
+            total429Errors,
+            totalCostUsd,
+            remainingBudgetUsd,
+            providerStats,
+            modelStats
         });
     }
 
