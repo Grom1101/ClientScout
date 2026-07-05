@@ -70,6 +70,11 @@ public partial class SearchCandidateFilter : ISearchCandidateFilter
             return new PrefilterResult(false, regularMatches, strongMatches, "INFORMATIONAL_CONTENT", 0);
         }
 
+        if (HasAdjacentVideoEditingSignal(normalizedText) && !ProfileAllowsVideoEditing(settings))
+        {
+            return new PrefilterResult(false, regularMatches, strongMatches, "ADJACENT_VIDEO_EDITING", 0);
+        }
+
         var hasWorkRequest = hasBuyerIntent || hasConcreteDeliveryRequest;
         if (!hasWorkRequest)
         {
@@ -418,6 +423,62 @@ public partial class SearchCandidateFilter : ISearchCandidateFilter
         };
 
         return informationalTerms.Any(term => ContainsTerm(normalizedText, term));
+    }
+
+    private static bool HasAdjacentVideoEditingSignal(string normalizedText)
+    {
+        var videoEditingTerms = new[]
+        {
+            "\u043c\u043e\u043d\u0442\u0430\u0436",
+            "\u0432\u0438\u0434\u0435\u043e\u043c\u043e\u043d\u0442\u0430\u0436",
+            "\u0441\u043c\u043e\u043d\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c",
+            "\u0441\u043c\u043e\u043d\u0442\u0438\u0440\u0443\u0439\u0442\u0435",
+            "\u0440\u043e\u043b\u0438\u043a",
+            "\u0440\u043e\u043b\u0438\u043a\u0438",
+            "\u0448\u043e\u0440\u0442\u0441",
+            "\u0448\u043e\u0440\u0442",
+            "\u0444\u0443\u0442\u0430\u0436",
+            "\u0444\u0443\u0442\u0430\u0436\u0438",
+            "\u0432\u0438\u0434\u0435\u043e",
+            "\u044e\u0442\u0443\u0431",
+            "youtube",
+            "video editing",
+            "edit video",
+            "video editor",
+            "shorts",
+            "reels",
+            "footage"
+        };
+
+        return videoEditingTerms.Any(term => ContainsTerm(normalizedText, term));
+    }
+
+    private static bool ProfileAllowsVideoEditing(SearchSettings settings)
+    {
+        var profileTerms = Merge(
+            settings.UserKeywords,
+            settings.MustIncludeSignals,
+            settings.SoftSignals,
+            settings.ExpandedPositiveTerms,
+            settings.ExpandedIntentTerms,
+            settings.StrongTerms);
+
+        var allowedTerms = new[]
+        {
+            "\u043c\u043e\u043d\u0442\u0430\u0436",
+            "\u0432\u0438\u0434\u0435\u043e\u043c\u043e\u043d\u0442\u0430\u0436",
+            "\u0440\u043e\u043b\u0438\u043a",
+            "\u0440\u043e\u043b\u0438\u043a\u0438",
+            "\u0448\u043e\u0440\u0442\u0441",
+            "\u044e\u0442\u0443\u0431",
+            "youtube",
+            "video editing",
+            "video editor",
+            "shorts",
+            "reels"
+        };
+
+        return profileTerms.Any(profileTerm => allowedTerms.Any(allowed => ContainsTerm(NormalizeText(profileTerm), allowed)));
     }
 
     private static string[] Merge(params IEnumerable<string>[] groups)

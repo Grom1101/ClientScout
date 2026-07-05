@@ -67,6 +67,7 @@ Decision target:
 - Reject job vacancies, job ads, full-time/part-time hiring posts, resumes, CVs, candidate profiles, and "looking for work" posts. Words like "job", "work", "vacancy", "position", and "resume" are not positive signals by themselves.
 - Reject adjacent non-matching deliverables even when they contain profile keywords. A domain word is not enough: the requested deliverable must match the user's actual profile intent.
 - Examples: if the profile is about software development, reject video editing/marketing/articles/news even when they mention that domain; if the profile is about video editing, accept video editing requests and reject software-development-only requests. Apply this logic to every niche, not only gamedev.
+- For gamedev/software profiles, reject video editing requests such as "монтаж игрового ролика", "смонтировать видео для YouTube", gameplay footage editing, trailers, shorts, reels, previews, or YouTube content unless the user's profile explicitly asks for video editing/montage.
 - If the text only mentions a profile keyword but the requested deliverable belongs to a different service category than the profile intent, set isRelevant=false.
 - Example: if UserKeywords are "C#, gamedev, Unity, game", a generic C# desktop app is not relevant because it misses the gamedev/Unity/game context.
 - Respect NegativeKeywords and RejectSignals strictly.
@@ -149,6 +150,7 @@ Decision target:
 - Reject job vacancies, job ads, full-time/part-time hiring posts, resumes, CVs, candidate profiles, and "looking for work" posts. Words like "job", "work", "vacancy", "position", and "resume" are not positive signals by themselves.
 - Reject adjacent non-matching deliverables even when they contain profile keywords. A domain word is not enough: the requested deliverable must match the user's actual profile intent.
 - Examples: if the profile is about software development, reject video editing/marketing/articles/news even when they mention that domain; if the profile is about video editing, accept video editing requests and reject software-development-only requests. Apply this logic to every niche, not only gamedev.
+- For gamedev/software profiles, reject video editing requests such as "монтаж игрового ролика", "смонтировать видео для YouTube", gameplay footage editing, trailers, shorts, reels, previews, or YouTube content unless the user's profile explicitly asks for video editing/montage.
 - If the text only mentions a profile keyword but the requested deliverable belongs to a different service category than the profile intent, set isRelevant=false.
 - Example: if UserKeywords are "C#, gamedev, Unity, game", a generic C# desktop app is not relevant because it misses the gamedev/Unity/game context.
 - Respect NegativeKeywords and RejectSignals strictly.
