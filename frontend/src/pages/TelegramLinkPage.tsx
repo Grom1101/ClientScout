@@ -95,7 +95,7 @@ export default function TelegramLinkPage() {
             <input
               type="text"
               placeholder="Номер телефона, например +1234567890"
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-indigo-500 focus:bg-white/[0.07]"
+              className="w-full p-3 bg-white/5 border border-white/10 rounded-md text-white outline-none focus:border-[#0078D4] focus:bg-white/[0.07]"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
@@ -104,7 +104,7 @@ export default function TelegramLinkPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-2xl transition-colors disabled:opacity-50"
+              className="w-full py-3 bg-[#0078D4] hover:bg-[#0067B8] text-white font-medium rounded-md transition-colors disabled:opacity-50"
             >
               {isLoading ? 'Загрузка...' : 'Отправить код'}
             </button>
@@ -116,7 +116,7 @@ export default function TelegramLinkPage() {
             <input
               type="text"
               placeholder="Код из Telegram"
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-indigo-500 focus:bg-white/[0.07]"
+              className="w-full p-3 bg-white/5 border border-white/10 rounded-md text-white outline-none focus:border-[#0078D4] focus:bg-white/[0.07]"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               required
@@ -125,7 +125,7 @@ export default function TelegramLinkPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-2xl transition-colors disabled:opacity-50"
+              className="w-full py-3 bg-[#0078D4] hover:bg-[#0067B8] text-white font-medium rounded-md transition-colors disabled:opacity-50"
             >
               {isLoading ? 'Проверка...' : 'Привязать'}
             </button>
@@ -137,7 +137,7 @@ export default function TelegramLinkPage() {
             <input
               type="password"
               placeholder="Облачный пароль Telegram"
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-indigo-500 focus:bg-white/[0.07]"
+              className="w-full p-3 bg-white/5 border border-white/10 rounded-md text-white outline-none focus:border-[#0078D4] focus:bg-white/[0.07]"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -146,7 +146,7 @@ export default function TelegramLinkPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-2xl transition-colors disabled:opacity-50"
+              className="w-full py-3 bg-[#0078D4] hover:bg-[#0067B8] text-white font-medium rounded-md transition-colors disabled:opacity-50"
             >
               {isLoading ? 'Проверка...' : 'Войти'}
             </button>

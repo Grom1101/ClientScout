@@ -125,7 +125,7 @@ export default function HomePage() {
             style={{ 
               width: '42px', 
               height: '42px', 
-              backgroundColor: '#1C2038', 
+              backgroundColor: '#333333', 
               border: '1px solid rgba(255,255,255,0.08)',
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
             }}
@@ -147,9 +147,9 @@ export default function HomePage() {
           </p>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-[13px] font-medium" style={{ color: '#7F8CA0' }}>Активный профиль:</span>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md" style={{ backgroundColor: 'rgba(99,102,241,0.1)' }}>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md" style={{ backgroundColor: 'rgba(0, 120, 212,0.1)' }}>
               <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#10B981' }}></div>
-              <span className="text-[12px] font-bold" style={{ color: '#C7D2FE' }}>{activeProfile?.name || 'Не выбран'}</span>
+              <span className="text-[12px] font-bold" style={{ color: '#9ECBFF' }}>{activeProfile?.name || 'Не выбран'}</span>
             </div>
           </div>
         </div>
@@ -167,12 +167,12 @@ export default function HomePage() {
             </div>
           </div>
           <div className="mail-card relative overflow-hidden group" style={{ borderRadius: 12, padding: '15px' }}>
-            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full blur-[30px] transition-opacity" style={{ backgroundColor: 'rgba(129, 140, 248, 0.4)' }}></div>
-            <p className="text-[11px] font-bold mb-1 relative z-10 tracking-wider uppercase" style={{ color: '#818CF8' }}>Рассылок сегодня</p>
+            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full blur-[30px] transition-opacity" style={{ backgroundColor: 'rgba(76, 194, 255, 0.4)' }}></div>
+            <p className="text-[11px] font-bold mb-1 relative z-10 tracking-wider uppercase" style={{ color: '#4CC2FF' }}>Рассылок сегодня</p>
             <div className="flex items-end justify-between relative z-10">
               <span className="text-3xl font-extrabold text-white tracking-tight">{stats?.sentToday ?? 0}</span>
-              <div className="p-1.5 rounded-xl bg-indigo-500/10">
-                <Send className="w-5 h-5 text-indigo-500" />
+              <div className="p-1.5 rounded-xl bg-sky-500/10">
+                <Send className="w-5 h-5 text-sky-500" />
               </div>
             </div>
           </div>
@@ -253,8 +253,8 @@ export default function HomePage() {
                   onClick={() => setSentPeriod(period)}
                   className="flex-1 text-[10px] text-center uppercase tracking-wider py-1.5 rounded-full transition-all font-extrabold"
                   style={{
-                    backgroundColor: sentPeriod === period ? 'rgba(129, 140, 248, 0.25)' : 'transparent',
-                    color: sentPeriod === period ? '#818CF8' : '#64748B',
+                    backgroundColor: sentPeriod === period ? 'rgba(76, 194, 255, 0.25)' : 'transparent',
+                    color: sentPeriod === period ? '#4CC2FF' : '#64748B',
                   }}
                 >
                   {period === 'today' ? 'Сегодня' : 'Месяц'}
@@ -267,8 +267,8 @@ export default function HomePage() {
               <AreaChart data={sentChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorSentOnly" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#818CF8" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#818CF8" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#4CC2FF" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#4CC2FF" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
@@ -289,7 +289,7 @@ export default function HomePage() {
                 <Area 
                   type="monotone" 
                   dataKey="sent" 
-                  stroke="#818CF8" 
+                  stroke="#4CC2FF" 
                   strokeWidth={2} 
                   fillOpacity={1} 
                   fill="url(#colorSentOnly)" 
@@ -317,7 +317,7 @@ export default function HomePage() {
           >
             {/* Avatar block */}
             <div className="flex items-center gap-5 px-1" style={{ marginBottom: '15px' }}>
-              <div className="shrink-0 rounded-full flex items-center justify-center text-xl font-bold overflow-hidden shadow-[0_4px_20px_rgba(99,102,241,0.3)]" style={{ width: '64px', height: '64px', minWidth: '64px', minHeight: '64px', backgroundColor: '#6366F1', color: 'white' }}>
+              <div className="shrink-0 rounded-full flex items-center justify-center text-xl font-bold overflow-hidden shadow-[0_4px_20px_rgba(0, 120, 212,0.3)]" style={{ width: '64px', height: '64px', minWidth: '64px', minHeight: '64px', backgroundColor: '#0078D4', color: 'white' }}>
                 {account?.telegramAvatarBase64 ? (
                   <img src={account.telegramAvatarBase64} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -387,12 +387,12 @@ export default function HomePage() {
                       height: '56px',
                       paddingLeft: '15px',
                       paddingRight: '15px',
-                      backgroundColor: isCurrent ? 'rgba(99,102,241,0.15)' : 'rgba(255, 255, 255, 0.03)',
-                      border: isCurrent ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
+                      backgroundColor: isCurrent ? 'rgba(0, 120, 212,0.15)' : 'rgba(255, 255, 255, 0.03)',
+                      border: isCurrent ? '1px solid rgba(0, 120, 212,0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
                       backdropFilter: 'blur(12px)'
                     }}
                   >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 shadow-sm" style={{ backgroundColor: p.color || '#6366F1', color: 'white' }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 shadow-sm" style={{ backgroundColor: p.color || '#0078D4', color: 'white' }}>
                       {p.name.charAt(0).toUpperCase()}
                     </div>
 
@@ -483,7 +483,7 @@ export default function HomePage() {
               <button 
                 onClick={handleCreateProfile} 
                 className="w-full rounded-2xl text-[15px] font-semibold text-white transition-all active:scale-[0.98]" 
-                style={{ height: '56px', backgroundColor: '#6366F1', boxShadow: '0 4px 15px rgba(99,102,241,0.3)' }}
+                style={{ height: '56px', backgroundColor: '#0078D4', boxShadow: '0 4px 15px rgba(0, 120, 212,0.3)' }}
               >
                 Создать профиль
               </button>

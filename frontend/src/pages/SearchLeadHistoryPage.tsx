@@ -47,7 +47,7 @@ const SourceLabel = ({ order }: { order: { chatName?: string; source: string; so
       {label.topic && (
         <>
           <ChevronRight style={{ width: 14, height: 14, flexShrink: 0, strokeWidth: 3 }} />
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#A5B4FC', fontWeight: 700 }}>{label.topic}</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#60CDFF', fontWeight: 700 }}>{label.topic}</span>
         </>
       )}
     </span>
@@ -137,13 +137,13 @@ export default function SearchLeadHistoryPage() {
             cursor: 'pointer',
             color: aiFilter === 'confirmed' ? '#FFFFFF' : '#64748B',
             border: aiFilter === 'confirmed'
-              ? '1px solid rgba(99,102,241,0.5)'
+              ? '1px solid rgba(0, 120, 212,0.5)'
               : '1px solid rgba(255,255,255,0.06)',
             background: aiFilter === 'confirmed'
               ? 'linear-gradient(135deg, rgba(79,70,229,0.38), rgba(49,46,129,0.25))'
               : undefined,
             boxShadow: aiFilter === 'confirmed'
-              ? '0 0 0 1px rgba(99,102,241,0.2)'
+              ? '0 0 0 1px rgba(0, 120, 212,0.2)'
               : undefined,
           }}
         >
@@ -164,13 +164,13 @@ export default function SearchLeadHistoryPage() {
             cursor: 'pointer',
             color: aiFilter === 'unverified' ? '#FFFFFF' : '#64748B',
             border: aiFilter === 'unverified'
-              ? '1px solid rgba(99,102,241,0.5)'
+              ? '1px solid rgba(0, 120, 212,0.5)'
               : '1px solid rgba(255,255,255,0.06)',
             background: aiFilter === 'unverified'
               ? 'linear-gradient(135deg, rgba(79,70,229,0.38), rgba(49,46,129,0.25))'
               : undefined,
             boxShadow: aiFilter === 'unverified'
-              ? '0 0 0 1px rgba(99,102,241,0.2)'
+              ? '0 0 0 1px rgba(0, 120, 212,0.2)'
               : undefined,
           }}
         >
@@ -181,13 +181,13 @@ export default function SearchLeadHistoryPage() {
       {/* Р—Р°РіСЂСѓР·РєР° */}
       {isHistoryLoading && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
-          <Loader2 style={{ width: 32, height: 32, color: '#6366F1' }} className="animate-spin" />
+          <Loader2 style={{ width: 32, height: 32, color: '#0078D4' }} className="animate-spin" />
         </div>
       )}
 
       {/* РџСѓСЃС‚Рѕ */}
       {!isHistoryLoading && history.length === 0 && (
-        <div style={{ backgroundColor: '#141828', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, color: '#7F8CA0', fontSize: 14 }}>
+        <div style={{ backgroundColor: '#2B2B2B', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, color: '#7F8CA0', fontSize: 14 }}>
           История пока пустая.
         </div>
       )}
@@ -198,7 +198,7 @@ export default function SearchLeadHistoryPage() {
           <SwipeableItem key={order.id} onDelete={() => hideLead(order.id)}>
             <div
               style={{
-                backgroundColor: '#141828',
+                backgroundColor: '#2B2B2B',
                 border: '1px solid rgba(255,255,255,0.06)',
                 borderRadius: 16,
                 paddingTop: 12,
@@ -288,7 +288,7 @@ export default function SearchLeadHistoryPage() {
                     <button
                       onClick={() => openLead(order.id, order.link)}
                       style={{
-                        backgroundColor: '#6366F1',
+                        backgroundColor: '#0078D4',
                         color: 'white',
                         borderRadius: 8,
                         paddingTop: 6,
@@ -329,7 +329,7 @@ export default function SearchLeadHistoryPage() {
               gap: 6,
               fontSize: 13,
               fontWeight: 700,
-              color: page === 0 ? '#374151' : '#A5B4FC',
+              color: page === 0 ? '#374151' : '#60CDFF',
               cursor: page === 0 ? 'default' : 'pointer',
               opacity: page === 0 || isHistoryLoading ? 0.4 : 1,
               border: '1px solid rgba(255,255,255,0.06)',
@@ -346,10 +346,10 @@ export default function SearchLeadHistoryPage() {
             minWidth: 44,
             height: 44,
             borderRadius: 12,
-            backgroundColor: 'rgba(99,102,241,0.12)',
-            border: '1px solid rgba(99,102,241,0.2)',
+            backgroundColor: 'rgba(0, 120, 212,0.12)',
+            border: '1px solid rgba(0, 120, 212,0.2)',
           }}>
-            <span style={{ color: '#A5B4FC', fontSize: 14, fontWeight: 800 }}>{page + 1}</span>
+            <span style={{ color: '#60CDFF', fontSize: 14, fontWeight: 800 }}>{page + 1}</span>
           </div>
 
           <button
@@ -367,7 +367,7 @@ export default function SearchLeadHistoryPage() {
               gap: 6,
               fontSize: 13,
               fontWeight: 700,
-              color: history.length < pageSize ? '#374151' : '#A5B4FC',
+              color: history.length < pageSize ? '#374151' : '#60CDFF',
               cursor: history.length < pageSize ? 'default' : 'pointer',
               opacity: history.length < pageSize || isHistoryLoading ? 0.4 : 1,
               border: '1px solid rgba(255,255,255,0.06)',

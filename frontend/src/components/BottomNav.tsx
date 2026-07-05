@@ -35,8 +35,8 @@ export default function BottomNav() {
             onClick={() => navigate(tab.path)}
             className="h-[58px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all active:scale-[0.98]"
             style={{
-              backgroundColor: isActive ? 'rgba(99,102,241,0.16)' : 'transparent',
-              color: isActive ? '#A5B4FC' : '#7A8798',
+              backgroundColor: isActive ? 'rgba(0, 120, 212,0.16)' : 'transparent',
+              color: isActive ? '#60CDFF' : '#7A8798',
             }}
           >
             <Icon className="w-7 h-7" strokeWidth={isActive ? 2.4 : 2} />

@@ -189,7 +189,7 @@ export default function SearchExchangesModal({ isOpen, onClose }: Props) {
                   gap: 6,
                   background: needsReconnect
                     ? 'linear-gradient(135deg, #D97706 0%, #B45309 100%)'
-                    : 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
+                    : 'linear-gradient(135deg, #0078D4 0%, #004A80 100%)',
                 }}
               >
                 {(isStarting || isFlowPending) && (

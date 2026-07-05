@@ -72,7 +72,7 @@ const SourceLabel = ({ order }: { order: { chatName?: string; source: string; so
       {label.topic && (
         <>
           <ChevronRight style={{ width: 14, height: 14, flexShrink: 0, strokeWidth: 3 }} />
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#A5B4FC', fontWeight: 700 }}>{label.topic}</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#60CDFF', fontWeight: 700 }}>{label.topic}</span>
         </>
       )}
     </span>
@@ -203,9 +203,9 @@ export default function SearchPage() {
         )}
 
         {settings?.needsAiExpansion && (
-          <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20" style={{ marginTop: 8 }}>
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-400" />
-            <span className="text-xs font-semibold text-blue-400">Генерация AI-профиля...</span>
+          <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20" style={{ marginTop: 8 }}>
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-sky-400" />
+            <span className="text-xs font-semibold text-sky-400">Генерация AI-профиля...</span>
           </div>
         )}
       </div>
@@ -231,7 +231,7 @@ export default function SearchPage() {
           <div className="flex items-center gap-3">
             <span
               className="min-w-8 rounded-lg px-2.5 py-1 text-center text-sm font-black"
-              style={{ backgroundColor: 'rgba(99,102,241,0.18)', color: '#A5B4FC' }}
+              style={{ backgroundColor: 'rgba(0, 120, 212,0.18)', color: '#60CDFF' }}
             >
               {selectedSearchChats.length}
             </span>
@@ -307,7 +307,7 @@ export default function SearchPage() {
         <button
           onClick={() => fetchLeads(getActiveProfileId())}
           disabled={isLoading}
-          style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#818CF8', fontSize: 12, fontWeight: 600, opacity: isLoading ? 0.5 : 1 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#4CC2FF', fontSize: 12, fontWeight: 600, opacity: isLoading ? 0.5 : 1 }}
         >
           <RefreshCw style={{ width: 13, height: 13 }} className={isLoading ? 'animate-spin' : ''} />
           Обновить
@@ -316,7 +316,7 @@ export default function SearchPage() {
 
       <div className="relative flex flex-col gap-3">
         {!isLoading && leads.length === 0 && (
-          <div className="rounded-2xl p-4 text-sm" style={{ backgroundColor: '#141828', color: '#7F8CA0', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="rounded-2xl p-4 text-sm" style={{ backgroundColor: '#2B2B2B', color: '#7F8CA0', border: '1px solid rgba(255,255,255,0.06)' }}>
             Пока нет найденных заказов.
           </div>
         )}
@@ -325,7 +325,7 @@ export default function SearchPage() {
           <SwipeableItem key={order.id} onDelete={() => hideLead(order.id)}>
             <div
               style={{
-                backgroundColor: '#141828',
+                backgroundColor: '#2B2B2B',
                 border: '1px solid rgba(255,255,255,0.06)',
                 borderRadius: 16,
                 paddingTop: 12,
@@ -411,7 +411,7 @@ export default function SearchPage() {
                     <button
                       onClick={() => openOrder(order.id, order.link)}
                       style={{
-                        backgroundColor: '#6366F1',
+                        backgroundColor: '#0078D4',
                         color: 'white',
                         borderRadius: 10,
                         paddingTop: 6,
@@ -444,14 +444,14 @@ export default function SearchPage() {
             paddingRight: 15,
             marginTop: 12,
             marginBottom: 12,
-            border: '1px solid rgba(99,102,241,0.28)',
+            border: '1px solid rgba(0, 120, 212,0.28)',
             background: 'linear-gradient(180deg, rgba(30,29,66,0.97), rgba(18,17,42,0.97))',
           }}
         >
-          <span style={{ color: '#C7D2FE', fontSize: 15, fontWeight: 700 }}>Показать все</span>
+          <span style={{ color: '#9ECBFF', fontSize: 15, fontWeight: 700 }}>Показать все</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ color: '#818CF8', fontSize: 13, fontWeight: 600 }}>{totalCount} заказов</span>
-            <ChevronRight style={{ color: '#818CF8', width: 20, height: 20 }} />
+            <span style={{ color: '#4CC2FF', fontSize: 13, fontWeight: 600 }}>{totalCount} заказов</span>
+            <ChevronRight style={{ color: '#4CC2FF', width: 20, height: 20 }} />
           </div>
         </button>
       )}

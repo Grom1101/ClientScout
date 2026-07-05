@@ -21,8 +21,8 @@ export default function Modal({ isOpen, onClose, onBack, title, children }: Moda
       <div
         className="w-full max-w-[360px] rounded-[24px] animate-scale-in"
         style={{
-          background: 'linear-gradient(180deg, #1A1E36 0%, #10142A 100%)',
-          border: '1px solid rgba(129,140,248,0.16)',
+          background: 'linear-gradient(180deg, #2B2B2B 0%, #202020 100%)',
+          border: '1px solid rgba(76, 194, 255,0.16)',
           boxShadow: '0 25px 60px rgba(5,8,18,0.6)',
           padding: '24px 30px 32px 30px'
         }}

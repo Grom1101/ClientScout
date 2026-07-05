@@ -252,9 +252,9 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
     <div
       className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-all"
       style={{
-        backgroundColor: checked ? 'rgba(99,102,241,0.6)' : 'rgba(99,102,241,0.08)',
-        border: '1px solid rgba(129,140,248,0.75)',
-        boxShadow: checked ? '0 0 16px rgba(99,102,241,0.45)' : 'none',
+        backgroundColor: checked ? 'rgba(0, 120, 212,0.6)' : 'rgba(0, 120, 212,0.08)',
+        border: '1px solid rgba(76, 194, 255,0.75)',
+        boxShadow: checked ? '0 0 16px rgba(0, 120, 212,0.45)' : 'none',
       }}
     >
       {checked && <Check className="h-4 w-4 text-white" strokeWidth={3} />}
@@ -269,7 +269,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
         <button
           onClick={() => setShowAddChat(true)}
           className="flex h-9 w-9 items-center justify-center rounded-full"
-          style={{ background: 'linear-gradient(135deg, #6366F1, #4F46E5)', marginRight: '10px' }}
+          style={{ background: 'linear-gradient(135deg, #0078D4, #005A9E)', marginRight: '10px' }}
         >
           <Plus className="h-5 w-5 text-white" />
         </button>
@@ -291,7 +291,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
         <div className="relative pb-24">
           {isLoading && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#07111c]/50">
-              <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#818CF8' }} />
+              <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#4CC2FF' }} />
             </div>
           )}
 
@@ -313,7 +313,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
                     <span className="truncate text-[15px] font-extrabold text-white">{platformLabels[platform]}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-lg px-2 py-0.5 text-xs font-black" style={{ backgroundColor: 'rgba(99,102,241,0.18)', color: '#A5B4FC' }}>
+                    <span className="rounded-lg px-2 py-0.5 text-xs font-black" style={{ backgroundColor: 'rgba(0, 120, 212,0.18)', color: '#60CDFF' }}>
                       {platformEntries.length}
                     </span>
                     {isCollapsed ? <ChevronDown className="h-4 w-4 text-slate-500" /> : <ChevronUp className="h-4 w-4 text-slate-500" />}
@@ -446,7 +446,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
                       className="flex cursor-pointer items-center gap-3 rounded-xl p-3 transition-all"
                       style={{ backgroundColor: disabled ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)', opacity: disabled ? 0.55 : 1 }}
                     >
-                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: topic.checked ? '#6366F1' : 'transparent', border: topic.checked ? 'none' : '1px solid rgba(255,255,255,0.2)' }}>
+                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: topic.checked ? '#0078D4' : 'transparent', border: topic.checked ? 'none' : '1px solid rgba(255,255,255,0.2)' }}>
                         {topic.checked && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
                         {!topic.checked && showWriteLock && <Lock className="h-3 w-3 text-slate-400" />}
                       </div>
@@ -478,7 +478,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
             onClick={handleAddChat}
             disabled={isAdding || (!newChatLink.trim() && !forumTopics)}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-black uppercase text-white transition-all active:scale-[0.98] disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #6366F1, #4F46E5)' }}
+            style={{ background: 'linear-gradient(135deg, #0078D4, #005A9E)' }}
           >
             {isAdding ? <Loader2 className="h-5 w-5 animate-spin" /> : forumTopics ? 'Сохранить' : 'Добавить'}
           </button>

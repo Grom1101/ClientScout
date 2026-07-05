@@ -91,7 +91,7 @@ export default function SwipeableItem({ onDelete, children }: SwipeableItemProps
         style={{
           transform: `translateX(-${offset}px)`,
           transition: isDragging.current ? 'none' : 'transform 0.3s ease',
-          backgroundColor: '#141828',
+          backgroundColor: '#2B2B2B',
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
