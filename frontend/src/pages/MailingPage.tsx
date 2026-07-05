@@ -103,7 +103,7 @@ export default function MailingPage() {
       <div className="relative mx-auto flex flex-col items-center" style={{ width: '100%', marginBottom: 8, paddingTop: 8 }}>
         {isOutreachLoading && (
           <div className="absolute left-0 top-1 z-10 rounded-full bg-white/10 p-1.5 shadow-lg backdrop-blur-md">
-            <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#8B5CF6' }} />
+            <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#818CF8' }} />
           </div>
         )}
 
@@ -132,7 +132,7 @@ export default function MailingPage() {
           <div className="flex items-center gap-3">
             <span
               className="min-w-8 rounded-lg px-2.5 py-1 text-center text-sm font-black"
-              style={{ backgroundColor: 'rgba(124,58,237,0.18)', color: '#B794F6' }}
+              style={{ backgroundColor: 'rgba(99,102,241,0.18)', color: '#A5B4FC' }}
             >
               {selectedChats.length}
             </span>
@@ -207,7 +207,7 @@ export default function MailingPage() {
           <button
             onClick={() => fetchStats(getActiveProfileId(), 'today')}
             disabled={isStatsLoading}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#6D28D9', fontSize: 12, fontWeight: 600, opacity: isStatsLoading ? 0.5 : 1 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#818CF8', fontSize: 12, fontWeight: 600, opacity: isStatsLoading ? 0.5 : 1 }}
           >
             <RefreshCw style={{ width: 13, height: 13 }} className={isStatsLoading ? 'animate-spin' : ''} />
             Обновить
@@ -232,8 +232,8 @@ export default function MailingPage() {
                 paddingTop: index === 0 ? 20 : 0,
                 paddingBottom: index === stats.recentLogs.length - 1 ? 20 : 0
               }}>
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-active:scale-95 shadow-sm" style={{ backgroundColor: entry.status === 0 ? 'rgba(139, 92, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: entry.status === 0 ? '1px solid rgba(139, 92, 246, 0.15)' : '1px solid rgba(239, 68, 68, 0.15)' }}>
-                  <Send className="w-5 h-5" style={{ color: entry.status === 0 ? '#A78BFA' : '#F87171' }} />
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-active:scale-95 shadow-sm" style={{ backgroundColor: entry.status === 0 ? 'rgba(99, 102, 241, 0.12)' : 'rgba(239, 68, 68, 0.1)', border: entry.status === 0 ? '1px solid rgba(99, 102, 241, 0.18)' : '1px solid rgba(239, 68, 68, 0.15)' }}>
+                  <Send className="w-5 h-5" style={{ color: entry.status === 0 ? '#A5B4FC' : '#F87171' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <ChatNameLabel value={entry.chatName} />
@@ -246,7 +246,7 @@ export default function MailingPage() {
                     {entry.matchedKeyword && (
                       <>
                         <span className="text-slate-600 shrink-0">→</span>
-                        <span className="font-semibold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 shrink-0 border border-purple-500/20">{entry.matchedKeyword}</span>
+                        <span className="font-semibold px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 shrink-0 border border-indigo-500/20">{entry.matchedKeyword}</span>
                       </>
                     )}
                   </div>

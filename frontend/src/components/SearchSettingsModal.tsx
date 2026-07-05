@@ -118,9 +118,9 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
       key={term}
       className="inline-flex max-w-full items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold"
       style={{
-        backgroundColor: tone === 'purple' ? 'rgba(124,58,237,0.18)' : 'rgba(239,68,68,0.12)',
-        color: tone === 'purple' ? '#C4B5FD' : '#FCA5A5',
-        border: tone === 'purple' ? '1px solid rgba(167,139,250,0.22)' : '1px solid rgba(248,113,113,0.2)',
+        backgroundColor: tone === 'purple' ? 'rgba(99,102,241,0.18)' : 'rgba(239,68,68,0.12)',
+        color: tone === 'purple' ? '#C7D2FE' : '#FCA5A5',
+        border: tone === 'purple' ? '1px solid rgba(129,140,248,0.22)' : '1px solid rgba(248,113,113,0.2)',
       }}
     >
       <span className="truncate">{term}</span>
@@ -134,14 +134,14 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
     <Modal isOpen={isOpen} onClose={handleClose} title="Настройки поиска">
       <div className="relative flex flex-col gap-5 pb-2 pt-5">
         {isLoading && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl bg-[#0B0E18]/50 backdrop-blur-sm">
-            <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#7C3AED' }} />
+          <div className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl bg-[#0A0D17]/50 backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#818CF8' }} />
           </div>
         )}
 
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2 px-1">
-            <Clock className="h-4 w-4" style={{ color: '#8B5CF6' }} />
+            <Clock className="h-4 w-4" style={{ color: '#818CF8' }} />
             <h3 className="text-[15px] font-extrabold text-white">Периодичность поиска</h3>
           </div>
           <div className="grid grid-cols-3 gap-2">
@@ -151,9 +151,9 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
                 onClick={() => setDraftInterval(option)}
                 className="h-11 rounded-xl text-[13px] font-black transition-all active:scale-95"
                 style={{
-                  backgroundColor: draftInterval === option ? 'rgba(124,58,237,0.24)' : 'rgba(255,255,255,0.04)',
+                  backgroundColor: draftInterval === option ? 'rgba(99,102,241,0.24)' : 'rgba(255,255,255,0.04)',
                   color: draftInterval === option ? '#FFFFFF' : '#94A3B8',
-                  border: draftInterval === option ? '1px solid rgba(167,139,250,0.45)' : '1px solid rgba(255,255,255,0.08)',
+                  border: draftInterval === option ? '1px solid rgba(129,140,248,0.45)' : '1px solid rgba(255,255,255,0.08)',
                 }}
               >
                 {option} мин
@@ -164,7 +164,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
 
         <div className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-black/20 px-[15px] py-3.5">
           <div className="flex items-center gap-2.5">
-            <Bell className="h-5 w-5" style={{ color: '#8B5CF6' }} />
+            <Bell className="h-5 w-5" style={{ color: '#818CF8' }} />
             <span className="text-[15px] font-extrabold text-white">Уведомления</span>
           </div>
           <Toggle checked={draftNotifications} onChange={setDraftNotifications} />
@@ -174,7 +174,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <h3 className="text-[15px] font-extrabold text-white">Ключевые слова</h3>
-              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase" style={{ backgroundColor: 'rgba(124,58,237,0.16)', color: '#C4B5FD' }}>
+              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase" style={{ backgroundColor: 'rgba(99,102,241,0.16)', color: '#C7D2FE' }}>
                 <Bot className="h-3 w-3" />
                 AI
               </span>
@@ -241,7 +241,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
         <button
           onClick={handleSave}
           className="flex h-[52px] w-full items-center justify-center rounded-[14px] text-[14px] font-black uppercase tracking-widest text-white transition-all active:scale-[0.98]"
-          style={{ background: 'linear-gradient(135deg, #7C3AED, #315DF4)', boxShadow: '0 8px 24px rgba(124,58,237,0.25)' }}
+          style={{ background: 'linear-gradient(135deg, #7C3AED, #315DF4)', boxShadow: '0 8px 24px rgba(99,102,241,0.25)' }}
         >
           Сохранить
         </button>

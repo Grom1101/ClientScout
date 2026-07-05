@@ -231,7 +231,7 @@ export default function SearchPage() {
           <div className="flex items-center gap-3">
             <span
               className="min-w-8 rounded-lg px-2.5 py-1 text-center text-sm font-black"
-              style={{ backgroundColor: 'rgba(124,58,237,0.18)', color: '#B794F6' }}
+              style={{ backgroundColor: 'rgba(99,102,241,0.18)', color: '#A5B4FC' }}
             >
               {selectedSearchChats.length}
             </span>
@@ -307,7 +307,7 @@ export default function SearchPage() {
         <button
           onClick={() => fetchLeads(getActiveProfileId())}
           disabled={isLoading}
-          style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#6D28D9', fontSize: 12, fontWeight: 600, opacity: isLoading ? 0.5 : 1 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#818CF8', fontSize: 12, fontWeight: 600, opacity: isLoading ? 0.5 : 1 }}
         >
           <RefreshCw style={{ width: 13, height: 13 }} className={isLoading ? 'animate-spin' : ''} />
           Обновить
@@ -411,9 +411,9 @@ export default function SearchPage() {
                     <button
                       onClick={() => openOrder(order.id, order.link)}
                       style={{
-                        backgroundColor: '#7C3AED',
+                        backgroundColor: '#6366F1',
                         color: 'white',
-                        borderRadius: 8,
+                        borderRadius: 10,
                         paddingTop: 6,
                         paddingBottom: 6,
                         paddingLeft: 16,
@@ -444,14 +444,14 @@ export default function SearchPage() {
             paddingRight: 15,
             marginTop: 12,
             marginBottom: 12,
-            border: '1px solid rgba(100,58,200,0.25)',
-            background: 'linear-gradient(180deg, rgba(28,20,55,0.97), rgba(18,12,38,0.97))',
+            border: '1px solid rgba(99,102,241,0.28)',
+            background: 'linear-gradient(180deg, rgba(30,29,66,0.97), rgba(18,17,42,0.97))',
           }}
         >
-          <span style={{ color: '#C4B5FD', fontSize: 15, fontWeight: 700 }}>Показать все</span>
+          <span style={{ color: '#C7D2FE', fontSize: 15, fontWeight: 700 }}>Показать все</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ color: '#7C5FBF', fontSize: 13, fontWeight: 600 }}>{totalCount} заказов</span>
-            <ChevronRight style={{ color: '#7C5FBF', width: 20, height: 20 }} />
+            <span style={{ color: '#818CF8', fontSize: 13, fontWeight: 600 }}>{totalCount} заказов</span>
+            <ChevronRight style={{ color: '#818CF8', width: 20, height: 20 }} />
           </div>
         </button>
       )}

@@ -34,7 +34,7 @@ export default function RegisterPage() {
           <input
             type="email"
             placeholder="Email"
-            className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-purple-500"
+            className="w-full p-3.5 bg-white/5 border border-white/10 rounded-2xl text-white outline-none transition-colors focus:border-indigo-500 focus:bg-white/[0.07]"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -42,7 +42,7 @@ export default function RegisterPage() {
           <input
             type="password"
             placeholder="Пароль"
-            className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-purple-500"
+            className="w-full p-3.5 bg-white/5 border border-white/10 rounded-2xl text-white outline-none transition-colors focus:border-indigo-500 focus:bg-white/[0.07]"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -51,13 +51,13 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50"
+            className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-2xl transition-all active:scale-[0.99] shadow-lg shadow-indigo-600/25 disabled:opacity-50"
           >
             {isLoading ? 'Создать аккаунт' : 'Зарегистрироваться'}
           </button>
         </form>
         <p className="mt-6 text-center text-white/50 text-sm">
-          Уже есть аккаунт? <Link to="/login" className="text-purple-400 hover:underline">Войти</Link>
+          Уже есть аккаунт? <Link to="/login" className="text-indigo-400 font-semibold hover:underline">Войти</Link>
         </p>
       </div>
     </div>
