@@ -19,7 +19,8 @@ public class SearchJobService : ISearchJobService
 {
     private static readonly TimeSpan CandidateFlushDelay = TimeSpan.FromSeconds(12);
     private static readonly TimeSpan KworkScanTimeout = TimeSpan.FromMinutes(20);
-    private static readonly SemaphoreSlim ClassifierThrottle = new(1, 1);
+    // High concurrency to allow AiJsonClient's load balancer to distribute across all models
+    private static readonly SemaphoreSlim ClassifierThrottle = new(50, 50);
     private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> KworkScanLocks = new();
     private static readonly ConcurrentDictionary<Guid, List<SearchCandidateJobDto>> CandidateBuffers = new();
     private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> CandidateBufferLocks = new();
