@@ -1,0 +1,3394 @@
+﻿diff --git a/.env.example b/.env.example
+new file mode 100644
+index 0000000..88e7c6d
+--- /dev/null
++++ b/.env.example
+@@ -0,0 +1,23 @@
++POSTGRES_USER=clientscout
++POSTGRES_PASSWORD=replace-with-a-local-dev-password
++POSTGRES_DB=clientscout
++
++ConnectionStrings__DefaultConnection=Host=localhost;Database=clientscout;Username=clientscout;Password=replace-with-a-local-dev-password
++Jwt__Secret=replace-with-a-random-32-byte-minimum-secret
++Jwt__Issuer=clientscout.app
++Jwt__Audience=clientscout.tma
++
++Cors__AllowedOrigins__0=http://localhost:5173
++Cors__AllowedOrigins__1=https://localhost:5173
++
++Admin__AccountIds__0=replace-with-admin-account-guid
++Admin__TelegramUserIds__0=replace-with-admin-telegram-id
++
++Telegram__BotToken=replace-with-telegram-bot-token
++Telegram__ApiId=replace-with-telegram-api-id
++Telegram__ApiHash=replace-with-telegram-api-hash
++
++GROQ_API_KEY=replace-with-groq-key
++OPENROUTER_API_KEY=replace-with-openrouter-key
++GEMINI_API_KEY=replace-with-gemini-key
++BLUESMINDS_API_KEY=replace-with-bluesminds-key
+diff --git a/.gitignore b/.gitignore
+index 8f37df2..1caeb4e 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -41,6 +41,11 @@ coverage/
+ # Logs
+ logs/
+ *.log
++*.err.log
++*.out.log
++*.run.log
++dotnet-run-*.txt
++backend-*.txt
+ npm-debug.log*
+ yarn-debug.log*
+ yarn-error.log*
+@@ -67,6 +72,9 @@ redis-data/
+ src/ClientScout.Api/wwwroot/uploads/
+ src/ClientScout.Api/session_*.dat
+ session_*.dat
++*.session
++*.session-journal
++*.dat
+ 
+ # OS files
+ .DS_Store
+@@ -74,6 +82,9 @@ Thumbs.db
+ desktop.ini
+ 
+ # Temporary files
++.tmp/
++tmp/
++debug/
+ *.tmp
+ *.temp
+ *.bak
+@@ -81,3 +92,10 @@ desktop.ini
+ *.swo
+ scratch/
+ diff.txt
++
++# Local throwaway tools / scripts
++/test*.cs
++/QueryHangfire.cs
++/QueryHangfire/
++/TestGroq/
++/db-cleaner/
+diff --git a/docker-compose.yml b/docker-compose.yml
+index b24f63f..d3e2f62 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -2,9 +2,9 @@
+   postgres:
+     image: postgres:16-alpine
+     environment:
+-      POSTGRES_USER: postgres
+-      POSTGRES_PASSWORD: password
+-      POSTGRES_DB: clientscout
++      POSTGRES_USER: ${POSTGRES_USER:-clientscout}
++      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env or environment}
++      POSTGRES_DB: ${POSTGRES_DB:-clientscout}
+     ports:
+       - "5432:5432"
+     volumes:
+diff --git a/frontend/package-lock.json b/frontend/package-lock.json
+index 48ffb9f..8dae7d4 100644
+--- a/frontend/package-lock.json
++++ b/frontend/package-lock.json
+@@ -1224,20 +1224,6 @@
+         "valibot": "1.0.0-beta.14"
+       }
+     },
+-    "node_modules/@telegram-apps/transformers/node_modules/valibot": {
+-      "version": "1.0.0-beta.14",
+-      "resolved": "https://registry.npmjs.org/valibot/-/valibot-1.0.0-beta.14.tgz",
+-      "integrity": "sha512-tLyV2rE5QL6U29MFy3xt4AqMrn+/HErcp2ZThASnQvPMwfSozjV1uBGKIGiegtZIGjinJqn0SlBdannf18wENA==",
+-      "license": "MIT",
+-      "peerDependencies": {
+-        "typescript": ">=5"
+-      },
+-      "peerDependenciesMeta": {
+-        "typescript": {
+-          "optional": true
+-        }
+-      }
+-    },
+     "node_modules/@telegram-apps/types": {
+       "version": "2.0.3",
+       "resolved": "https://registry.npmjs.org/@telegram-apps/types/-/types-2.0.3.tgz",
+@@ -3983,9 +3969,9 @@
+       }
+     },
+     "node_modules/valibot": {
+-      "version": "1.0.0",
+-      "resolved": "https://registry.npmjs.org/valibot/-/valibot-1.0.0.tgz",
+-      "integrity": "sha512-1Hc0ihzWxBar6NGeZv7fPLY0QuxFMyxwYR2sF1Blu7Wq7EnremwY2W02tit2ij2VJT8HcSkHAQqmFfl77f73Yw==",
++      "version": "1.4.2",
++      "resolved": "https://registry.npmjs.org/valibot/-/valibot-1.4.2.tgz",
++      "integrity": "sha512-gjdCvJ6d3RyHAneqxMYMW9QMCwYMb3jpOO0IyHZV1bnRHFBHrX3VkIILt5XYR0WhwHiH7Mty8ovuPZ/O3gamrg==",
+       "license": "MIT",
+       "peerDependencies": {
+         "typescript": ">=5"
+diff --git a/frontend/package.json b/frontend/package.json
+index 90497fb..c31dab5 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -22,6 +22,9 @@
+     "recharts": "^3.9.0",
+     "zustand": "^5.0.14"
+   },
++  "overrides": {
++    "valibot": "^1.4.2"
++  },
+   "devDependencies": {
+     "@eslint/js": "^10.0.1",
+     "@types/node": "^24.12.3",
+diff --git a/frontend/src/components/AnimatedRoutes.tsx b/frontend/src/components/AnimatedRoutes.tsx
+index 1c92708..8af5596 100644
+--- a/frontend/src/components/AnimatedRoutes.tsx
++++ b/frontend/src/components/AnimatedRoutes.tsx
+@@ -1,19 +1,20 @@
+-import { useEffect, useRef } from 'react';
++import { lazy, Suspense, useEffect, useRef } from 'react';
+ import { Routes, Route, useLocation } from 'react-router-dom';
+ import { AnimatePresence, motion } from 'framer-motion';
+ 
+-import HomePage from '../pages/HomePage';
+-import SearchPage from '../pages/SearchPage';
+-import SearchChatsPage from '../pages/SearchChatsPage';
+-import SearchLeadHistoryPage from '../pages/SearchLeadHistoryPage';
+-import MailingPage from '../pages/MailingPage';
+-import MailingChatsPage from '../pages/MailingChatsPage';
+-import LoginPage from '../pages/LoginPage';
+-import RegisterPage from '../pages/RegisterPage';
+-import TelegramLinkPage from '../pages/TelegramLinkPage';
+-import AdminAnalyticsPage from '../pages/AdminAnalyticsPage';
+ import AuthGuard from './AuthGuard';
+ 
++const HomePage = lazy(() => import('../pages/HomePage'));
++const SearchPage = lazy(() => import('../pages/SearchPage'));
++const SearchChatsPage = lazy(() => import('../pages/SearchChatsPage'));
++const SearchLeadHistoryPage = lazy(() => import('../pages/SearchLeadHistoryPage'));
++const MailingPage = lazy(() => import('../pages/MailingPage'));
++const MailingChatsPage = lazy(() => import('../pages/MailingChatsPage'));
++const LoginPage = lazy(() => import('../pages/LoginPage'));
++const RegisterPage = lazy(() => import('../pages/RegisterPage'));
++const TelegramLinkPage = lazy(() => import('../pages/TelegramLinkPage'));
++const AdminAnalyticsPage = lazy(() => import('../pages/AdminAnalyticsPage'));
++
+ const variants = {
+   initial: (direction: number) => ({
+     x: direction > 0 ? '100%' : direction < 0 ? '-100%' : '0%',
+@@ -62,21 +63,23 @@ export default function AnimatedRoutes() {
+           transition={{ type: "spring", stiffness: 260, damping: 30 }}
+           className="absolute inset-0 w-full h-full overflow-y-auto overflow-x-hidden bg-[#202020]"
+         >
+-          <Routes location={location}>
+-            <Route path="/login" element={<LoginPage />} />
+-            <Route path="/register" element={<RegisterPage />} />
+-            <Route path="/link-telegram" element={<TelegramLinkPage />} />
+-            
+-            <Route element={<AuthGuard />}>
+-              <Route path="/" element={<HomePage />} />
+-              <Route path="/search" element={<SearchPage />} />
+-              <Route path="/search/chats" element={<SearchChatsPage />} />
+-              <Route path="/search/leads" element={<SearchLeadHistoryPage />} />
+-              <Route path="/mailing" element={<MailingPage />} />
+-              <Route path="/mailing/chats" element={<MailingChatsPage />} />
+-              <Route path="/admin" element={<AdminAnalyticsPage />} />
+-            </Route>
+-          </Routes>
++          <Suspense fallback={null}>
++            <Routes location={location}>
++              <Route path="/login" element={<LoginPage />} />
++              <Route path="/register" element={<RegisterPage />} />
++              <Route path="/link-telegram" element={<TelegramLinkPage />} />
++
++              <Route element={<AuthGuard />}>
++                <Route path="/" element={<HomePage />} />
++                <Route path="/search" element={<SearchPage />} />
++                <Route path="/search/chats" element={<SearchChatsPage />} />
++                <Route path="/search/leads" element={<SearchLeadHistoryPage />} />
++                <Route path="/mailing" element={<MailingPage />} />
++                <Route path="/mailing/chats" element={<MailingChatsPage />} />
++                <Route path="/admin" element={<AdminAnalyticsPage />} />
++              </Route>
++            </Routes>
++          </Suspense>
+         </motion.div>
+       </AnimatePresence>
+     </div>
+diff --git a/frontend/src/components/SearchExchangesModal.tsx b/frontend/src/components/SearchExchangesModal.tsx
+index a1f70e2..9ac7cc2 100644
+--- a/frontend/src/components/SearchExchangesModal.tsx
++++ b/frontend/src/components/SearchExchangesModal.tsx
+@@ -1,14 +1,32 @@
+-import { useEffect, useState } from 'react';
++import { useEffect, useMemo, useState } from 'react';
++import { AlertCircle, CheckCircle, Loader2, Wifi, WifiOff } from 'lucide-react';
+ import Modal from './Modal';
+-import { useSearchRuntimeStore, type KworkLoginFlowStatus } from '../store/useSearchRuntimeStore';
+-import { CheckCircle, AlertCircle, Loader2, Wifi, WifiOff } from 'lucide-react';
++import { useSearchRuntimeStore, type ExchangeConnection, type KworkLoginFlowStatus } from '../store/useSearchRuntimeStore';
+ 
+ interface Props {
+   isOpen: boolean;
+   onClose: () => void;
+ }
+ 
+-// Modern Kwork SVG logo
++const EXCHANGE_STATUS = {
++  notConnected: 0,
++  connected: 1,
++  requiresReconnect: 2,
++} as const;
++
++const EXCHANGE_TYPES = {
++  kwork: 0,
++  upwork: 1,
++  fiverr: 2,
++  freelancer: 3,
++} as const;
++
++const FUTURE_EXCHANGES = [
++  { exchangeType: EXCHANGE_TYPES.upwork, providerKey: 'upwork', displayName: 'Upwork' },
++  { exchangeType: EXCHANGE_TYPES.fiverr, providerKey: 'fiverr', displayName: 'Fiverr' },
++  { exchangeType: EXCHANGE_TYPES.freelancer, providerKey: 'freelancer', displayName: 'Freelancer' },
++];
++
+ const KworkSVG = () => (
+   <svg viewBox="0 0 100 100" width="46" height="46" xmlns="http://www.w3.org/2000/svg">
+     <polygon points="17,20 41,20 41,36 25,52 25,28 17,28" fill="#FF9900" />
+@@ -19,31 +37,59 @@ const KworkSVG = () => (
+ function friendlyError(raw?: string | null): string | null {
+   if (!raw) return null;
+   const r = raw.toUpperCase();
+-  if (r.includes('KWORK_ACCESS_BLOCKED'))  return 'Kwork заблокировал доступ. Зайдите в Kwork через браузер, пройдите проверку и переподключите.';
+-  if (r.includes('NOT_AUTHORIZED'))        return 'Сессия устарела, переподключитесь.';
+-  if (r.includes('UNAUTHORIZED'))          return 'Нет доступа. Переподключитесь.';
+-  if (r.includes('TIMEOUT') || r.includes('TIMED OUT')) return 'Нет ответа от Kwork. Попробуйте позже.';
++  if (r.includes('KWORK_ACCESS_BLOCKED')) return 'Kwork заблокировал доступ. Зайдите в Kwork через браузер, пройдите проверку и переподключите.';
++  if (r.includes('NOT_AUTHORIZED')) return 'Сессия устарела, переподключитесь.';
++  if (r.includes('UNAUTHORIZED')) return 'Нет доступа. Переподключитесь.';
++  if (r.includes('TIMEOUT') || r.includes('TIMED OUT')) return 'Нет ответа от биржи. Попробуйте позже.';
+   if (r.includes('NETWORK') || r.includes('CONNECTION')) return 'Ошибка сети. Проверьте интернет.';
+-  if (r.includes('BOT') || r.includes('CAPTCHA') || r.includes('ANTI-BOT')) return 'Kwork запросил проверку. Войдите вручную и переподключите.';
+-  if (r.includes('SESSION'))               return 'Сессия недействительна, переподключитесь.';
++  if (r.includes('BOT') || r.includes('CAPTCHA') || r.includes('ANTI-BOT')) return 'Биржа запросила проверку. Войдите вручную и переподключите.';
++  if (r.includes('SESSION')) return 'Сессия недействительна, переподключитесь.';
+   if (raw.length > 60) return 'Ошибка соединения, переподключитесь.';
+   return raw;
+ }
+ 
+ const flowText = (flow?: KworkLoginFlowStatus | null): { text: string; isError: boolean; isDone: boolean } | null => {
+   if (!flow) return null;
+-  if (flow.isCompleted) return { text: 'Kwork подключен', isError: false, isDone: true };
+-  if (flow.isFailed)    return { text: friendlyError(flow.error) || 'Не удалось подключить', isError: true, isDone: false };
+-  if (flow.status === 'opening_browser')    return { text: 'Открываю браузер...', isError: false, isDone: false };
+-  if (flow.status === 'waiting_for_login')  return { text: 'Войдите в Kwork в открывшемся браузере', isError: false, isDone: false };
++  if (flow.isCompleted) return { text: 'Биржа подключена', isError: false, isDone: true };
++  if (flow.isFailed) return { text: friendlyError(flow.error) || 'Не удалось подключить биржу', isError: true, isDone: false };
++  if (flow.status === 'opening_browser') return { text: 'Открываю браузер...', isError: false, isDone: false };
++  if (flow.status === 'waiting_for_login') return { text: 'Войдите в аккаунт биржи в открывшемся браузере', isError: false, isDone: false };
+   return { text: 'Подключаю...', isError: false, isDone: false };
+ };
+ 
++function getFallbackExchange(type: number) {
++  return FUTURE_EXCHANGES.find(exchange => exchange.exchangeType === type);
++}
++
++function getExchangeIcon(exchange: Pick<ExchangeConnection, 'exchangeType' | 'displayName'>, enabled: boolean) {
++  if (exchange.exchangeType === EXCHANGE_TYPES.kwork) {
++    return <KworkSVG />;
++  }
++
++  return (
++    <div
++      className="flex shrink-0 items-center justify-center rounded-full"
++      style={{ width: '46px', height: '46px', backgroundColor: enabled ? '#0D2B1E' : '#1F2937' }}
++    >
++      <span className="text-lg font-black" style={{ color: enabled ? '#6EE7B7' : '#64748B' }}>
++        {exchange.displayName.charAt(0).toUpperCase()}
++      </span>
++    </div>
++  );
++}
++
+ export default function SearchExchangesModal({ isOpen, onClose }: Props) {
+-  const { exchanges, isLoading, fetchExchanges, startKworkLogin, disconnectKwork, fetchKworkLoginStatus } = useSearchRuntimeStore();
++  const {
++    exchanges,
++    isLoading,
++    fetchExchanges,
++    startExchangeLogin,
++    disconnectExchange,
++    fetchKworkLoginStatus,
++  } = useSearchRuntimeStore();
+   const [flow, setFlow] = useState<KworkLoginFlowStatus | null>(null);
+-  const [isStarting, setIsStarting] = useState(false);
+-  const [isDisconnecting, setIsDisconnecting] = useState(false);
++  const [flowExchangeType, setFlowExchangeType] = useState<number | null>(null);
++  const [busyExchangeType, setBusyExchangeType] = useState<number | null>(null);
+ 
+   useEffect(() => {
+     if (isOpen) fetchExchanges();
+@@ -58,150 +104,177 @@ export default function SearchExchangesModal({ isOpen, onClose }: Props) {
+     return () => window.clearInterval(timer);
+   }, [flow, fetchKworkLoginStatus]);
+ 
+-  const kwork = exchanges.find(e => e.exchangeType === 0);
+-  const isConnected   = kwork?.status === 1;
+-  const needsReconnect = kwork?.status === 2;
+-  const isFlowPending  = !!flow && !flow.isCompleted && !flow.isFailed;
+-  const currentFlow    = flowText(flow);
+-  const errorText      = friendlyError(kwork?.lastError);
++  const exchangeCards = useMemo(() => {
++    const byType = new Map<number, ExchangeConnection>();
++    exchanges.forEach(exchange => byType.set(exchange.exchangeType, exchange));
++
++    const placeholders = FUTURE_EXCHANGES
++      .filter(exchange => !byType.has(exchange.exchangeType))
++      .map(exchange => ({
++        id: '',
++        profileId: '',
++        exchangeType: exchange.exchangeType,
++        providerKey: exchange.providerKey,
++        displayName: exchange.displayName,
++        status: EXCHANGE_STATUS.notConnected,
++        isConnected: false,
++        requiresReconnect: false,
++        supportsBrowserLogin: false,
++        supportsManualSession: false,
++        isAvailable: false,
++        lastCheckedAt: null,
++        lastError: null,
++        updatedAt: '',
++      }));
++
++    return [...exchanges, ...placeholders].sort((a, b) => a.exchangeType - b.exchangeType);
++  }, [exchanges]);
++
++  const currentFlow = flowText(flow);
++  const isFlowPending = !!flow && !flow.isCompleted && !flow.isFailed;
+ 
+-  const handleConnect = async () => {
+-    setIsStarting(true);
++  const handleConnect = async (exchange: ExchangeConnection) => {
++    if (!exchange.supportsBrowserLogin || !exchange.isAvailable) return;
++    setBusyExchangeType(exchange.exchangeType);
++    setFlowExchangeType(exchange.exchangeType);
+     try {
+-      const nextFlow = await startKworkLogin();
++      const nextFlow = await startExchangeLogin(exchange.exchangeType);
+       setFlow(nextFlow);
+     } finally {
+-      setIsStarting(false);
++      setBusyExchangeType(null);
+     }
+   };
+ 
+-  const handleDisconnect = async () => {
+-    setIsDisconnecting(true);
++  const handleDisconnect = async (exchange: ExchangeConnection) => {
++    setBusyExchangeType(exchange.exchangeType);
+     try {
+-      await disconnectKwork();
+-      setFlow(null);
++      await disconnectExchange(exchange.exchangeType);
++      if (flowExchangeType === exchange.exchangeType) {
++        setFlow(null);
++        setFlowExchangeType(null);
++      }
+     } finally {
+-      setIsDisconnecting(false);
++      setBusyExchangeType(null);
+     }
+   };
+ 
+   return (
+     <Modal isOpen={isOpen} onClose={onClose} title="Биржи">
+       <div className="relative flex flex-col gap-4 pb-2" style={{ marginTop: '5px' }}>
++        {exchangeCards.map((exchange) => {
++          const fallback = getFallbackExchange(exchange.exchangeType);
++          const isAvailable = exchange.isAvailable && exchange.supportsBrowserLogin;
++          const isConnected = exchange.status === EXCHANGE_STATUS.connected;
++          const needsReconnect = exchange.status === EXCHANGE_STATUS.requiresReconnect;
++          const isBusy = busyExchangeType === exchange.exchangeType || (isFlowPending && flowExchangeType === exchange.exchangeType);
++          const errorText = friendlyError(exchange.lastError);
++          const isPlaceholder = !!fallback && !exchange.isAvailable;
+ 
+-        {/* ── Kwork ── */}
+-        <div className="rounded-xl border border-white/[0.08] bg-black/20" style={{ padding: '15px 20px' }}>
+-          {/* Шапка */}
+-          <div className="flex items-center gap-4">
+-            <div className="shrink-0"><KworkSVG /></div>
+-
+-            <div className="flex-1 min-w-0">
+-              <p className="text-[17px] font-extrabold text-white leading-none" style={{ marginBottom: '4px' }}>Kwork</p>
+-              <div className="flex items-center gap-1.5" style={{ marginBottom: '4px' }}>
+-                {isLoading
+-                  ? <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+-                  : isConnected
+-                    ? <Wifi className="h-4 w-4" style={{ color: '#4CC2FF' }} />
+-                    : <WifiOff className="h-4 w-4" style={{ color: needsReconnect ? '#F59E0B' : '#64748B' }} />
+-                }
+-                <span 
+-                  className="text-[13px] font-bold"
+-                  style={{ color: isLoading ? '#64748B' : isConnected ? '#4CC2FF' : needsReconnect ? '#F59E0B' : '#64748B' }}
+-                >
+-                  {isLoading ? 'Проверка...' : isConnected ? 'Подключено' : needsReconnect ? 'Нужно переподключить' : 'Не подключено'}
+-                </span>
++          return (
++            <div
++              key={exchange.exchangeType}
++              className="rounded-xl border bg-black/20"
++              style={{
++                padding: '15px 20px',
++                borderColor: isPlaceholder ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
++                opacity: isPlaceholder ? 0.45 : 1,
++              }}
++            >
++              <div className="flex items-center gap-4">
++                <div className="shrink-0">{getExchangeIcon(exchange, !isPlaceholder)}</div>
++
++                <div className="min-w-0 flex-1">
++                  <p className="text-[17px] font-extrabold leading-none text-white" style={{ marginBottom: '4px' }}>
++                    {exchange.displayName || fallback?.displayName || 'Exchange'}
++                  </p>
++                  <div className="flex items-center gap-1.5" style={{ marginBottom: '4px' }}>
++                    {isLoading ? (
++                      <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
++                    ) : isConnected ? (
++                      <Wifi className="h-4 w-4" style={{ color: '#4CC2FF' }} />
++                    ) : (
++                      <WifiOff className="h-4 w-4" style={{ color: needsReconnect ? '#F59E0B' : '#64748B' }} />
++                    )}
++                    <span
++                      className="text-[13px] font-bold"
++                      style={{ color: isLoading ? '#64748B' : isConnected ? '#4CC2FF' : needsReconnect ? '#F59E0B' : '#64748B' }}
++                    >
++                      {isPlaceholder ? 'Скоро' : isLoading ? 'Проверка...' : isConnected ? 'Подключено' : needsReconnect ? 'Нужно переподключить' : 'Не подключено'}
++                    </span>
++                  </div>
++                  {exchange.lastCheckedAt && !isLoading && (
++                    <p className="text-[11px] font-medium text-slate-500">
++                      Последняя проверка {new Date(exchange.lastCheckedAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
++                    </p>
++                  )}
++                </div>
++
++                <div
++                  className="h-2 w-2 shrink-0 rounded-full"
++                  style={{
++                    backgroundColor: isConnected ? '#4CC2FF' : needsReconnect ? '#F59E0B' : '#1F2937',
++                    boxShadow: isConnected ? '0 0 8px rgba(76,194,255,0.6)' : needsReconnect ? '0 0 8px rgba(245,158,11,0.6)' : 'none',
++                  }}
++                />
+               </div>
+-              {kwork?.lastCheckedAt && !isLoading && (
+-                <p className="text-[11px] font-medium text-slate-500">
+-                  Последняя проверка {new Date(kwork.lastCheckedAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+-                </p>
+-              )}
+-            </div>
+ 
+-            {/* Индикатор */}
+-            <div 
+-              className="h-2 w-2 shrink-0 rounded-full"
+-              style={{
+-                backgroundColor: isConnected ? '#4CC2FF' : needsReconnect ? '#F59E0B' : '#1F2937',
+-                boxShadow: isConnected ? '0 0 8px rgba(76,194,255,0.6)' : needsReconnect ? '0 0 8px rgba(245,158,11,0.6)' : 'none',
+-              }} 
+-            />
+-          </div>
+-
+-          {/* Ошибка с сервера (lastError) */}
+-          {errorText && !flow && (
+-            <div className="mb-3 mt-4 flex items-start gap-2 rounded-xl border border-red-500/15 bg-red-500/10 p-3">
+-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+-              <p className="text-xs font-semibold leading-relaxed text-red-400">{errorText}</p>
+-            </div>
+-          )}
++              {errorText && !flow && (
++                <div className="mb-3 mt-4 flex items-start gap-2 rounded-xl border border-red-500/15 bg-red-500/10 p-3">
++                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
++                  <p className="text-xs font-semibold leading-relaxed text-red-400">{errorText}</p>
++                </div>
++              )}
+ 
++              <div className="flex flex-col gap-3" style={{ marginTop: '15px' }}>
++                <div className="grid grid-cols-2 gap-3">
++                  <button
++                    onClick={() => handleConnect(exchange)}
++                    disabled={!isAvailable || isBusy}
++                    className="flex items-center justify-center gap-2 rounded-xl text-[13px] font-bold text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
++                    style={{ backgroundColor: needsReconnect ? '#F59E0B' : '#0EA5E9', height: '38px' }}
++                  >
++                    {isBusy && <Loader2 className="h-4 w-4 animate-spin" />}
++                    {needsReconnect ? 'Сброс' : 'Подключить'}
++                  </button>
+ 
++                  <button
++                    onClick={() => handleDisconnect(exchange)}
++                    disabled={busyExchangeType === exchange.exchangeType || isFlowPending || !isConnected}
++                    className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-[13px] font-bold text-white transition-all hover:bg-white/[0.08] active:scale-[0.98] disabled:opacity-50"
++                    style={{ height: '38px' }}
++                  >
++                    {busyExchangeType === exchange.exchangeType && <Loader2 className="h-4 w-4 animate-spin" />}
++                    Отключить
++                  </button>
++                </div>
+ 
+-          {/* Кнопки + флоу */}
+-          <div className="flex flex-col gap-3" style={{ marginTop: '15px' }}>
+-            <div className="grid grid-cols-2 gap-3">
+-              <button
+-                onClick={handleConnect}
+-                disabled={isStarting || isFlowPending}
+-                className="flex items-center justify-center gap-2 rounded-xl text-[13px] font-bold text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+-                style={{ backgroundColor: needsReconnect ? '#F59E0B' : '#0EA5E9', height: '38px' }}
+-              >
+-                {(isStarting || isFlowPending) && (
+-                  <Loader2 className="h-4 w-4 animate-spin" />
+-                )}
+-                {kwork?.requiresReconnect ? 'Сброс' : 'Подключить'}
+-              </button>
+-
+-              <button
+-                onClick={handleDisconnect}
+-                disabled={isDisconnecting || isFlowPending || !isConnected}
+-                className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-[13px] font-bold text-white transition-all hover:bg-white/[0.08] active:scale-[0.98] disabled:opacity-50"
+-                style={{ height: '38px' }}
+-              >
+-                {isDisconnecting && (
+-                  <Loader2 className="h-4 w-4 animate-spin" />
++                {currentFlow && flowExchangeType === exchange.exchangeType && (
++                  <div
++                    className="mt-2 flex items-start gap-2 rounded-xl border p-3"
++                    style={{
++                      backgroundColor: currentFlow.isError ? 'rgba(239,68,68,0.08)' : currentFlow.isDone ? 'rgba(76,194,255,0.08)' : 'rgba(255,255,255,0.04)',
++                      borderColor: currentFlow.isError ? 'rgba(239,68,68,0.15)' : currentFlow.isDone ? 'rgba(76,194,255,0.15)' : 'rgba(255,255,255,0.06)',
++                    }}
++                  >
++                    {currentFlow.isError ? (
++                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
++                    ) : currentFlow.isDone ? (
++                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#4CC2FF]" />
++                    ) : (
++                      <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-slate-400" />
++                    )}
++                    <p
++                      className="text-xs font-semibold leading-relaxed"
++                      style={{ color: currentFlow.isError ? '#F87171' : currentFlow.isDone ? '#4CC2FF' : '#94A3B8' }}
++                    >
++                      {currentFlow.text}
++                    </p>
++                  </div>
+                 )}
+-                Отключить
+-              </button>
+-            </div>
+-
+-            {/* Статус флоу */}
+-            {currentFlow && (
+-              <div 
+-                className="flex items-start gap-2 rounded-xl border p-3 mt-2"
+-                style={{
+-                  backgroundColor: currentFlow.isError ? 'rgba(239,68,68,0.08)' : currentFlow.isDone ? 'rgba(76,194,255,0.08)' : 'rgba(255,255,255,0.04)',
+-                  borderColor: currentFlow.isError ? 'rgba(239,68,68,0.15)' : currentFlow.isDone ? 'rgba(76,194,255,0.15)' : 'rgba(255,255,255,0.06)',
+-                }}
+-              >
+-                {currentFlow.isError
+-                  ? <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+-                  : currentFlow.isDone
+-                    ? <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#4CC2FF]" />
+-                    : <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-slate-400" />
+-                }
+-                <p 
+-                  className="text-xs font-semibold leading-relaxed"
+-                  style={{ color: currentFlow.isError ? '#F87171' : currentFlow.isDone ? '#4CC2FF' : '#94A3B8' }}
+-                >
+-                  {currentFlow.text}
+-                </p>
+               </div>
+-            )}
+-          </div>
+-        </div>
+-
+-        {/* ── Upwork (скоро) ── */}
+-        <div className="flex items-center gap-4 rounded-xl border border-white/[0.05] bg-black/10 opacity-40" style={{ padding: '15px 20px' }}>
+-          <div className="flex shrink-0 items-center justify-center rounded-full bg-[#0D2B1E]" style={{ width: '46px', height: '46px' }}>
+-            <span className="font-black text-[#6EE7B7] text-lg">U</span>
+-          </div>
+-          <div>
+-            <p className="text-[15px] font-extrabold text-white">Upwork</p>
+-            <p className="mt-0.5 text-[11px] font-bold text-slate-500">Скоро</p>
+-          </div>
+-        </div>
++            </div>
++          );
++        })}
+       </div>
+     </Modal>
+   );
+diff --git a/frontend/src/components/SearchSettingsModal.tsx b/frontend/src/components/SearchSettingsModal.tsx
+index bc6f216..3c0ad65 100644
+--- a/frontend/src/components/SearchSettingsModal.tsx
++++ b/frontend/src/components/SearchSettingsModal.tsx
+@@ -1,4 +1,4 @@
+-import { useEffect, useMemo, useRef, useState } from 'react';
++import { useEffect, useRef, useState } from 'react';
+ import { Bell, Bot, Clock, Loader2, Plus, X } from 'lucide-react';
+ import Modal from './Modal';
+ import Toggle from './Toggle';
+@@ -57,10 +57,6 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
+   const keywordsLeft = MAX_SEARCH_KEYWORDS - draftKeywords.length;
+   const negativeLeft = MAX_SEARCH_NEGATIVE_KEYWORDS - draftNegativeKeywords.length;
+ 
+-  const summary = useMemo(() => (
+-    `${draftKeywords.length}/${MAX_SEARCH_KEYWORDS} ключевых, ${draftNegativeKeywords.length}/${MAX_SEARCH_NEGATIVE_KEYWORDS} стоп-слов`
+-  ), [draftKeywords.length, draftNegativeKeywords.length]);
+-
+   const addTerm = (value: string, list: string[], setList: (terms: string[]) => void, max: number, label: string) => {
+     const term = normalizeTerm(value);
+     if (!term) return false;
+diff --git a/frontend/src/pages/HomePage.tsx b/frontend/src/pages/HomePage.tsx
+index 45745f5..370b48d 100644
+--- a/frontend/src/pages/HomePage.tsx
++++ b/frontend/src/pages/HomePage.tsx
+@@ -1,7 +1,7 @@
+ import { useEffect, useState } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { Check, ChevronRight, LogOut, Pencil, Plus, Send, Trash2, User, Users, X, BookOpen, Shield } from 'lucide-react';
+-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
++import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
+ import Modal from '../components/Modal';
+ import { useAppStore, type Profile } from '../store/useAppStore';
+ import { useAuthStore } from '../store/useAuthStore';
+@@ -19,7 +19,6 @@ export default function HomePage() {
+   const { stats, fetchStats } = useOutreachStore();
+   const { fetchHistory } = useLeadsStore();
+ 
+-  const [showRecommendations, setShowRecommendations] = useState(false);
+   const [showProfile, setShowProfile] = useState(false);
+   const [profileView, setProfileView] = useState<'main' | 'list' | 'new'>('main');
+   const [newProfileName, setNewProfileName] = useState('');
+@@ -28,7 +27,6 @@ export default function HomePage() {
+   
+   const [chartPeriod, setChartPeriod] = useState<StatsPeriod>('today');
+   const [combinedChartData, setCombinedChartData] = useState<OutreachActivityPoint[]>([]);
+-  const [sentChartData, setSentChartData] = useState<OutreachActivityPoint[]>([]);
+ 
+   const [searchChatsCount, setSearchChatsCount] = useState<number | null>(null);
+   const [mailingChatsCount, setMailingChatsCount] = useState<number | null>(null);
+@@ -307,7 +305,6 @@ export default function HomePage() {
+ 
+         {/* Recommendations Button */}
+         <button
+-          onClick={() => setShowRecommendations(true)}
+           className="flex items-center justify-between w-full rounded-[20px] transition-all active:scale-[0.98] shrink-0 mt-auto"
+           style={{ 
+             padding: '20px',
+diff --git a/frontend/src/pages/SearchLeadHistoryPage.tsx b/frontend/src/pages/SearchLeadHistoryPage.tsx
+index 7de2a02..192b855 100644
+--- a/frontend/src/pages/SearchLeadHistoryPage.tsx
++++ b/frontend/src/pages/SearchLeadHistoryPage.tsx
+@@ -1,6 +1,5 @@
+ import { useEffect, useState } from 'react';
+-import { useNavigate } from 'react-router-dom';
+-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
++import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+ import { getActiveProfileId } from '../api/client';
+ import { useLeadsStore } from '../store/useLeadsStore';
+ import SwipeableItem from '../components/SwipeableItem';
+@@ -63,7 +62,6 @@ const openLeadLink = (link: string) => {
+ };
+ 
+ export default function SearchLeadHistoryPage() {
+-  const navigate = useNavigate();
+   const { history, isHistoryLoading, fetchHistory, viewLead, hideLead } = useLeadsStore();
+   const [page, setPage] = useState(0);
+   const [aiFilter, setAiFilter] = useState<'confirmed' | 'unverified'>('confirmed');
+diff --git a/frontend/src/store/useSearchRuntimeStore.ts b/frontend/src/store/useSearchRuntimeStore.ts
+index be624ef..68cc26d 100644
+--- a/frontend/src/store/useSearchRuntimeStore.ts
++++ b/frontend/src/store/useSearchRuntimeStore.ts
+@@ -15,9 +15,14 @@ export interface ExchangeConnection {
+   id: string;
+   profileId: string;
+   exchangeType: number;
++  providerKey: string;
++  displayName: string;
+   status: number;
+   isConnected: boolean;
+   requiresReconnect: boolean;
++  supportsBrowserLogin: boolean;
++  supportsManualSession: boolean;
++  isAvailable: boolean;
+   lastCheckedAt: string | null;
+   lastError: string | null;
+   updatedAt: string;
+@@ -37,6 +42,8 @@ interface SearchRuntimeState {
+   isLoading: boolean;
+   fetchStatus: (profileId?: string) => Promise<void>;
+   fetchExchanges: (profileId?: string) => Promise<void>;
++  startExchangeLogin: (exchangeType: number, profileId?: string) => Promise<KworkLoginFlowStatus>;
++  disconnectExchange: (exchangeType: number, profileId?: string) => Promise<void>;
+   startKworkLogin: (profileId?: string) => Promise<KworkLoginFlowStatus>;
+   disconnectKwork: (profileId?: string) => Promise<void>;
+   fetchKworkLoginStatus: (flowId: string) => Promise<KworkLoginFlowStatus>;
+@@ -65,25 +72,29 @@ export const useSearchRuntimeStore = create<SearchRuntimeState>((set, get) => ({
+     }
+   },
+ 
+-  startKworkLogin: async (profileId = getActiveProfileId()) => {
++  startExchangeLogin: async (exchangeType, profileId = getActiveProfileId()) => {
+     const response = await apiClient.post<KworkLoginFlowStatus>('/search/exchanges/login/start', {
+       profileId,
+-      exchangeType: 0,
++      exchangeType,
+     });
+     return response.data;
+   },
+ 
+-  disconnectKwork: async (profileId = getActiveProfileId()) => {
++  disconnectExchange: async (exchangeType, profileId = getActiveProfileId()) => {
+     if (!profileId) return;
+     await apiClient.post('/search/exchanges/disconnect', {
+       profileId,
+-      exchangeType: 0,
++      exchangeType,
+     });
+     await get().fetchExchanges(profileId);
+     await get().fetchStatus(profileId);
+     await useSearchSettingsStore.getState().fetchSettings(profileId);
+   },
+ 
++  startKworkLogin: async (profileId = getActiveProfileId()) => get().startExchangeLogin(0, profileId),
++
++  disconnectKwork: async (profileId = getActiveProfileId()) => get().disconnectExchange(0, profileId),
++
+   fetchKworkLoginStatus: async (flowId: string) => {
+     const response = await apiClient.get<KworkLoginFlowStatus>(`/search/exchanges/login/${flowId}`);
+     if (response.data.isCompleted) {
+diff --git a/src/ClientScout.Api/ClientScout.Api.csproj b/src/ClientScout.Api/ClientScout.Api.csproj
+index e3ac85c..aaf2cab 100644
+--- a/src/ClientScout.Api/ClientScout.Api.csproj
++++ b/src/ClientScout.Api/ClientScout.Api.csproj
+@@ -9,7 +9,8 @@
+   <ItemGroup>
+     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
+     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
+-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
++    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
++    <PackageReference Include="Microsoft.OpenApi" Version="2.9.0" />
+     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
+       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+       <PrivateAssets>all</PrivateAssets>
+diff --git a/src/ClientScout.Api/Controllers/AdminController.cs b/src/ClientScout.Api/Controllers/AdminController.cs
+index 5965c2c..47f6457 100644
+--- a/src/ClientScout.Api/Controllers/AdminController.cs
++++ b/src/ClientScout.Api/Controllers/AdminController.cs
+@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
+ using Microsoft.EntityFrameworkCore;
+ using System.Security.Claims;
+ using System.IdentityModel.Tokens.Jwt;
++using ClientScout.Api.Security;
+ using ClientScout.Infrastructure.Persistence;
+ 
+ namespace ClientScout.Api.Controllers;
+@@ -13,11 +14,12 @@ namespace ClientScout.Api.Controllers;
+ public class AdminController : ControllerBase
+ {
+     private readonly AppDbContext _context;
+-    private const long AdminTelegramId = 1080953147;
++    private readonly IConfiguration _configuration;
+ 
+-    public AdminController(AppDbContext context)
++    public AdminController(AppDbContext context, IConfiguration configuration)
+     {
+         _context = context;
++        _configuration = configuration;
+     }
+ 
+     [HttpGet("stats")]
+@@ -26,8 +28,10 @@ public class AdminController : ControllerBase
+         var accountId = GetAccountId();
+         if (accountId == null) return Unauthorized();
+ 
+-        var account = await _context.Accounts.FirstOrDefaultAsync(a => a.Id == accountId);
+-        if (account == null || account.TelegramUserId != AdminTelegramId)
++        var account = await _context.Accounts
++            .AsNoTracking()
++            .FirstOrDefaultAsync(a => a.Id == accountId);
++        if (account == null || !AdminAccess.IsAdmin(account.Id, account.TelegramUserId, _configuration))
+         {
+             return Forbid();
+         }
+@@ -36,11 +40,12 @@ public class AdminController : ControllerBase
+         var today = DateTimeOffset.UtcNow.Date;
+         var startOfMonth = new DateTimeOffset(today.Year, today.Month, 1, 0, 0, 0, TimeSpan.Zero);
+ 
+-        var totalLogs = await _context.AiUsageLogs.CountAsync();
+-        var errorCount = await _context.AiUsageLogs.CountAsync(l => l.StatusCode >= 400);
++        var totalLogs = await _context.AiUsageLogs.AsNoTracking().CountAsync();
++        var errorCount = await _context.AiUsageLogs.AsNoTracking().CountAsync(l => l.StatusCode >= 400);
+         
+         // Calculate provider stats
+         var providerStats = await _context.AiUsageLogs
++            .AsNoTracking()
+             .GroupBy(l => l.ProviderName)
+             .Select(g => new
+             {
+@@ -56,6 +61,7 @@ public class AdminController : ControllerBase
+ 
+         // Calculate model stats
+         var modelStats = await _context.AiUsageLogs
++            .AsNoTracking()
+             .GroupBy(l => new { l.ProviderName, l.ModelName })
+             .Select(g => new
+             {
+diff --git a/src/ClientScout.Api/Controllers/AuthController.cs b/src/ClientScout.Api/Controllers/AuthController.cs
+index 697ce87..bedfffb 100644
+--- a/src/ClientScout.Api/Controllers/AuthController.cs
++++ b/src/ClientScout.Api/Controllers/AuthController.cs
+@@ -7,11 +7,13 @@ using ClientScout.Application.Auth;
+ using ClientScout.Application.Auth.Models;
+ using Microsoft.AspNetCore.Authorization;
+ using Microsoft.AspNetCore.Mvc;
++using Microsoft.AspNetCore.RateLimiting;
+ 
+ namespace ClientScout.Api.Controllers;
+ 
+ [ApiController]
+ [Route("api/auth")]
++[EnableRateLimiting("Auth")]
+ public class AuthController : ControllerBase
+ {
+     private readonly IAuthService _authService;
+diff --git a/src/ClientScout.Api/Controllers/SearchController.cs b/src/ClientScout.Api/Controllers/SearchController.cs
+index 856590f..7b307ad 100644
+--- a/src/ClientScout.Api/Controllers/SearchController.cs
++++ b/src/ClientScout.Api/Controllers/SearchController.cs
+@@ -5,6 +5,7 @@ using ClientScout.Application.Search;
+ using ClientScout.Application.Search.Models;
+ using Microsoft.AspNetCore.Authorization;
+ using Microsoft.AspNetCore.Mvc;
++using Microsoft.AspNetCore.RateLimiting;
+ using Microsoft.EntityFrameworkCore;
+ 
+ namespace ClientScout.Api.Controllers;
+@@ -12,25 +13,26 @@ namespace ClientScout.Api.Controllers;
+ [Authorize]
+ [ApiController]
+ [Route("api/search")]
++[EnableRateLimiting("Search")]
+ public class SearchController : ControllerBase
+ {
+     private readonly ISearchSettingsService _settingsService;
+     private readonly ISearchIngestionService _ingestionService;
+     private readonly IExchangeConnectionService _exchangeConnectionService;
+-    private readonly IKworkBrowserLoginService _kworkBrowserLoginService;
++    private readonly IReadOnlyDictionary<Domain.Enums.ExchangeType, IExchangeBrowserLoginService> _browserLoginServices;
+     private readonly IAppDbContext _dbContext;
+ 
+     public SearchController(
+         ISearchSettingsService settingsService,
+         ISearchIngestionService ingestionService,
+         IExchangeConnectionService exchangeConnectionService,
+-        IKworkBrowserLoginService kworkBrowserLoginService,
++        IEnumerable<IExchangeBrowserLoginService> browserLoginServices,
+         IAppDbContext dbContext)
+     {
+         _settingsService = settingsService;
+         _ingestionService = ingestionService;
+         _exchangeConnectionService = exchangeConnectionService;
+-        _kworkBrowserLoginService = kworkBrowserLoginService;
++        _browserLoginServices = browserLoginServices.ToDictionary(service => service.ExchangeType);
+         _dbContext = dbContext;
+     }
+ 
+@@ -118,10 +120,11 @@ public class SearchController : ControllerBase
+             .Where(s => s.ProfileId == profileId && s.Type == Domain.Enums.SourceType.Telegram)
+             .MaxAsync(s => (DateTimeOffset?)s.LastScraped, cancellationToken);
+ 
+-        var kwork = await _dbContext.ExchangeConnections.AsNoTracking()
+-            .FirstOrDefaultAsync(c => c.ProfileId == profileId && c.ExchangeType == Domain.Enums.ExchangeType.Kwork, cancellationToken);
++        var lastExchange = await _dbContext.ExchangeConnections.AsNoTracking()
++            .Where(c => c.ProfileId == profileId)
++            .MaxAsync(c => (DateTimeOffset?)c.LastCheckedAt, cancellationToken);
+ 
+-        var lastCheck = new[] { lastTelegram, kwork?.LastCheckedAt }
++        var lastCheck = new[] { lastTelegram, lastExchange }
+             .Where(value => value.HasValue)
+             .Select(value => value!.Value)
+             .DefaultIfEmpty()
+@@ -166,9 +169,9 @@ public class SearchController : ControllerBase
+         if (AccountId == null) return Unauthorized();
+         try
+         {
+-            if (dto.ExchangeType == Domain.Enums.ExchangeType.Kwork)
++            if (_browserLoginServices.TryGetValue(dto.ExchangeType, out var browserLoginService))
+             {
+-                return Ok(await _kworkBrowserLoginService.StartAsync(AccountId.Value, dto.ProfileId, cancellationToken));
++                return Ok(await browserLoginService.StartAsync(AccountId.Value, dto.ProfileId, cancellationToken));
+             }
+ 
+             return Ok(await _exchangeConnectionService.StartLoginAsync(AccountId.Value, dto, cancellationToken));
+@@ -187,7 +190,11 @@ public class SearchController : ControllerBase
+     public IActionResult GetExchangeLoginStatus(Guid flowId)
+     {
+         if (AccountId == null) return Unauthorized();
+-        return Ok(_kworkBrowserLoginService.GetStatus(flowId));
++        var status = _browserLoginServices.Values
++            .Select(service => service.GetStatus(flowId))
++            .FirstOrDefault(result => result.Status != "not_found");
++
++        return Ok(status ?? new ExchangeLoginFlowStatusDto(flowId, "not_found", false, true, "LOGIN_FLOW_NOT_FOUND"));
+     }
+ 
+     [HttpPost("exchanges/connect")]
+diff --git a/src/ClientScout.Api/Controllers/SourceController.cs b/src/ClientScout.Api/Controllers/SourceController.cs
+index a8c17d3..9e9d504 100644
+--- a/src/ClientScout.Api/Controllers/SourceController.cs
++++ b/src/ClientScout.Api/Controllers/SourceController.cs
+@@ -10,6 +10,7 @@ using ClientScout.Domain.Enums;
+ using Microsoft.AspNetCore.Authorization;
+ using Microsoft.AspNetCore.Mvc;
+ using Microsoft.EntityFrameworkCore;
++using Microsoft.Extensions.Logging;
+ 
+ namespace ClientScout.Api.Controllers;
+ 
+@@ -20,11 +21,16 @@ public class SourceController : ControllerBase
+ {
+     private readonly ISourceService _sourceService;
+     private readonly IAppDbContext _dbContext;
++    private readonly ILogger<SourceController> _logger;
+ 
+-    public SourceController(ISourceService sourceService, IAppDbContext dbContext)
++    public SourceController(
++        ISourceService sourceService,
++        IAppDbContext dbContext,
++        ILogger<SourceController> logger)
+     {
+         _sourceService = sourceService;
+         _dbContext = dbContext;
++        _logger = logger;
+     }
+ 
+     /// <summary>Get accountId from JWT sub claim.</summary>
+@@ -110,8 +116,8 @@ public class SourceController : ControllerBase
+         }
+         catch (Exception ex)
+         {
+-            Console.WriteLine($"[CREATE SOURCE ERROR] {ex}");
+-            return BadRequest(new { message = ex.Message });
++            _logger.LogWarning(ex, "Create source failed for account {AccountId} and profile {ProfileId}", AccountId, dto.ProfileId);
++            return BadRequest(new { message = "SOURCE_CREATE_FAILED" });
+         }
+     }
+ 
+@@ -158,8 +164,8 @@ public class SourceController : ControllerBase
+         }
+         catch (Exception ex)
+         {
+-            Console.WriteLine($"[VALIDATE ERROR] {ex}");
+-            return BadRequest(new { message = ex.Message });
++            _logger.LogWarning(ex, "Validate source failed for account {AccountId}", AccountId);
++            return BadRequest(new { message = "SOURCE_VALIDATE_FAILED" });
+         }
+     }
+ 
+diff --git a/src/ClientScout.Api/Controllers/TelegramAuthController.cs b/src/ClientScout.Api/Controllers/TelegramAuthController.cs
+index daaac84..bf9d683 100644
+--- a/src/ClientScout.Api/Controllers/TelegramAuthController.cs
++++ b/src/ClientScout.Api/Controllers/TelegramAuthController.cs
+@@ -5,23 +5,31 @@ using ClientScout.Application.Auth;
+ using ClientScout.Application.Telegram;
+ using Microsoft.AspNetCore.Authorization;
+ using Microsoft.AspNetCore.Mvc;
++using Microsoft.AspNetCore.RateLimiting;
+ using System.Security.Claims;
+ using System.IdentityModel.Tokens.Jwt;
++using Microsoft.Extensions.Logging;
+ 
+ namespace ClientScout.Api.Controllers;
+ 
+ [ApiController]
+ [Route("api/[controller]")]
+ [Authorize]
++[EnableRateLimiting("Auth")]
+ public class TelegramAuthController : ControllerBase
+ {
+     private readonly ITelegramClientManager _clientManager;
+     private readonly IAuthService _authService;
++    private readonly ILogger<TelegramAuthController> _logger;
+ 
+-    public TelegramAuthController(ITelegramClientManager clientManager, IAuthService authService)
++    public TelegramAuthController(
++        ITelegramClientManager clientManager,
++        IAuthService authService,
++        ILogger<TelegramAuthController> logger)
+     {
+         _clientManager = clientManager;
+         _authService = authService;
++        _logger = logger;
+     }
+ 
+     [HttpPost("send-code")]
+@@ -32,15 +40,19 @@ public class TelegramAuthController : ControllerBase
+ 
+         try
+         {
+-            Console.WriteLine($"[TELEGRAM AUTH] Sending code for account {accountId.Value} to {MaskPhone(request.PhoneNumber)}");
++            _logger.LogInformation("Sending Telegram code for account {AccountId} to {MaskedPhone}",
++                accountId.Value,
++                MaskPhone(request.PhoneNumber));
+             var result = await _clientManager.SendCodeAsync(accountId.Value.ToString(), request.PhoneNumber);
+-            Console.WriteLine($"[TELEGRAM AUTH] SendCode result for account {accountId.Value}: {result}");
++            _logger.LogInformation("Telegram code request completed for account {AccountId} with next step {NextStep}",
++                accountId.Value,
++                result);
+             return Ok(new { success = true, result });
+         }
+         catch (Exception ex)
+         {
+-            Console.WriteLine($"[TELEGRAM AUTH] SendCode failed for account {accountId.Value}: {ex}");
+-            return BadRequest(new { success = false, message = ex.Message });
++            _logger.LogWarning(ex, "Telegram send-code failed for account {AccountId}", accountId.Value);
++            return BadRequest(new { success = false, message = NormalizeTelegramError(ex) });
+         }
+     }
+ 
+@@ -68,7 +80,8 @@ public class TelegramAuthController : ControllerBase
+         }
+         catch (Exception ex)
+         {
+-            return BadRequest(new { success = false, message = ex.Message });
++            _logger.LogWarning(ex, "Telegram verify-code failed for account {AccountId}", accountId.Value);
++            return BadRequest(new { success = false, message = NormalizeTelegramError(ex) });
+         }
+     }
+ 
+@@ -95,7 +108,8 @@ public class TelegramAuthController : ControllerBase
+         }
+         catch (Exception ex)
+         {
+-            return BadRequest(new { success = false, message = ex.Message });
++            _logger.LogWarning(ex, "Telegram verify-password failed for account {AccountId}", accountId.Value);
++            return BadRequest(new { success = false, message = NormalizeTelegramError(ex) });
+         }
+     }
+ 
+@@ -111,6 +125,17 @@ public class TelegramAuthController : ControllerBase
+         if (string.IsNullOrWhiteSpace(phone) || phone.Length <= 4) return "****";
+         return new string('*', Math.Max(0, phone.Length - 4)) + phone[^4..];
+     }
++
++    private static string NormalizeTelegramError(Exception ex)
++    {
++        var message = ex.Message;
++        if (message.Contains("PHONE_CODE_INVALID", StringComparison.OrdinalIgnoreCase)) return "PHONE_CODE_INVALID";
++        if (message.Contains("PHONE_CODE_EXPIRED", StringComparison.OrdinalIgnoreCase)) return "PHONE_CODE_EXPIRED";
++        if (message.Contains("PASSWORD_HASH_INVALID", StringComparison.OrdinalIgnoreCase)) return "PASSWORD_HASH_INVALID";
++        if (message.Contains("FLOOD_WAIT", StringComparison.OrdinalIgnoreCase)) return "FLOOD_WAIT";
++        if (message.Contains("Auth session not found", StringComparison.OrdinalIgnoreCase)) return "AUTH_SESSION_NOT_FOUND";
++        return "TELEGRAM_AUTH_FAILED";
++    }
+ }
+ 
+ public class SendCodeRequest
+diff --git a/src/ClientScout.Api/Program.cs b/src/ClientScout.Api/Program.cs
+index 52a43d1..9e87bf1 100644
+--- a/src/ClientScout.Api/Program.cs
++++ b/src/ClientScout.Api/Program.cs
+@@ -3,6 +3,7 @@ using ClientScout.Application;
+ using ClientScout.Application.Leads;
+ using ClientScout.Application.Outreach;
+ using ClientScout.Application.Search;
++using ClientScout.Api.Security;
+ using ClientScout.Infrastructure;
+ using ClientScout.Infrastructure.Persistence;
+ using ClientScout.Scrapers;
+@@ -13,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
+ using Microsoft.IdentityModel.Tokens;
+ using System;
+ using System.IO;
++using System.Threading.RateLimiting;
+ 
+ Console.SetIn(StreamReader.Null); // Prevent WTelegramClient from blocking locally
+ 
+@@ -21,6 +23,57 @@ builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, relo
+ 
+ // Add services to the container.
+ builder.Services.AddControllers();
++builder.Services.AddCors(options =>
++{
++    options.AddPolicy("ClientApp", policy =>
++    {
++        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
++        if (allowedOrigins.Length > 0)
++        {
++            policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod();
++            return;
++        }
++
++        if (builder.Environment.IsDevelopment())
++        {
++            policy
++                .WithOrigins("http://localhost:5173", "https://localhost:5173")
++                .AllowAnyHeader()
++                .AllowAnyMethod();
++            return;
++        }
++
++        policy.SetIsOriginAllowed(_ => false).AllowAnyHeader().AllowAnyMethod();
++    });
++});
++builder.Services.AddRateLimiter(options =>
++{
++    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
++    options.AddPolicy("Auth", context => RateLimitPartition.GetFixedWindowLimiter(
++        GetRateLimitPartitionKey(context),
++        _ => new FixedWindowRateLimiterOptions
++        {
++            PermitLimit = 10,
++            Window = TimeSpan.FromMinutes(1),
++            QueueLimit = 0
++        }));
++    options.AddPolicy("Search", context => RateLimitPartition.GetFixedWindowLimiter(
++        GetRateLimitPartitionKey(context),
++        _ => new FixedWindowRateLimiterOptions
++        {
++            PermitLimit = 60,
++            Window = TimeSpan.FromMinutes(1),
++            QueueLimit = 0
++        }));
++    options.AddPolicy("Api", context => RateLimitPartition.GetFixedWindowLimiter(
++        GetRateLimitPartitionKey(context),
++        _ => new FixedWindowRateLimiterOptions
++        {
++            PermitLimit = 120,
++            Window = TimeSpan.FromMinutes(1),
++            QueueLimit = 0
++        }));
++});
+ 
+ // Add Layers
+ builder.Services.AddApplication();
+@@ -44,17 +97,42 @@ builder.Services.AddHangfireServer();
+ 
+ var app = builder.Build();
+ 
+-app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
++if (!app.Environment.IsDevelopment())
++{
++    app.UseHsts();
++}
++
++app.Use(async (context, next) =>
++{
++    var headers = context.Response.Headers;
++    headers.TryAdd("X-Content-Type-Options", "nosniff");
++    headers.TryAdd("Referrer-Policy", "strict-origin-when-cross-origin");
++    headers.TryAdd("Content-Security-Policy",
++        "default-src 'self'; " +
++        "script-src 'self'; " +
++        "style-src 'self' 'unsafe-inline'; " +
++        "img-src 'self' data: https:; " +
++        "font-src 'self' data:; " +
++        "connect-src 'self' https: wss:; " +
++        "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org https://t.me");
++    await next();
++});
++
++app.UseCors("ClientApp");
+ app.UseHttpsRedirection();
+ app.Environment.WebRootPath ??= Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+ Directory.CreateDirectory(Path.Combine(app.Environment.WebRootPath, "uploads"));
+ app.UseStaticFiles();
+ 
+ app.UseAuthentication();
++app.UseRateLimiter();
+ app.UseAuthorization();
+ 
+ // Hangfire Dashboard
+-app.UseHangfireDashboard("/hangfire");
++app.UseHangfireDashboard("/hangfire", new DashboardOptions
++{
++    Authorization = [new HangfireDashboardAuthorizationFilter(app.Configuration)]
++});
+ 
+ app.MapControllers();
+ 
+@@ -68,7 +146,8 @@ using (var scope = app.Services.CreateScope())
+     }
+     catch (Exception ex)
+     {
+-        Console.WriteLine($"Error migrating database: {ex.Message}");
++        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
++        logger.LogError(ex, "Error migrating database");
+     }
+ 
+     dbContext.Database.ExecuteSqlRaw("""
+@@ -181,8 +260,7 @@ app.Run();
+ 
+ void ConfigureJwtOptions(WebApplicationBuilder webApplicationBuilder, JwtBearerOptions jwtBearerOptions)
+ {
+-    var secret = webApplicationBuilder.Configuration["Jwt:Secret"] ??
+-                 "A_VERY_LONG_SECRET_KEY_THAT_NEEDS_TO_BE_AT_LEAST_32_BYTES_LONG_OR_MORE";
++    var secret = GetRequiredJwtSecret(webApplicationBuilder.Configuration, webApplicationBuilder.Environment);
+     jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
+     {
+         ValidateIssuer = true,
+@@ -194,3 +272,33 @@ void ConfigureJwtOptions(WebApplicationBuilder webApplicationBuilder, JwtBearerO
+         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
+     };
+ }
++
++string GetRateLimitPartitionKey(HttpContext context)
++{
++    var accountId = AdminAccess.GetAccountId(context.User);
++    return accountId?.ToString()
++           ?? context.Connection.RemoteIpAddress?.ToString()
++           ?? "anonymous";
++}
++
++static string GetRequiredJwtSecret(IConfiguration configuration, IWebHostEnvironment environment)
++{
++    var secret = configuration["Jwt:Secret"];
++    if (string.IsNullOrWhiteSpace(secret))
++    {
++        throw new InvalidOperationException("Jwt:Secret must be configured from environment, user-secrets, or production secret storage.");
++    }
++
++    if (Encoding.UTF8.GetByteCount(secret) < 32)
++    {
++        throw new InvalidOperationException("Jwt:Secret must be at least 32 bytes.");
++    }
++
++    if (!environment.IsDevelopment() &&
++        secret.Contains("CHANGE_ME", StringComparison.OrdinalIgnoreCase))
++    {
++        throw new InvalidOperationException("Jwt:Secret placeholder cannot be used outside Development.");
++    }
++
++    return secret;
++}
+diff --git a/src/ClientScout.Api/Security/AdminAccess.cs b/src/ClientScout.Api/Security/AdminAccess.cs
+new file mode 100644
+index 0000000..4e69556
+--- /dev/null
++++ b/src/ClientScout.Api/Security/AdminAccess.cs
+@@ -0,0 +1,70 @@
++using System.Security.Claims;
++using Hangfire.Dashboard;
++using Microsoft.Extensions.Configuration;
++
++namespace ClientScout.Api.Security;
++
++public static class AdminAccess
++{
++    public static bool IsAdmin(Guid? accountId, long? telegramUserId, IConfiguration configuration)
++    {
++        if (accountId.HasValue)
++        {
++            var adminAccountIds = configuration.GetSection("Admin:AccountIds").Get<string[]>() ?? [];
++            if (adminAccountIds.Any(value =>
++                    Guid.TryParse(value, out var configuredId) && configuredId == accountId.Value))
++            {
++                return true;
++            }
++        }
++
++        if (telegramUserId.HasValue)
++        {
++            var adminTelegramIds = configuration.GetSection("Admin:TelegramUserIds").Get<string[]>() ?? [];
++            if (adminTelegramIds.Any(value =>
++                    long.TryParse(value, out var configuredId) && configuredId == telegramUserId.Value))
++            {
++                return true;
++            }
++        }
++
++        return false;
++    }
++
++    public static Guid? GetAccountId(ClaimsPrincipal user)
++    {
++        var sub = user.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)
++                  ?? user.FindFirstValue(ClaimTypes.NameIdentifier);
++        return Guid.TryParse(sub, out var id) ? id : null;
++    }
++
++    public static long? GetTelegramUserId(ClaimsPrincipal user)
++    {
++        var value = user.FindFirstValue("telegramUserId");
++        return long.TryParse(value, out var id) ? id : null;
++    }
++}
++
++public sealed class HangfireDashboardAuthorizationFilter : IDashboardAuthorizationFilter
++{
++    private readonly IConfiguration _configuration;
++
++    public HangfireDashboardAuthorizationFilter(IConfiguration configuration)
++    {
++        _configuration = configuration;
++    }
++
++    public bool Authorize(DashboardContext context)
++    {
++        var httpContext = context.GetHttpContext();
++        if (httpContext.User.Identity?.IsAuthenticated != true)
++        {
++            return false;
++        }
++
++        return AdminAccess.IsAdmin(
++            AdminAccess.GetAccountId(httpContext.User),
++            AdminAccess.GetTelegramUserId(httpContext.User),
++            _configuration);
++    }
++}
+diff --git a/src/ClientScout.Api/Services/TelegramBotHostedService.cs b/src/ClientScout.Api/Services/TelegramBotHostedService.cs
+index 3ef0896..fbc7016 100644
+--- a/src/ClientScout.Api/Services/TelegramBotHostedService.cs
++++ b/src/ClientScout.Api/Services/TelegramBotHostedService.cs
+@@ -16,15 +16,18 @@ public class TelegramBotHostedService : BackgroundService
+ {
+     private readonly ILogger<TelegramBotHostedService> _logger;
+     private readonly string _botToken;
+-    private readonly long _adminTelegramId = 1080953147;
++    private readonly HashSet<long> _adminTelegramIds;
+     private readonly string _frontendUrl;
+     private TelegramBotClient? _botClient;
+ 
+     public TelegramBotHostedService(ILogger<TelegramBotHostedService> logger, IConfiguration configuration)
+     {
+         _logger = logger;
+-        // In production, token should be read from configuration, but for simplicity here we use the exact one
+-        _botToken = "8714330561:AAE0r-2KBOZjf_XuFKajJMb4p_910ZwIGK0"; 
++        _botToken = configuration["Telegram:BotToken"] ?? configuration["TELEGRAM_BOT_TOKEN"] ?? string.Empty;
++        _adminTelegramIds = (configuration.GetSection("Admin:TelegramUserIds").Get<string[]>() ?? [])
++            .Select(value => long.TryParse(value, out var id) ? id : 0)
++            .Where(id => id > 0)
++            .ToHashSet();
+         _frontendUrl = configuration["FrontendUrl"] ?? "https://client-scout.com";
+     }
+ 
+@@ -72,10 +75,8 @@ public class TelegramBotHostedService : BackgroundService
+         long chatId = message.Chat.Id;
+         long userId = message.From?.Id ?? 0;
+ 
+-        // Ensure this is our admin
+-        if (userId != _adminTelegramId)
++        if (!_adminTelegramIds.Contains(userId))
+         {
+-            // Optionally, we could send a message indicating no access
+             return;
+         }
+ 
+diff --git a/src/ClientScout.Api/appsettings.Development.json b/src/ClientScout.Api/appsettings.Development.json
+index f143a73..12bc884 100644
+--- a/src/ClientScout.Api/appsettings.Development.json
++++ b/src/ClientScout.Api/appsettings.Development.json
+@@ -6,6 +6,26 @@
+                                  }
+                 },
+     "FrontendUrl": "https://involve-kim-section-intensive.trycloudflare.com",
++    "Jwt": {
++        "Secret": "CHANGE_ME_DEV_ONLY_32_BYTES_MINIMUM_SECRET",
++        "Issuer": "clientscout.app",
++        "Audience": "clientscout.tma"
++    },
++    "Cors": {
++        "AllowedOrigins": [
++            "http://localhost:5173",
++            "https://localhost:5173"
++        ]
++    },
++    "Admin": {
++        "AccountIds": [],
++        "TelegramUserIds": []
++    },
++    "Telegram": {
++        "BotToken": "",
++        "ApiId": "",
++        "ApiHash": ""
++    },
+     "AI":  {
+                "Provider":  "Groq",
+                "ApiKey":  "",
+diff --git a/src/ClientScout.Api/appsettings.Local.example.json b/src/ClientScout.Api/appsettings.Local.example.json
+index 91c1337..f1fd6b2 100644
+--- a/src/ClientScout.Api/appsettings.Local.example.json
++++ b/src/ClientScout.Api/appsettings.Local.example.json
+@@ -1,4 +1,31 @@
+ {
++  "ConnectionStrings": {
++    "DefaultConnection": "Host=localhost;Database=clientscout;Username=clientscout;Password=PUT_LOCAL_DB_PASSWORD_HERE"
++  },
++  "Jwt": {
++    "Secret": "PUT_A_RANDOM_32_BYTE_MINIMUM_SECRET_HERE",
++    "Issuer": "clientscout.app",
++    "Audience": "clientscout.tma"
++  },
++  "Cors": {
++    "AllowedOrigins": [
++      "http://localhost:5173",
++      "https://localhost:5173"
++    ]
++  },
++  "Admin": {
++    "AccountIds": [
++      "PUT_ADMIN_ACCOUNT_GUID_HERE"
++    ],
++    "TelegramUserIds": [
++      "PUT_ADMIN_TELEGRAM_ID_HERE"
++    ]
++  },
++  "Telegram": {
++    "BotToken": "PUT_TELEGRAM_BOT_TOKEN_HERE",
++    "ApiId": "PUT_TELEGRAM_API_ID_HERE",
++    "ApiHash": "PUT_TELEGRAM_API_HASH_HERE"
++  },
+   "AI": {
+     "Mode": "free-first",
+     "Providers": [
+@@ -15,6 +42,19 @@
+           { "Id": "llama-3.3-70b-versatile", "Priority": 2 }
+         ]
+       },
++      {
++        "Name": "BluesMinds",
++        "BaseUrl": "https://api.bluesminds.com/v1",
++        "ApiKey": "PUT_BLUESMINDS_KEY_HERE",
++        "Priority": 5,
++        "MaxRequestsPerMinute": 30,
++        "MaxTokensPerMinute": 90000,
++        "MaxConcurrency": 3,
++        "Models": [
++          { "Id": "gpt-4o-mini", "Priority": 1, "MaxInputChars": 60000 },
++          { "Id": "mimo-v2.5", "Priority": 100, "MaxInputChars": 60000 }
++        ]
++      },
+       {
+         "Name": "OpenRouter",
+         "BaseUrl": "https://openrouter.ai/api/v1",
+diff --git a/src/ClientScout.Api/appsettings.json b/src/ClientScout.Api/appsettings.json
+index 0e6dc06..07bc75d 100644
+--- a/src/ClientScout.Api/appsettings.json
++++ b/src/ClientScout.Api/appsettings.json
+@@ -7,13 +7,20 @@
+   },
+   "AllowedHosts": "*",
+   "ConnectionStrings": {
+-    "DefaultConnection": "Host=localhost;Database=clientscout;Username=postgres;Password=postgres"
++    "DefaultConnection": ""
+   },
+   "Jwt": {
+-    "Secret": "A_VERY_LONG_SECRET_KEY_THAT_NEEDS_TO_BE_AT_LEAST_32_BYTES_LONG_OR_MORE",
++    "Secret": "",
+     "Issuer": "clientscout.app",
+     "Audience": "clientscout.tma"
+   },
++  "Cors": {
++    "AllowedOrigins": []
++  },
++  "Admin": {
++    "AccountIds": [],
++    "TelegramUserIds": []
++  },
+   "AI": {
+     "Provider": "Groq",
+     "ApiKey": "",
+@@ -30,10 +37,9 @@
+     "ApiKey": "",
+     "Model": "gemini-2.5-flash-lite"
+   },
+-  "TELEGRAM_BOT_TOKEN": "8714330561:AAE0r-2KBOZjf_XuFKajJMb4p_910ZwIGK0",
+   "Telegram": {
+-    "ApiId": "33201795",
+-    "ApiHash": "466c9d8e21b4da967be2b025f4fc2a5f",
+-    "AdminTelegramId": 1080953147
++    "BotToken": "",
++    "ApiId": "",
++    "ApiHash": ""
+   }
+ }
+diff --git a/src/ClientScout.Application/Auth/AuthService.cs b/src/ClientScout.Application/Auth/AuthService.cs
+index f923903..ebd2be1 100644
+--- a/src/ClientScout.Application/Auth/AuthService.cs
++++ b/src/ClientScout.Application/Auth/AuthService.cs
+@@ -119,20 +119,24 @@ public class AuthService : IAuthService
+ 
+     private string GenerateToken(Account account, bool rememberMe)
+     {
+-        var secret = _config["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret not configured");
++        var secret = GetRequiredJwtSecret(_config);
+         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+ 
+         // rememberMe = 30 days; otherwise 24 hours
+         var expiry = rememberMe ? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddHours(24);
+ 
+-        var claims = new[]
++        var claims = new List<Claim>
+         {
+             new Claim(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
+             new Claim(JwtRegisteredClaimNames.Email, account.Email),
+             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+             new Claim("accountId", account.Id.ToString())
+         };
++        if (account.TelegramUserId.HasValue)
++        {
++            claims.Add(new Claim("telegramUserId", account.TelegramUserId.Value.ToString()));
++        }
+ 
+         var token = new JwtSecurityToken(
+             issuer: _config["Jwt:Issuer"],
+@@ -145,6 +149,22 @@ public class AuthService : IAuthService
+         return new JwtSecurityTokenHandler().WriteToken(token);
+     }
+ 
++    private static string GetRequiredJwtSecret(IConfiguration config)
++    {
++        var secret = config["Jwt:Secret"];
++        if (string.IsNullOrWhiteSpace(secret))
++        {
++            throw new InvalidOperationException("Jwt:Secret not configured");
++        }
++
++        if (Encoding.UTF8.GetByteCount(secret) < 32)
++        {
++            throw new InvalidOperationException("Jwt:Secret must be at least 32 bytes.");
++        }
++
++        return secret;
++    }
++
+     private static AccountDto MapToDto(Account account) => new(
+         account.Id,
+         account.Email,
+diff --git a/src/ClientScout.Application/Auth/JwtService.cs b/src/ClientScout.Application/Auth/JwtService.cs
+index 595bdf0..b7644d1 100644
+--- a/src/ClientScout.Application/Auth/JwtService.cs
++++ b/src/ClientScout.Application/Auth/JwtService.cs
+@@ -18,7 +18,17 @@ public class JwtService
+ 
+     public string GenerateToken(User user)
+     {
+-        var secret = _config["Jwt:Secret"] ?? throw new ArgumentNullException("Jwt:Secret missing");
++        var secret = _config["Jwt:Secret"];
++        if (string.IsNullOrWhiteSpace(secret))
++        {
++            throw new ArgumentNullException("Jwt:Secret missing");
++        }
++
++        if (Encoding.UTF8.GetByteCount(secret) < 32)
++        {
++            throw new InvalidOperationException("Jwt:Secret must be at least 32 bytes.");
++        }
++
+         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+ 
+diff --git a/src/ClientScout.Application/Auth/TelegramAuthService.cs b/src/ClientScout.Application/Auth/TelegramAuthService.cs
+index 6bfd29c..d2c60ed 100644
+--- a/src/ClientScout.Application/Auth/TelegramAuthService.cs
++++ b/src/ClientScout.Application/Auth/TelegramAuthService.cs
+@@ -11,7 +11,13 @@ public class TelegramAuthService
+ 
+     public TelegramAuthService(IConfiguration config)
+     {
+-        _botToken = config["TELEGRAM_BOT_TOKEN"] ?? throw new ArgumentNullException("TELEGRAM_BOT_TOKEN is missing");
++        _botToken = config["Telegram:BotToken"]
++            ?? config["TELEGRAM_BOT_TOKEN"]
++            ?? throw new ArgumentNullException("Telegram bot token is missing");
++        if (string.IsNullOrWhiteSpace(_botToken))
++        {
++            throw new ArgumentNullException("Telegram bot token is missing");
++        }
+     }
+ 
+     public bool ValidateInitData(string initData)
+diff --git a/src/ClientScout.Application/ClientScout.Application.csproj b/src/ClientScout.Application/ClientScout.Application.csproj
+index 56e9be3..974ac1b 100644
+--- a/src/ClientScout.Application/ClientScout.Application.csproj
++++ b/src/ClientScout.Application/ClientScout.Application.csproj
+@@ -13,6 +13,7 @@
+     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.9" />
+     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.9" />
+     <PackageReference Include="Microsoft.Playwright" Version="1.57.0" />
++    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
+   </ItemGroup>
+ 
+diff --git a/src/ClientScout.Application/DependencyInjection.cs b/src/ClientScout.Application/DependencyInjection.cs
+index 77a044d..c0454f9 100644
+--- a/src/ClientScout.Application/DependencyInjection.cs
++++ b/src/ClientScout.Application/DependencyInjection.cs
+@@ -21,7 +21,9 @@ public static class DependencyInjection
+         services.AddScoped<ISearchSettingsService, SearchSettingsService>();
+         services.AddOptions<AiProviderPoolOptions>()
+             .BindConfiguration("AI");
+-        services.AddHttpClient<AiJsonClient>(client =>
++        services.AddScoped<IAiProviderRegistry, AiProviderRegistry>();
++        services.AddScoped<IAiUsageLogger, AiUsageLogger>();
++        services.AddHttpClient<OpenAiCompatibleAiProviderClient>(client =>
+         {
+             client.Timeout = TimeSpan.FromSeconds(45);
+         })
+@@ -29,13 +31,18 @@ public static class DependencyInjection
+         {
+             ConnectTimeout = TimeSpan.FromSeconds(5)
+         });
++        services.AddScoped<AiJsonClient>();
+         services.AddScoped<IAiSearchExpansionService, AiSearchExpansionService>();
+         services.AddScoped<IAiLeadClassifier, AiLeadClassifier>();
+         services.AddScoped<ISearchCandidateFilter, SearchCandidateFilter>();
+         services.AddScoped<ISearchIngestionService, SearchIngestionService>();
++        services.AddScoped<IExchangeProvider, KworkExchangeProvider>();
++        services.AddScoped<IExchangeProviderRegistry, ExchangeProviderRegistry>();
+         services.AddScoped<IExchangeConnectionService, ExchangeConnectionService>();
+         services.AddScoped<ISearchJobService, SearchJobService>();
+-        services.AddSingleton<IKworkBrowserLoginService, KworkBrowserLoginService>();
++        services.AddSingleton<KworkBrowserLoginService>();
++        services.AddSingleton<IKworkBrowserLoginService>(provider => provider.GetRequiredService<KworkBrowserLoginService>());
++        services.AddSingleton<IExchangeBrowserLoginService>(provider => provider.GetRequiredService<KworkBrowserLoginService>());
+         services.AddHttpClient<ILeadNotificationService, TelegramLeadNotificationService>();
+         services.AddHttpClient("Kwork");
+         services.AddScoped<LeadParsingService>();
+diff --git a/src/ClientScout.Application/Leads/LeadService.cs b/src/ClientScout.Application/Leads/LeadService.cs
+index 5a8f702..6963bca 100644
+--- a/src/ClientScout.Application/Leads/LeadService.cs
++++ b/src/ClientScout.Application/Leads/LeadService.cs
+@@ -39,6 +39,7 @@ public class LeadService : ILeadService
+         var now = DateTimeOffset.UtcNow;
+ 
+         var query = _dbContext.JobLeads
++            .AsNoTracking()
+             .Where(l => l.ProfileId == profileId &&
+                         l.Status != LeadStatus.Hidden &&
+                         l.ExpiresAt > now)
+@@ -74,6 +75,7 @@ public class LeadService : ILeadService
+ 
+         var now = DateTimeOffset.UtcNow;
+         var query = _dbContext.JobLeads
++            .AsNoTracking()
+             .Where(l => l.ProfileId == profileId &&
+                         l.Status != LeadStatus.Hidden &&
+                         l.ExpiresAt > now);
+diff --git a/src/ClientScout.Application/Profiles/ProfileService.cs b/src/ClientScout.Application/Profiles/ProfileService.cs
+index 251e534..d8de094 100644
+--- a/src/ClientScout.Application/Profiles/ProfileService.cs
++++ b/src/ClientScout.Application/Profiles/ProfileService.cs
+@@ -22,6 +22,7 @@ public class ProfileService : IProfileService
+     public async Task<List<ProfileDto>> GetProfilesAsync(Guid accountId, CancellationToken cancellationToken = default)
+     {
+         var profiles = await _dbContext.Profiles
++            .AsNoTracking()
+             .Where(p => p.AccountId == accountId)
+             .OrderByDescending(p => p.IsDefault)
+             .ThenByDescending(p => p.CreatedAt)
+@@ -33,6 +34,7 @@ public class ProfileService : IProfileService
+     public async Task<ProfileDto?> GetProfileAsync(Guid id, Guid accountId, CancellationToken cancellationToken = default)
+     {
+         var profile = await _dbContext.Profiles
++            .AsNoTracking()
+             .FirstOrDefaultAsync(p => p.Id == id && p.AccountId == accountId, cancellationToken);
+ 
+         return profile == null ? null : MapToDto(profile);
+diff --git a/src/ClientScout.Application/Search/AiJsonClient.cs b/src/ClientScout.Application/Search/AiJsonClient.cs
+index 430746c..2305a70 100644
+--- a/src/ClientScout.Application/Search/AiJsonClient.cs
++++ b/src/ClientScout.Application/Search/AiJsonClient.cs
+@@ -1,12 +1,4 @@
+ using System.Collections.Concurrent;
+-using System.Net;
+-using System.Net.Http.Headers;
+-using System.Net.Http.Json;
+-using System.Text.Json;
+-using Microsoft.Extensions.Configuration;
+-using Microsoft.Extensions.Logging;
+-using Microsoft.Extensions.Options;
+-using Microsoft.Extensions.DependencyInjection;
+ 
+ namespace ClientScout.Application.Search;
+ 
+@@ -22,27 +14,19 @@ public enum AiFailureKind
+ public sealed class AiJsonClient
+ {
+     private static readonly ConcurrentDictionary<string, AiProviderRuntimeState> RuntimeStates = new(StringComparer.OrdinalIgnoreCase);
+-    private readonly HttpClient _httpClient;
+-    private readonly IConfiguration _configuration;
+-    private readonly AiProviderPoolOptions _options;
+-    private readonly ILogger<AiJsonClient> _logger;
+-    private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
++
++    private readonly IAiProviderRegistry _providerRegistry;
++    private readonly OpenAiCompatibleAiProviderClient _providerClient;
+ 
+     public AiJsonClient(
+-        HttpClient httpClient,
+-        IConfiguration configuration,
+-        IOptions<AiProviderPoolOptions> options,
+-        ILogger<AiJsonClient> logger,
+-        Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory)
++        IAiProviderRegistry providerRegistry,
++        OpenAiCompatibleAiProviderClient providerClient)
+     {
+-        _httpClient = httpClient;
+-        _configuration = configuration;
+-        _options = options.Value;
+-        _logger = logger;
+-        _scopeFactory = scopeFactory;
++        _providerRegistry = providerRegistry;
++        _providerClient = providerClient;
+     }
+ 
+-    public bool IsAvailable => GetProviders(AiTaskKind.LeadClassification).Any();
++    public bool IsAvailable => _providerRegistry.GetProviders(AiTaskKind.LeadClassification).Any();
+     public AiFailureKind LastFailureKind { get; private set; } = AiFailureKind.None;
+     private int LastFailureCooldownSeconds { get; set; }
+ 
+@@ -55,7 +39,7 @@ public sealed class AiJsonClient
+         LastFailureCooldownSeconds = 0;
+         var estimatedTokens = EstimateTokens(prompt);
+ 
+-        foreach (var candidate in GetProviderModelCandidates(taskKind, prompt.Length))
++        foreach (var candidate in _providerRegistry.GetCandidates(taskKind, prompt.Length))
+         {
+             var runtime = RuntimeStates.GetOrAdd(candidate.RuntimeKey, _ => new AiProviderRuntimeState(candidate.Provider.MaxConcurrency));
+             if (runtime.IsCoolingDown)
+@@ -77,14 +61,17 @@ public sealed class AiJsonClient
+ 
+             try
+             {
+-                var result = await TryGenerateJsonAsync<T>(candidate, prompt, cancellationToken);
+-                if (result != null)
++                var result = await _providerClient.GenerateJsonAsync<T>(candidate, prompt, cancellationToken);
++                LastFailureKind = result.FailureKind;
++                LastFailureCooldownSeconds = result.CooldownSeconds;
++
++                if (result.Value != null)
+                 {
+                     LastFailureKind = AiFailureKind.None;
+-                    return result;
++                    return result.Value;
+                 }
+ 
+-                if (LastFailureKind == AiFailureKind.RateLimited || LastFailureKind == AiFailureKind.RequestFailed)
++                if (LastFailureKind is AiFailureKind.RateLimited or AiFailureKind.RequestFailed)
+                 {
+                     runtime.CoolDown(LastFailureCooldownSeconds > 0
+                         ? LastFailureCooldownSeconds
+@@ -105,438 +92,19 @@ public sealed class AiJsonClient
+         return default;
+     }
+ 
+-    private async Task<T?> TryGenerateJsonAsync<T>(
+-        AiProviderModelCandidate candidate,
+-        string prompt,
+-        CancellationToken cancellationToken)
+-    {
+-        var url = $"{candidate.Provider.BaseUrl.TrimEnd('/')}/chat/completions";
+-        var useResponseFormat = candidate.Model.UseResponseFormat && candidate.Provider.UseResponseFormat;
+-        var payload = new Dictionary<string, object?>
+-        {
+-            ["model"] = candidate.Model.Id,
+-            ["messages"] = new[]
+-            {
+-                new { role = "user", content = prompt }
+-            },
+-            ["temperature"] = 0.15
+-        };
+-
+-        if (useResponseFormat)
+-        {
+-            payload["response_format"] = new { type = "json_object" };
+-        }
+-
+-        using var request = new HttpRequestMessage(HttpMethod.Post, url)
+-        {
+-            Content = JsonContent.Create(payload)
+-        };
+-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", candidate.Provider.ApiKey);
+-        request.Headers.TryAddWithoutValidation("HTTP-Referer", "https://clientscout.local");
+-        request.Headers.TryAddWithoutValidation("X-Title", "ClientScout");
+-
+-        try
+-        {
+-            using var response = await _httpClient.SendAsync(request, cancellationToken);
+-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+-            if (!response.IsSuccessStatusCode)
+-            {
+-                LastFailureKind = IsRateLimitOrCapacityFailure(response.StatusCode, body)
+-                    ? AiFailureKind.RateLimited
+-                    : AiFailureKind.RequestFailed;
+-                LastFailureCooldownSeconds = GetFailureCooldownSeconds(response.StatusCode, body, candidate.Provider);
+-                _logger.LogWarning(
+-                    "AI provider {Provider}/{Model} failed with {StatusCode}: {Body}",
+-                    candidate.Provider.Name,
+-                    candidate.Model.Id,
+-                    response.StatusCode,
+-                    Truncate(body, 800));
+-                
+-                await LogUsageAsync(candidate, (int)response.StatusCode, body, Truncate(body, 800), cancellationToken);
+-                return default;
+-            }
+-
+-            await LogUsageAsync(candidate, (int)response.StatusCode, body, null, cancellationToken);
+-
+-            using var document = JsonDocument.Parse(body);
+-            var text = document.RootElement
+-                .GetProperty("choices")[0]
+-                .GetProperty("message")
+-                .GetProperty("content")
+-                .GetString();
+-
+-            if (string.IsNullOrWhiteSpace(text))
+-            {
+-                LastFailureKind = AiFailureKind.InvalidResponse;
+-                return default;
+-            }
+-
+-            var normalized = ExtractJson(text);
+-            return JsonSerializer.Deserialize<T>(normalized, new JsonSerializerOptions
+-            {
+-                PropertyNameCaseInsensitive = true
+-            });
+-        }
+-        catch (Exception ex) when (ex is not OperationCanceledException)
+-        {
+-            LastFailureKind = AiFailureKind.InvalidResponse;
+-            LastFailureCooldownSeconds = candidate.Provider.CooldownSeconds;
+-            _logger.LogWarning(ex, "AI JSON generation failed for provider {Provider}/{Model}", candidate.Provider.Name, candidate.Model.Id);
+-            await LogUsageAsync(candidate, 0, string.Empty, ex.Message, cancellationToken);
+-            return default;
+-        }
+-    }
+-
+-    private async Task LogUsageAsync(AiProviderModelCandidate candidate, int statusCode, string body, string? errorMessage, CancellationToken cancellationToken)
+-    {
+-        try
+-        {
+-            int inputTokens = 0;
+-            int outputTokens = 0;
+-            decimal costUsd = 0m;
+-
+-            if (!string.IsNullOrEmpty(body))
+-            {
+-                try
+-                {
+-                    using var document = JsonDocument.Parse(body);
+-                    if (document.RootElement.TryGetProperty("usage", out var usageElem))
+-                    {
+-                        if (usageElem.TryGetProperty("prompt_tokens", out var pTokens))
+-                            inputTokens = pTokens.GetInt32();
+-                        if (usageElem.TryGetProperty("completion_tokens", out var cTokens))
+-                            outputTokens = cTokens.GetInt32();
+-                    }
+-                }
+-                catch
+-                {
+-                    // Ignore parse errors for logging
+-                }
+-            }
+-
+-            if (candidate.Provider.Name == "BluesMinds")
+-            {
+-                if (candidate.Model.Id == "gpt-4o-mini")
+-                {
+-                    costUsd = (inputTokens / 1_000_000m * 0.30m) + (outputTokens / 1_000_000m * 0.18m);
+-                }
+-                else if (candidate.Model.Id == "mimo-v2.5")
+-                {
+-                    costUsd = (inputTokens / 1_000_000m * 0.10m) + (outputTokens / 1_000_000m * 0.28m);
+-                }
+-            }
+-
+-            using var scope = _scopeFactory.CreateScope();
+-            var dbContext = scope.ServiceProvider.GetRequiredService<ClientScout.Application.Common.Interfaces.IAppDbContext>();
+-            
+-            var log = new ClientScout.Domain.Entities.AiUsageLog
+-            {
+-                ProviderName = candidate.Provider.Name,
+-                ModelName = candidate.Model.Id,
+-                InputTokens = inputTokens,
+-                OutputTokens = outputTokens,
+-                CostUsd = costUsd,
+-                StatusCode = statusCode,
+-                ErrorMessage = errorMessage
+-            };
+-
+-            dbContext.AiUsageLogs.Add(log);
+-            await dbContext.SaveChangesAsync(cancellationToken);
+-        }
+-        catch (Exception ex)
+-        {
+-            _logger.LogError(ex, "Failed to save AI usage log for {Provider}/{Model}", candidate.Provider.Name, candidate.Model.Id);
+-        }
+-    }
+-
+     public int GetOptimalBatchSize(AiTaskKind taskKind)
+     {
+-        var primaryCandidate = GetProviderModelCandidates(taskKind, 0).FirstOrDefault();
+-        if (primaryCandidate == null) return 4;
+-        
+-        return primaryCandidate.Model.MaxInputChars >= 35000 ? 15 : 4;
+-    }
+-
+-    private IEnumerable<AiProviderModelCandidate> GetProviderModelCandidates(AiTaskKind taskKind, int promptChars)
+-    {
+-        return GetProviders(taskKind)
+-            .SelectMany(provider => provider.Models
+-                .Where(model => IsModelUsableForTask(model, taskKind) && promptChars <= model.MaxInputChars)
+-                .Select(model => new AiProviderModelCandidate(provider, model)))
+-            .OrderBy(c => c.Model.Priority)
+-            .ThenBy(c => c.Provider.Priority);
+-    }
+-
+-    private IReadOnlyList<AiProviderOptions> GetProviders(AiTaskKind taskKind)
+-    {
+-        var providers = BuildProviderList();
+-        return providers
+-            .Where(provider => provider.Enabled)
+-            .Where(provider => !string.IsNullOrWhiteSpace(provider.ApiKey))
+-            .Where(provider => !string.IsNullOrWhiteSpace(provider.BaseUrl))
+-            .Where(provider => provider.Models.Any())
+-            .Where(provider => IsProviderUsableForTask(provider, taskKind))
+-            .OrderBy(provider => provider.Priority)
+-            .ToArray();
+-    }
+-
+-    private List<AiProviderOptions> BuildProviderList()
+-    {
+-        var providers = _options.Providers
+-            .Select(NormalizeProvider)
+-            .Where(provider => !string.IsNullOrWhiteSpace(provider.Name))
+-            .ToList();
+-
+-        var bluesMindsKey = Environment.GetEnvironmentVariable("BLUESMINDS_API_KEY") 
+-            ?? "sk-NrYmjNQFIzqcMi0AvDod7DIV0adwh5cQeTGADjFN96fckKfA";
+-        
+-        providers.Add(NormalizeProvider(new AiProviderOptions
++        var primaryCandidate = _providerRegistry.GetCandidates(taskKind, 0).FirstOrDefault();
++        if (primaryCandidate == null)
+         {
+-            Name = "BluesMinds",
+-            BaseUrl = "https://api.bluesminds.com/v1",
+-            ApiKey = bluesMindsKey,
+-            Priority = 5,
+-            MaxRequestsPerMinute = 30,
+-            MaxTokensPerMinute = 90000,
+-            MaxConcurrency = 3,
+-            Models = new[] 
+-            { 
+-                new AiModelOptions { Id = "gpt-4o-mini", Priority = 1, MaxInputChars = 60000 },
+-                new AiModelOptions { Id = "mimo-v2.5", Priority = 100, MaxInputChars = 60000 } 
+-            }.ToList()
+-        }));
+-
+-        AddEnvProvider(providers, "Groq", "GROQ_API_KEY", "https://api.groq.com/openai/v1",
+-            ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "mixtral-8x7b-32768"], 10, 20, 45000, 2);
+-        AddEnvProvider(providers, "OpenRouter", "OPENROUTER_API_KEY", "https://openrouter.ai/api/v1",
+-            ["qwen/qwen-2.5-72b-instruct:free", "meta-llama/llama-3.1-8b-instruct:free", "google/gemini-2.0-flash-lite-preview-02-05:free", "microsoft/phi-3-mini-128k-instruct:free", "openrouter/auto"], 20, 20, 50000, 2);
+-        AddEnvProvider(providers, "DeepSeek", "DEEPSEEK_API_KEY", "https://api.deepseek.com",
+-            ["deepseek-v4-flash", "deepseek-chat"], 30, 30, 90000, 3);
+-        AddEnvProvider(providers, "ZAI", "ZAI_API_KEY", "https://api.z.ai/api/paas/v4",
+-            ["glm-4.7-flash", "glm-4.5-flash"], 40, 30, 90000, 3);
+-        AddEnvProvider(providers, "Kimi", "KIMI_API_KEY", "https://api.moonshot.ai/v1",
+-            ["kimi-k2.7-code-highspeed", "kimi-k2.6", "moonshot-v1-8k"], 50, 20, 60000, 2);
+-        AddEnvProvider(providers, "Gemini", "GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai",
+-            ["gemini-2.5-flash-lite", "gemini-1.5-flash"], 60, 10, 35000, 1);
+-        AddEnvProvider(providers, "Qwen", "DASHSCOPE_API_KEY", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+-            ["qwen-flash", "qwen-plus-latest", "qwen-turbo-latest"], 70, 20, 50000, 2);
+-        AddEnvProvider(providers, "Qwen", "QWEN_API_KEY", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+-            ["qwen-flash", "qwen-plus-latest", "qwen-turbo-latest"], 70, 20, 50000, 2);
+-
+-        AddLegacySingleProvider(providers);
+-        AddLegacyGeminiProvider(providers);
+-
+-        return providers
+-            .GroupBy(provider => provider.Name, StringComparer.OrdinalIgnoreCase)
+-            .Select(group => group.First())
+-            .ToList();
+-    }
+-
+-    private static AiProviderOptions NormalizeProvider(AiProviderOptions provider)
+-    {
+-        provider.Models = provider.Models
+-            .Where(model => !string.IsNullOrWhiteSpace(model.Id))
+-            .Select(model =>
+-            {
+-                model.MaxInputChars = model.MaxInputChars <= 0 ? 12000 : model.MaxInputChars;
+-                return model;
+-            })
+-            .ToList();
+-        provider.MaxConcurrency = Math.Max(1, provider.MaxConcurrency);
+-        provider.MaxRequestsPerMinute = Math.Max(1, provider.MaxRequestsPerMinute);
+-        provider.MaxTokensPerMinute = Math.Max(1000, provider.MaxTokensPerMinute);
+-        provider.CooldownSeconds = Math.Max(10, provider.CooldownSeconds);
+-        return provider;
+-    }
+-
+-    private void AddLegacySingleProvider(List<AiProviderOptions> providers)
+-    {
+-        if (providers.Count > 0 || string.IsNullOrWhiteSpace(_configuration["AI:ApiKey"]))
+-        {
+-            return;
+-        }
+-
+-        providers.Add(NormalizeProvider(new AiProviderOptions
+-        {
+-            Name = _configuration["AI:Provider"] ?? "LegacyAI",
+-            BaseUrl = _configuration["AI:BaseUrl"] ?? "https://api.groq.com/openai/v1",
+-            ApiKey = _configuration["AI:ApiKey"],
+-            Priority = 90,
+-            MaxRequestsPerMinute = 6,
+-            MaxTokensPerMinute = 20000,
+-            MaxConcurrency = 1,
+-            Models = ReadLegacyModels()
+-                .Select((model, index) => new AiModelOptions { Id = model, Priority = index + 1 })
+-                .ToList()
+-        }));
+-    }
+-
+-    private void AddLegacyGeminiProvider(List<AiProviderOptions> providers)
+-    {
+-        var apiKey = _configuration["Gemini:ApiKey"] ?? _configuration["GeminiApiKey"];
+-        if (providers.Any(provider => provider.Name.Equals("Gemini", StringComparison.OrdinalIgnoreCase)) ||
+-            string.IsNullOrWhiteSpace(apiKey))
+-        {
+-            return;
+-        }
+-
+-        providers.Add(NormalizeProvider(new AiProviderOptions
+-        {
+-            Name = "Gemini",
+-            BaseUrl = "https://generativelanguage.googleapis.com/v1beta/openai",
+-            ApiKey = apiKey,
+-            Priority = 60,
+-            MaxRequestsPerMinute = 10,
+-            MaxTokensPerMinute = 35000,
+-            MaxConcurrency = 1,
+-            Models =
+-            [
+-                new AiModelOptions { Id = _configuration["Gemini:Model"] ?? "gemini-2.5-flash-lite" }
+-            ]
+-        }));
+-    }
+-
+-    private string[] ReadLegacyModels()
+-    {
+-        var models = new List<string>();
+-        var primary = _configuration["AI:Model"];
+-        if (!string.IsNullOrWhiteSpace(primary))
+-        {
+-            models.Add(primary);
+-        }
+-
+-        var fallbacks = _configuration.GetSection("AI:ModelFallbacks").Get<string[]>()
+-            ?? ReadCsv(Environment.GetEnvironmentVariable("AI_MODEL_FALLBACKS"))
+-            ?? [];
+-        models.AddRange(fallbacks);
+-        return models.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+-    }
+-
+-    private static void AddEnvProvider(
+-        List<AiProviderOptions> providers,
+-        string name,
+-        string envKey,
+-        string baseUrl,
+-        string[] models,
+-        int priority,
+-        int rpm,
+-        int tpm,
+-        int concurrency)
+-    {
+-        if (providers.Any(provider => provider.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+-        {
+-            return;
+-        }
+-
+-        var apiKey = Environment.GetEnvironmentVariable(envKey);
+-        if (string.IsNullOrWhiteSpace(apiKey))
+-        {
+-            return;
+-        }
+-
+-        providers.Add(NormalizeProvider(new AiProviderOptions
+-        {
+-            Name = name,
+-            BaseUrl = baseUrl,
+-            ApiKey = apiKey,
+-            Priority = priority,
+-            MaxRequestsPerMinute = rpm,
+-            MaxTokensPerMinute = tpm,
+-            MaxConcurrency = concurrency,
+-            Models = models.Select((model, index) => new AiModelOptions
+-            {
+-                Id = model,
+-                Priority = index + 1,
+-                MaxInputChars = 60000
+-            }).ToList()
+-        }));
+-    }
+-
+-    private static bool IsProviderUsableForTask(AiProviderOptions provider, AiTaskKind taskKind)
+-    {
+-        return provider.Tasks.Length == 0 ||
+-               provider.Tasks.Any(task => task.Equals(taskKind.ToString(), StringComparison.OrdinalIgnoreCase));
+-    }
+-
+-    private static bool IsModelUsableForTask(AiModelOptions model, AiTaskKind taskKind)
+-    {
+-        return model.Tasks.Length == 0 ||
+-               model.Tasks.Any(task => task.Equals(taskKind.ToString(), StringComparison.OrdinalIgnoreCase));
+-    }
+-
+-    private static bool IsRateLimitOrCapacityFailure(HttpStatusCode statusCode, string body)
+-    {
+-        return statusCode == HttpStatusCode.TooManyRequests ||
+-               statusCode == HttpStatusCode.ServiceUnavailable ||
+-               body.Contains("rate", StringComparison.OrdinalIgnoreCase) ||
+-               body.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
+-               body.Contains("capacity", StringComparison.OrdinalIgnoreCase) ||
+-               body.Contains("temporarily", StringComparison.OrdinalIgnoreCase) ||
+-               body.Contains("insufficient", StringComparison.OrdinalIgnoreCase);
+-    }
+-
+-    private static int GetFailureCooldownSeconds(HttpStatusCode statusCode, string body, AiProviderOptions provider)
+-    {
+-        if (statusCode is HttpStatusCode.PaymentRequired or HttpStatusCode.Forbidden ||
+-            body.Contains("insufficient balance", StringComparison.OrdinalIgnoreCase) ||
+-            body.Contains("suspended", StringComparison.OrdinalIgnoreCase) ||
+-            body.Contains("access denied", StringComparison.OrdinalIgnoreCase) ||
+-            body.Contains("AccessDenied", StringComparison.OrdinalIgnoreCase) ||
+-            body.Contains("Unpurchased", StringComparison.OrdinalIgnoreCase))
+-        {
+-            return 3600;
++            return 4;
+         }
+ 
+-        return provider.CooldownSeconds;
++        return primaryCandidate.Model.MaxInputChars >= 35000 ? 15 : 4;
+     }
+ 
+     private static int EstimateTokens(string text) => Math.Max(1, text.Length / 4);
+ 
+-    private static string ExtractJson(string text)
+-    {
+-        text = text.Trim();
+-        if (text.StartsWith("```", StringComparison.Ordinal))
+-        {
+-            var firstLineEnd = text.IndexOf('\n');
+-            if (firstLineEnd >= 0)
+-            {
+-                text = text[(firstLineEnd + 1)..].Trim();
+-            }
+-
+-            if (text.EndsWith("```", StringComparison.Ordinal))
+-            {
+-                text = text[..^3].Trim();
+-            }
+-        }
+-
+-        var firstBrace = text.IndexOf('{');
+-        var lastBrace = text.LastIndexOf('}');
+-        if (firstBrace >= 0 && lastBrace > firstBrace)
+-        {
+-            return text[firstBrace..(lastBrace + 1)];
+-        }
+-
+-        return text;
+-    }
+-
+-    private static string[]? ReadCsv(string? value)
+-    {
+-        return string.IsNullOrWhiteSpace(value)
+-            ? null
+-            : value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+-    }
+-
+-    private static string Truncate(string value, int max)
+-    {
+-        value = value.Trim();
+-        return value.Length <= max ? value : value[..max];
+-    }
+-
+-    private sealed record AiProviderModelCandidate(AiProviderOptions Provider, AiModelOptions Model)
+-    {
+-        public string RuntimeKey => $"{Provider.Name}:{Model.Id}";
+-    }
+-
+     private sealed class AiProviderRuntimeState
+     {
+         private readonly object _gate = new();
+diff --git a/src/ClientScout.Application/Search/AiProviderJsonResult.cs b/src/ClientScout.Application/Search/AiProviderJsonResult.cs
+new file mode 100644
+index 0000000..0bf85ab
+--- /dev/null
++++ b/src/ClientScout.Application/Search/AiProviderJsonResult.cs
+@@ -0,0 +1,6 @@
++namespace ClientScout.Application.Search;
++
++public sealed record AiProviderJsonResult<T>(
++    T? Value,
++    AiFailureKind FailureKind,
++    int CooldownSeconds);
+diff --git a/src/ClientScout.Application/Search/AiProviderModelCandidate.cs b/src/ClientScout.Application/Search/AiProviderModelCandidate.cs
+new file mode 100644
+index 0000000..b3c40ec
+--- /dev/null
++++ b/src/ClientScout.Application/Search/AiProviderModelCandidate.cs
+@@ -0,0 +1,6 @@
++namespace ClientScout.Application.Search;
++
++public sealed record AiProviderModelCandidate(AiProviderOptions Provider, AiModelOptions Model)
++{
++    public string RuntimeKey => $"{Provider.Name}:{Model.Id}";
++}
+diff --git a/src/ClientScout.Application/Search/AiProviderRegistry.cs b/src/ClientScout.Application/Search/AiProviderRegistry.cs
+new file mode 100644
+index 0000000..b2c1d81
+--- /dev/null
++++ b/src/ClientScout.Application/Search/AiProviderRegistry.cs
+@@ -0,0 +1,243 @@
++using Microsoft.Extensions.Configuration;
++using Microsoft.Extensions.Options;
++
++namespace ClientScout.Application.Search;
++
++public sealed class AiProviderRegistry : IAiProviderRegistry
++{
++    private readonly IConfiguration _configuration;
++    private readonly AiProviderPoolOptions _options;
++
++    public AiProviderRegistry(IConfiguration configuration, IOptions<AiProviderPoolOptions> options)
++    {
++        _configuration = configuration;
++        _options = options.Value;
++    }
++
++    public IEnumerable<AiProviderModelCandidate> GetCandidates(AiTaskKind taskKind, int promptChars)
++    {
++        return GetProviders(taskKind)
++            .SelectMany(provider => provider.Models
++                .Where(model => IsModelUsableForTask(model, taskKind) && promptChars <= model.MaxInputChars)
++                .Select(model => new AiProviderModelCandidate(provider, model)))
++            .OrderBy(candidate => candidate.Model.Priority)
++            .ThenBy(candidate => candidate.Provider.Priority);
++    }
++
++    public IReadOnlyList<AiProviderOptions> GetProviders(AiTaskKind taskKind)
++    {
++        return BuildProviderList()
++            .Where(provider => provider.Enabled)
++            .Where(provider => !string.IsNullOrWhiteSpace(provider.ApiKey))
++            .Where(provider => !string.IsNullOrWhiteSpace(provider.BaseUrl))
++            .Where(provider => provider.Models.Any())
++            .Where(provider => IsProviderUsableForTask(provider, taskKind))
++            .OrderBy(provider => provider.Priority)
++            .ToArray();
++    }
++
++    private List<AiProviderOptions> BuildProviderList()
++    {
++        var providers = _options.Providers
++            .Select(NormalizeProvider)
++            .Where(provider => !string.IsNullOrWhiteSpace(provider.Name))
++            .ToList();
++
++        AddBluesMindsProvider(providers);
++        AddEnvProvider(providers, "Groq", "GROQ_API_KEY", "https://api.groq.com/openai/v1",
++            ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "mixtral-8x7b-32768"], 10, 20, 45000, 2);
++        AddEnvProvider(providers, "OpenRouter", "OPENROUTER_API_KEY", "https://openrouter.ai/api/v1",
++            ["qwen/qwen-2.5-72b-instruct:free", "meta-llama/llama-3.1-8b-instruct:free", "google/gemini-2.0-flash-lite-preview-02-05:free", "microsoft/phi-3-mini-128k-instruct:free", "openrouter/auto"], 20, 20, 50000, 2);
++        AddEnvProvider(providers, "DeepSeek", "DEEPSEEK_API_KEY", "https://api.deepseek.com",
++            ["deepseek-v4-flash", "deepseek-chat"], 30, 30, 90000, 3);
++        AddEnvProvider(providers, "ZAI", "ZAI_API_KEY", "https://api.z.ai/api/paas/v4",
++            ["glm-4.7-flash", "glm-4.5-flash"], 40, 30, 90000, 3);
++        AddEnvProvider(providers, "Kimi", "KIMI_API_KEY", "https://api.moonshot.ai/v1",
++            ["kimi-k2.7-code-highspeed", "kimi-k2.6", "moonshot-v1-8k"], 50, 20, 60000, 2);
++        AddEnvProvider(providers, "Gemini", "GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai",
++            ["gemini-2.5-flash-lite", "gemini-1.5-flash"], 60, 10, 35000, 1);
++        AddEnvProvider(providers, "Qwen", "DASHSCOPE_API_KEY", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
++            ["qwen-flash", "qwen-plus-latest", "qwen-turbo-latest"], 70, 20, 50000, 2);
++        AddEnvProvider(providers, "Qwen", "QWEN_API_KEY", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
++            ["qwen-flash", "qwen-plus-latest", "qwen-turbo-latest"], 70, 20, 50000, 2);
++
++        AddLegacySingleProvider(providers);
++        AddLegacyGeminiProvider(providers);
++
++        return providers
++            .GroupBy(provider => provider.Name, StringComparer.OrdinalIgnoreCase)
++            .Select(group => group.First())
++            .ToList();
++    }
++
++    private void AddBluesMindsProvider(List<AiProviderOptions> providers)
++    {
++        if (providers.Any(provider => provider.Name.Equals("BluesMinds", StringComparison.OrdinalIgnoreCase)))
++        {
++            return;
++        }
++
++        var apiKey = _configuration["AI:BluesMinds:ApiKey"]
++            ?? _configuration["BluesMinds:ApiKey"]
++            ?? Environment.GetEnvironmentVariable("BLUESMINDS_API_KEY");
++        if (string.IsNullOrWhiteSpace(apiKey))
++        {
++            return;
++        }
++
++        providers.Add(NormalizeProvider(new AiProviderOptions
++        {
++            Name = "BluesMinds",
++            BaseUrl = "https://api.bluesminds.com/v1",
++            ApiKey = apiKey,
++            Priority = 5,
++            MaxRequestsPerMinute = 30,
++            MaxTokensPerMinute = 90000,
++            MaxConcurrency = 3,
++            Models =
++            [
++                new AiModelOptions { Id = "gpt-4o-mini", Priority = 1, MaxInputChars = 60000 },
++                new AiModelOptions { Id = "mimo-v2.5", Priority = 100, MaxInputChars = 60000 }
++            ]
++        }));
++    }
++
++    private void AddLegacySingleProvider(List<AiProviderOptions> providers)
++    {
++        if (providers.Count > 0 || string.IsNullOrWhiteSpace(_configuration["AI:ApiKey"]))
++        {
++            return;
++        }
++
++        providers.Add(NormalizeProvider(new AiProviderOptions
++        {
++            Name = _configuration["AI:Provider"] ?? "LegacyAI",
++            BaseUrl = _configuration["AI:BaseUrl"] ?? "https://api.groq.com/openai/v1",
++            ApiKey = _configuration["AI:ApiKey"],
++            Priority = 90,
++            MaxRequestsPerMinute = 6,
++            MaxTokensPerMinute = 20000,
++            MaxConcurrency = 1,
++            Models = ReadLegacyModels()
++                .Select((model, index) => new AiModelOptions { Id = model, Priority = index + 1 })
++                .ToList()
++        }));
++    }
++
++    private void AddLegacyGeminiProvider(List<AiProviderOptions> providers)
++    {
++        var apiKey = _configuration["Gemini:ApiKey"] ?? _configuration["GeminiApiKey"];
++        if (providers.Any(provider => provider.Name.Equals("Gemini", StringComparison.OrdinalIgnoreCase)) ||
++            string.IsNullOrWhiteSpace(apiKey))
++        {
++            return;
++        }
++
++        providers.Add(NormalizeProvider(new AiProviderOptions
++        {
++            Name = "Gemini",
++            BaseUrl = "https://generativelanguage.googleapis.com/v1beta/openai",
++            ApiKey = apiKey,
++            Priority = 60,
++            MaxRequestsPerMinute = 10,
++            MaxTokensPerMinute = 35000,
++            MaxConcurrency = 1,
++            Models =
++            [
++                new AiModelOptions { Id = _configuration["Gemini:Model"] ?? "gemini-2.5-flash-lite" }
++            ]
++        }));
++    }
++
++    private string[] ReadLegacyModels()
++    {
++        var models = new List<string>();
++        var primary = _configuration["AI:Model"];
++        if (!string.IsNullOrWhiteSpace(primary))
++        {
++            models.Add(primary);
++        }
++
++        var fallbacks = _configuration.GetSection("AI:ModelFallbacks").Get<string[]>()
++            ?? ReadCsv(Environment.GetEnvironmentVariable("AI_MODEL_FALLBACKS"))
++            ?? [];
++        models.AddRange(fallbacks);
++        return models.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
++    }
++
++    private static void AddEnvProvider(
++        List<AiProviderOptions> providers,
++        string name,
++        string envKey,
++        string baseUrl,
++        string[] models,
++        int priority,
++        int rpm,
++        int tpm,
++        int concurrency)
++    {
++        if (providers.Any(provider => provider.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
++        {
++            return;
++        }
++
++        var apiKey = Environment.GetEnvironmentVariable(envKey);
++        if (string.IsNullOrWhiteSpace(apiKey))
++        {
++            return;
++        }
++
++        providers.Add(NormalizeProvider(new AiProviderOptions
++        {
++            Name = name,
++            BaseUrl = baseUrl,
++            ApiKey = apiKey,
++            Priority = priority,
++            MaxRequestsPerMinute = rpm,
++            MaxTokensPerMinute = tpm,
++            MaxConcurrency = concurrency,
++            Models = models.Select((model, index) => new AiModelOptions
++            {
++                Id = model,
++                Priority = index + 1,
++                MaxInputChars = 60000
++            }).ToList()
++        }));
++    }
++
++    private static AiProviderOptions NormalizeProvider(AiProviderOptions provider)
++    {
++        provider.Models = provider.Models
++            .Where(model => !string.IsNullOrWhiteSpace(model.Id))
++            .Select(model =>
++            {
++                model.MaxInputChars = model.MaxInputChars <= 0 ? 12000 : model.MaxInputChars;
++                return model;
++            })
++            .ToList();
++        provider.MaxConcurrency = Math.Max(1, provider.MaxConcurrency);
++        provider.MaxRequestsPerMinute = Math.Max(1, provider.MaxRequestsPerMinute);
++        provider.MaxTokensPerMinute = Math.Max(1000, provider.MaxTokensPerMinute);
++        provider.CooldownSeconds = Math.Max(10, provider.CooldownSeconds);
++        return provider;
++    }
++
++    private static bool IsProviderUsableForTask(AiProviderOptions provider, AiTaskKind taskKind)
++    {
++        return provider.Tasks.Length == 0 ||
++               provider.Tasks.Any(task => task.Equals(taskKind.ToString(), StringComparison.OrdinalIgnoreCase));
++    }
++
++    private static bool IsModelUsableForTask(AiModelOptions model, AiTaskKind taskKind)
++    {
++        return model.Tasks.Length == 0 ||
++               model.Tasks.Any(task => task.Equals(taskKind.ToString(), StringComparison.OrdinalIgnoreCase));
++    }
++
++    private static string[]? ReadCsv(string? value)
++    {
++        return string.IsNullOrWhiteSpace(value)
++            ? null
++            : value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
++    }
++}
+diff --git a/src/ClientScout.Application/Search/AiUsageLogger.cs b/src/ClientScout.Application/Search/AiUsageLogger.cs
+new file mode 100644
+index 0000000..9c6e88e
+--- /dev/null
++++ b/src/ClientScout.Application/Search/AiUsageLogger.cs
+@@ -0,0 +1,65 @@
++using ClientScout.Application.Common.Interfaces;
++using ClientScout.Domain.Entities;
++using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.Logging;
++
++namespace ClientScout.Application.Search;
++
++public sealed class AiUsageLogger : IAiUsageLogger
++{
++    private readonly IServiceScopeFactory _scopeFactory;
++    private readonly ILogger<AiUsageLogger> _logger;
++
++    public AiUsageLogger(IServiceScopeFactory scopeFactory, ILogger<AiUsageLogger> logger)
++    {
++        _scopeFactory = scopeFactory;
++        _logger = logger;
++    }
++
++    public async Task LogAsync(
++        AiProviderModelCandidate candidate,
++        int statusCode,
++        string body,
++        string? errorMessage,
++        CancellationToken cancellationToken)
++    {
++        try
++        {
++            var usage = AiUsageParser.Parse(body);
++            using var scope = _scopeFactory.CreateScope();
++            var dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContext>();
++
++            dbContext.AiUsageLogs.Add(new AiUsageLog
++            {
++                ProviderName = candidate.Provider.Name,
++                ModelName = candidate.Model.Id,
++                InputTokens = usage.InputTokens,
++                OutputTokens = usage.OutputTokens,
++                CostUsd = EstimateCostUsd(candidate, usage),
++                StatusCode = statusCode,
++                ErrorMessage = errorMessage
++            });
++
++            await dbContext.SaveChangesAsync(cancellationToken);
++        }
++        catch (Exception ex)
++        {
++            _logger.LogError(ex, "Failed to save AI usage log for {Provider}/{Model}", candidate.Provider.Name, candidate.Model.Id);
++        }
++    }
++
++    private static decimal EstimateCostUsd(AiProviderModelCandidate candidate, AiUsage usage)
++    {
++        if (!candidate.Provider.Name.Equals("BluesMinds", StringComparison.OrdinalIgnoreCase))
++        {
++            return 0m;
++        }
++
++        return candidate.Model.Id switch
++        {
++            "gpt-4o-mini" => (usage.InputTokens / 1_000_000m * 0.30m) + (usage.OutputTokens / 1_000_000m * 0.18m),
++            "mimo-v2.5" => (usage.InputTokens / 1_000_000m * 0.10m) + (usage.OutputTokens / 1_000_000m * 0.28m),
++            _ => 0m
++        };
++    }
++}
+diff --git a/src/ClientScout.Application/Search/AiUsageParser.cs b/src/ClientScout.Application/Search/AiUsageParser.cs
+new file mode 100644
+index 0000000..0764f85
+--- /dev/null
++++ b/src/ClientScout.Application/Search/AiUsageParser.cs
+@@ -0,0 +1,38 @@
++using System.Text.Json;
++
++namespace ClientScout.Application.Search;
++
++public readonly record struct AiUsage(int InputTokens, int OutputTokens);
++
++public static class AiUsageParser
++{
++    public static AiUsage Parse(string body)
++    {
++        if (string.IsNullOrWhiteSpace(body))
++        {
++            return new AiUsage(0, 0);
++        }
++
++        try
++        {
++            using var document = JsonDocument.Parse(body);
++            if (!document.RootElement.TryGetProperty("usage", out var usage))
++            {
++                return new AiUsage(0, 0);
++            }
++
++            var inputTokens = usage.TryGetProperty("prompt_tokens", out var promptTokens)
++                ? promptTokens.GetInt32()
++                : 0;
++            var outputTokens = usage.TryGetProperty("completion_tokens", out var completionTokens)
++                ? completionTokens.GetInt32()
++                : 0;
++
++            return new AiUsage(inputTokens, outputTokens);
++        }
++        catch (JsonException)
++        {
++            return new AiUsage(0, 0);
++        }
++    }
++}
+diff --git a/src/ClientScout.Application/Search/ExchangeConnectionService.cs b/src/ClientScout.Application/Search/ExchangeConnectionService.cs
+index b9f624e..c11792f 100644
+--- a/src/ClientScout.Application/Search/ExchangeConnectionService.cs
++++ b/src/ClientScout.Application/Search/ExchangeConnectionService.cs
+@@ -10,10 +10,12 @@ namespace ClientScout.Application.Search;
+ public class ExchangeConnectionService : IExchangeConnectionService
+ {
+     private readonly IAppDbContext _dbContext;
++    private readonly IExchangeProviderRegistry _providerRegistry;
+ 
+-    public ExchangeConnectionService(IAppDbContext dbContext)
++    public ExchangeConnectionService(IAppDbContext dbContext, IExchangeProviderRegistry providerRegistry)
+     {
+         _dbContext = dbContext;
++        _providerRegistry = providerRegistry;
+     }
+ 
+     public async Task<List<ExchangeConnectionDto>> GetConnectionsAsync(Guid profileId, Guid accountId, CancellationToken cancellationToken = default)
+@@ -25,15 +27,18 @@ public class ExchangeConnectionService : IExchangeConnectionService
+             .OrderBy(c => c.ExchangeType)
+             .ToListAsync(cancellationToken);
+ 
+-        if (connections.All(c => c.ExchangeType != ExchangeType.Kwork))
++        foreach (var provider in _providerRegistry.GetProviders())
+         {
+-            connections.Add(new ExchangeConnection
++            if (connections.All(connection => connection.ExchangeType != provider.ExchangeType))
+             {
+-                Id = Guid.Empty,
+-                ProfileId = profileId,
+-                ExchangeType = ExchangeType.Kwork,
+-                IsConnected = false
+-            });
++                connections.Add(new ExchangeConnection
++                {
++                    Id = Guid.Empty,
++                    ProfileId = profileId,
++                    ExchangeType = provider.ExchangeType,
++                    IsConnected = false
++                });
++            }
+         }
+ 
+         return connections.Select(Map).ToList();
+@@ -42,21 +47,20 @@ public class ExchangeConnectionService : IExchangeConnectionService
+     public async Task<ExchangeLoginStartResult> StartLoginAsync(Guid accountId, ExchangeLoginStartDto dto, CancellationToken cancellationToken = default)
+     {
+         await EnsureProfileAccessAsync(dto.ProfileId, accountId, cancellationToken);
+-        if (dto.ExchangeType != ExchangeType.Kwork)
+-        {
+-            throw new ArgumentException("UNSUPPORTED_EXCHANGE");
+-        }
++        var provider = _providerRegistry.GetRequired(dto.ExchangeType);
+ 
+-        return new ExchangeLoginStartResult(
+-            Guid.Empty,
+-            "unsupported_fallback",
+-            "Для Kwork используется browser login-flow через кнопку подключения приложения.");
++        var instruction = provider.SupportsBrowserLogin
++            ? $"Для {provider.DisplayName} используется browser login-flow через кнопку подключения приложения."
++            : $"{provider.DisplayName} пока не поддерживает автоматическое подключение.";
++
++        return new ExchangeLoginStartResult(Guid.Empty, "unsupported_fallback", instruction);
+     }
+ 
+     public async Task<ExchangeConnectionDto> ConnectAsync(Guid accountId, ConnectExchangeDto dto, CancellationToken cancellationToken = default)
+     {
+         await EnsureProfileAccessAsync(dto.ProfileId, accountId, cancellationToken);
+-        if (dto.ExchangeType != ExchangeType.Kwork)
++        var provider = _providerRegistry.GetRequired(dto.ExchangeType);
++        if (!provider.SupportsManualSession)
+         {
+             throw new ArgumentException("UNSUPPORTED_EXCHANGE");
+         }
+@@ -88,7 +92,7 @@ public class ExchangeConnectionService : IExchangeConnectionService
+         connection.LastError = null;
+         connection.UpdatedAt = now;
+ 
+-        await EnsureKworkSourceActiveAsync(dto.ProfileId, now, cancellationToken);
++        await EnsureExchangeSourceActiveAsync(provider, dto.ProfileId, now, cancellationToken);
+         await StopSearchAsync(dto.ProfileId, cancellationToken);
+ 
+         await _dbContext.SaveChangesAsync(cancellationToken);
+@@ -98,10 +102,7 @@ public class ExchangeConnectionService : IExchangeConnectionService
+     public async Task<ExchangeConnectionDto> DisconnectAsync(Guid accountId, DisconnectExchangeDto dto, CancellationToken cancellationToken = default)
+     {
+         await EnsureProfileAccessAsync(dto.ProfileId, accountId, cancellationToken);
+-        if (dto.ExchangeType != ExchangeType.Kwork)
+-        {
+-            throw new ArgumentException("UNSUPPORTED_EXCHANGE");
+-        }
++        var provider = _providerRegistry.GetRequired(dto.ExchangeType);
+ 
+         var now = DateTimeOffset.UtcNow;
+         var connection = await _dbContext.ExchangeConnections
+@@ -124,7 +125,7 @@ public class ExchangeConnectionService : IExchangeConnectionService
+         connection.LastError = null;
+         connection.UpdatedAt = now;
+ 
+-        await MarkKworkSourceInactiveAsync(dto.ProfileId, cancellationToken);
++        await MarkExchangeSourceInactiveAsync(provider, dto.ProfileId, cancellationToken);
+         await StopSearchAsync(dto.ProfileId, cancellationToken);
+ 
+         await _dbContext.SaveChangesAsync(cancellationToken);
+@@ -146,13 +147,18 @@ public class ExchangeConnectionService : IExchangeConnectionService
+         connection.LastError = error;
+         connection.UpdatedAt = DateTimeOffset.UtcNow;
+ 
+-        var source = await _dbContext.Sources
+-            .FirstOrDefaultAsync(s => s.ProfileId == profileId && s.Type == SourceType.Kwork && s.Url == "https://kwork.ru/projects", cancellationToken);
+-
+-        if (source != null)
++        if (TryGetProvider(exchangeType, out var provider))
+         {
+-            source.Status = SourceStatus.Error;
+-            source.LastError = error;
++            var source = await _dbContext.Sources
++                .FirstOrDefaultAsync(
++                    s => s.ProfileId == profileId && s.Type == provider.SourceType && s.Url == provider.SourceUrl,
++                    cancellationToken);
++
++            if (source != null)
++            {
++                source.Status = SourceStatus.Error;
++                source.LastError = error;
++            }
+         }
+ 
+         await StopSearchAsync(profileId, cancellationToken);
+@@ -180,8 +186,9 @@ public class ExchangeConnectionService : IExchangeConnectionService
+         }
+     }
+ 
+-    private static ExchangeConnectionDto Map(ExchangeConnection connection)
++    private ExchangeConnectionDto Map(ExchangeConnection connection)
+     {
++        var provider = _providerRegistry.GetRequired(connection.ExchangeType);
+         var status = connection.RequiresReconnect
+             ? ExchangeConnectionStatus.RequiresReconnect
+             : connection.IsConnected
+@@ -192,18 +199,25 @@ public class ExchangeConnectionService : IExchangeConnectionService
+             connection.Id,
+             connection.ProfileId,
+             connection.ExchangeType,
++            provider.Key,
++            provider.DisplayName,
+             status,
+             connection.IsConnected,
+             connection.RequiresReconnect,
++            provider.SupportsBrowserLogin,
++            provider.SupportsManualSession,
++            provider.IsAvailable,
+             connection.LastCheckedAt,
+             connection.LastError,
+             connection.UpdatedAt);
+     }
+ 
+-    private async Task EnsureKworkSourceActiveAsync(Guid profileId, DateTimeOffset now, CancellationToken cancellationToken)
++    private async Task EnsureExchangeSourceActiveAsync(IExchangeProvider provider, Guid profileId, DateTimeOffset now, CancellationToken cancellationToken)
+     {
+         var source = await _dbContext.Sources
+-            .FirstOrDefaultAsync(s => s.ProfileId == profileId && s.Type == SourceType.Kwork && s.Url == "https://kwork.ru/projects", cancellationToken);
++            .FirstOrDefaultAsync(
++                s => s.ProfileId == profileId && s.Type == provider.SourceType && s.Url == provider.SourceUrl,
++                cancellationToken);
+ 
+         if (source == null)
+         {
+@@ -211,10 +225,10 @@ public class ExchangeConnectionService : IExchangeConnectionService
+             {
+                 Id = Guid.NewGuid(),
+                 ProfileId = profileId,
+-                Type = SourceType.Kwork,
+-                Name = "Kwork",
+-                Url = "https://kwork.ru/projects",
+-                Credentials = "{\"purpose\":0,\"exchange\":\"kwork\"}",
++                Type = provider.SourceType,
++                Name = provider.SourceName,
++                Url = provider.SourceUrl,
++                Credentials = provider.SourceCredentials,
+                 Status = SourceStatus.Active,
+                 CreatedAt = now
+             });
+@@ -225,10 +239,12 @@ public class ExchangeConnectionService : IExchangeConnectionService
+         source.LastError = null;
+     }
+ 
+-    private async Task MarkKworkSourceInactiveAsync(Guid profileId, CancellationToken cancellationToken)
++    private async Task MarkExchangeSourceInactiveAsync(IExchangeProvider provider, Guid profileId, CancellationToken cancellationToken)
+     {
+         var source = await _dbContext.Sources
+-            .FirstOrDefaultAsync(s => s.ProfileId == profileId && s.Type == SourceType.Kwork && s.Url == "https://kwork.ru/projects", cancellationToken);
++            .FirstOrDefaultAsync(
++                s => s.ProfileId == profileId && s.Type == provider.SourceType && s.Url == provider.SourceUrl,
++                cancellationToken);
+ 
+         if (source == null)
+         {
+@@ -238,4 +254,18 @@ public class ExchangeConnectionService : IExchangeConnectionService
+         source.Status = SourceStatus.Pending;
+         source.LastError = null;
+     }
++
++    private bool TryGetProvider(ExchangeType exchangeType, out IExchangeProvider provider)
++    {
++        try
++        {
++            provider = _providerRegistry.GetRequired(exchangeType);
++            return true;
++        }
++        catch (ArgumentException)
++        {
++            provider = null!;
++            return false;
++        }
++    }
+ }
+diff --git a/src/ClientScout.Application/Search/ExchangeProviderRegistry.cs b/src/ClientScout.Application/Search/ExchangeProviderRegistry.cs
+new file mode 100644
+index 0000000..6dc50c5
+--- /dev/null
++++ b/src/ClientScout.Application/Search/ExchangeProviderRegistry.cs
+@@ -0,0 +1,26 @@
++using ClientScout.Domain.Enums;
++
++namespace ClientScout.Application.Search;
++
++public sealed class ExchangeProviderRegistry : IExchangeProviderRegistry
++{
++    private readonly IReadOnlyList<IExchangeProvider> _providers;
++
++    public ExchangeProviderRegistry(IEnumerable<IExchangeProvider> providers)
++    {
++        _providers = providers
++            .OrderBy(provider => provider.ExchangeType)
++            .ToArray();
++    }
++
++    public IReadOnlyList<IExchangeProvider> GetProviders()
++    {
++        return _providers;
++    }
++
++    public IExchangeProvider GetRequired(ExchangeType exchangeType)
++    {
++        return _providers.FirstOrDefault(provider => provider.ExchangeType == exchangeType)
++            ?? throw new ArgumentException("UNSUPPORTED_EXCHANGE");
++    }
++}
+diff --git a/src/ClientScout.Application/Search/IAiProviderRegistry.cs b/src/ClientScout.Application/Search/IAiProviderRegistry.cs
+new file mode 100644
+index 0000000..d239952
+--- /dev/null
++++ b/src/ClientScout.Application/Search/IAiProviderRegistry.cs
+@@ -0,0 +1,7 @@
++namespace ClientScout.Application.Search;
++
++public interface IAiProviderRegistry
++{
++    IReadOnlyList<AiProviderOptions> GetProviders(AiTaskKind taskKind);
++    IEnumerable<AiProviderModelCandidate> GetCandidates(AiTaskKind taskKind, int promptChars);
++}
+diff --git a/src/ClientScout.Application/Search/IAiUsageLogger.cs b/src/ClientScout.Application/Search/IAiUsageLogger.cs
+new file mode 100644
+index 0000000..69dfcae
+--- /dev/null
++++ b/src/ClientScout.Application/Search/IAiUsageLogger.cs
+@@ -0,0 +1,11 @@
++namespace ClientScout.Application.Search;
++
++public interface IAiUsageLogger
++{
++    Task LogAsync(
++        AiProviderModelCandidate candidate,
++        int statusCode,
++        string body,
++        string? errorMessage,
++        CancellationToken cancellationToken);
++}
+diff --git a/src/ClientScout.Application/Search/IExchangeBrowserLoginService.cs b/src/ClientScout.Application/Search/IExchangeBrowserLoginService.cs
+new file mode 100644
+index 0000000..f7226a3
+--- /dev/null
++++ b/src/ClientScout.Application/Search/IExchangeBrowserLoginService.cs
+@@ -0,0 +1,11 @@
++using ClientScout.Application.Search.Models;
++using ClientScout.Domain.Enums;
++
++namespace ClientScout.Application.Search;
++
++public interface IExchangeBrowserLoginService
++{
++    ExchangeType ExchangeType { get; }
++    Task<ExchangeLoginStartResult> StartAsync(Guid accountId, Guid profileId, CancellationToken cancellationToken = default);
++    ExchangeLoginFlowStatusDto GetStatus(Guid flowId);
++}
+diff --git a/src/ClientScout.Application/Search/IExchangeProvider.cs b/src/ClientScout.Application/Search/IExchangeProvider.cs
+new file mode 100644
+index 0000000..20aa982
+--- /dev/null
++++ b/src/ClientScout.Application/Search/IExchangeProvider.cs
+@@ -0,0 +1,17 @@
++using ClientScout.Domain.Enums;
++
++namespace ClientScout.Application.Search;
++
++public interface IExchangeProvider
++{
++    ExchangeType ExchangeType { get; }
++    SourceType SourceType { get; }
++    string Key { get; }
++    string DisplayName { get; }
++    string SourceName { get; }
++    string SourceUrl { get; }
++    string SourceCredentials { get; }
++    bool SupportsBrowserLogin { get; }
++    bool SupportsManualSession { get; }
++    bool IsAvailable { get; }
++}
+diff --git a/src/ClientScout.Application/Search/IExchangeProviderRegistry.cs b/src/ClientScout.Application/Search/IExchangeProviderRegistry.cs
+new file mode 100644
+index 0000000..4d64ef4
+--- /dev/null
++++ b/src/ClientScout.Application/Search/IExchangeProviderRegistry.cs
+@@ -0,0 +1,9 @@
++using ClientScout.Domain.Enums;
++
++namespace ClientScout.Application.Search;
++
++public interface IExchangeProviderRegistry
++{
++    IReadOnlyList<IExchangeProvider> GetProviders();
++    IExchangeProvider GetRequired(ExchangeType exchangeType);
++}
+diff --git a/src/ClientScout.Application/Search/ISearchJobService.cs b/src/ClientScout.Application/Search/ISearchJobService.cs
+index a01db25..f482edf 100644
+--- a/src/ClientScout.Application/Search/ISearchJobService.cs
++++ b/src/ClientScout.Application/Search/ISearchJobService.cs
+@@ -4,6 +4,7 @@ public interface ISearchJobService
+ {
+     Task ScheduleDueSearchAsync(CancellationToken cancellationToken = default);
+     Task ScanSourceAsync(Guid sourceId, CancellationToken cancellationToken = default);
++    Task ScanExchangeAsync(Guid profileId, Domain.Enums.ExchangeType exchangeType, CancellationToken cancellationToken = default);
+     Task ScanKworkAsync(Guid profileId, CancellationToken cancellationToken = default);
+     Task ProcessCandidateAsync(Models.SearchCandidateJobDto dto, CancellationToken cancellationToken = default);
+     Task ProcessCandidateBatchAsync(Models.SearchCandidateBatchJobDto dto, CancellationToken cancellationToken = default);
+diff --git a/src/ClientScout.Application/Search/KworkBrowserLoginService.cs b/src/ClientScout.Application/Search/KworkBrowserLoginService.cs
+index 5e98901..9347f34 100644
+--- a/src/ClientScout.Application/Search/KworkBrowserLoginService.cs
++++ b/src/ClientScout.Application/Search/KworkBrowserLoginService.cs
+@@ -5,7 +5,7 @@ using Microsoft.Playwright;
+ 
+ namespace ClientScout.Application.Search;
+ 
+-public class KworkBrowserLoginService : IKworkBrowserLoginService
++public class KworkBrowserLoginService : IKworkBrowserLoginService, IExchangeBrowserLoginService
+ {
+     private readonly IServiceScopeFactory _scopeFactory;
+     private readonly ILogger<KworkBrowserLoginService> _logger;
+@@ -17,6 +17,8 @@ public class KworkBrowserLoginService : IKworkBrowserLoginService
+         _logger = logger;
+     }
+ 
++    public Domain.Enums.ExchangeType ExchangeType => Domain.Enums.ExchangeType.Kwork;
++
+     public Task<Models.ExchangeLoginStartResult> StartAsync(Guid accountId, Guid profileId, CancellationToken cancellationToken = default)
+     {
+         var flowId = Guid.NewGuid();
+diff --git a/src/ClientScout.Application/Search/KworkExchangeProvider.cs b/src/ClientScout.Application/Search/KworkExchangeProvider.cs
+new file mode 100644
+index 0000000..91c6f5a
+--- /dev/null
++++ b/src/ClientScout.Application/Search/KworkExchangeProvider.cs
+@@ -0,0 +1,17 @@
++using ClientScout.Domain.Enums;
++
++namespace ClientScout.Application.Search;
++
++public sealed class KworkExchangeProvider : IExchangeProvider
++{
++    public ExchangeType ExchangeType => ExchangeType.Kwork;
++    public SourceType SourceType => SourceType.Kwork;
++    public string Key => "kwork";
++    public string DisplayName => "Kwork";
++    public string SourceName => "Kwork";
++    public string SourceUrl => "https://kwork.ru/projects";
++    public string SourceCredentials => "{\"purpose\":0,\"exchange\":\"kwork\"}";
++    public bool SupportsBrowserLogin => true;
++    public bool SupportsManualSession => true;
++    public bool IsAvailable => true;
++}
+diff --git a/src/ClientScout.Application/Search/Models/ExchangeDtos.cs b/src/ClientScout.Application/Search/Models/ExchangeDtos.cs
+index 6d309a1..c66f486 100644
+--- a/src/ClientScout.Application/Search/Models/ExchangeDtos.cs
++++ b/src/ClientScout.Application/Search/Models/ExchangeDtos.cs
+@@ -6,9 +6,14 @@ public record ExchangeConnectionDto(
+     Guid Id,
+     Guid ProfileId,
+     ExchangeType ExchangeType,
++    string ProviderKey,
++    string DisplayName,
+     ExchangeConnectionStatus Status,
+     bool IsConnected,
+     bool RequiresReconnect,
++    bool SupportsBrowserLogin,
++    bool SupportsManualSession,
++    bool IsAvailable,
+     DateTimeOffset? LastCheckedAt,
+     string? LastError,
+     DateTimeOffset UpdatedAt);
+diff --git a/src/ClientScout.Application/Search/OpenAiCompatibleAiProviderClient.cs b/src/ClientScout.Application/Search/OpenAiCompatibleAiProviderClient.cs
+new file mode 100644
+index 0000000..55511d0
+--- /dev/null
++++ b/src/ClientScout.Application/Search/OpenAiCompatibleAiProviderClient.cs
+@@ -0,0 +1,167 @@
++using System.Net;
++using System.Net.Http.Headers;
++using System.Net.Http.Json;
++using System.Text.Json;
++using Microsoft.Extensions.Logging;
++
++namespace ClientScout.Application.Search;
++
++public sealed class OpenAiCompatibleAiProviderClient
++{
++    private readonly HttpClient _httpClient;
++    private readonly IAiUsageLogger _usageLogger;
++    private readonly ILogger<OpenAiCompatibleAiProviderClient> _logger;
++
++    public OpenAiCompatibleAiProviderClient(
++        HttpClient httpClient,
++        IAiUsageLogger usageLogger,
++        ILogger<OpenAiCompatibleAiProviderClient> logger)
++    {
++        _httpClient = httpClient;
++        _usageLogger = usageLogger;
++        _logger = logger;
++    }
++
++    public async Task<AiProviderJsonResult<T>> GenerateJsonAsync<T>(
++        AiProviderModelCandidate candidate,
++        string prompt,
++        CancellationToken cancellationToken)
++    {
++        var url = $"{candidate.Provider.BaseUrl.TrimEnd('/')}/chat/completions";
++        var payload = new Dictionary<string, object?>
++        {
++            ["model"] = candidate.Model.Id,
++            ["messages"] = new[]
++            {
++                new { role = "user", content = prompt }
++            },
++            ["temperature"] = 0.15
++        };
++
++        if (candidate.Model.UseResponseFormat && candidate.Provider.UseResponseFormat)
++        {
++            payload["response_format"] = new { type = "json_object" };
++        }
++
++        using var request = new HttpRequestMessage(HttpMethod.Post, url)
++        {
++            Content = JsonContent.Create(payload)
++        };
++        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", candidate.Provider.ApiKey);
++        request.Headers.TryAddWithoutValidation("HTTP-Referer", "https://clientscout.local");
++        request.Headers.TryAddWithoutValidation("X-Title", "ClientScout");
++
++        try
++        {
++            using var response = await _httpClient.SendAsync(request, cancellationToken);
++            var body = await response.Content.ReadAsStringAsync(cancellationToken);
++            if (!response.IsSuccessStatusCode)
++            {
++                var failureKind = IsRateLimitOrCapacityFailure(response.StatusCode, body)
++                    ? AiFailureKind.RateLimited
++                    : AiFailureKind.RequestFailed;
++                var cooldownSeconds = GetFailureCooldownSeconds(response.StatusCode, body, candidate.Provider);
++
++                _logger.LogWarning(
++                    "AI provider {Provider}/{Model} failed with {StatusCode}: {Body}",
++                    candidate.Provider.Name,
++                    candidate.Model.Id,
++                    response.StatusCode,
++                    Truncate(body, 800));
++
++                await _usageLogger.LogAsync(candidate, (int)response.StatusCode, body, Truncate(body, 800), cancellationToken);
++                return new AiProviderJsonResult<T>(default, failureKind, cooldownSeconds);
++            }
++
++            await _usageLogger.LogAsync(candidate, (int)response.StatusCode, body, null, cancellationToken);
++            var content = ExtractAssistantContent(body);
++            if (string.IsNullOrWhiteSpace(content))
++            {
++                return new AiProviderJsonResult<T>(default, AiFailureKind.InvalidResponse, 0);
++            }
++
++            var normalized = ExtractJson(content);
++            var value = JsonSerializer.Deserialize<T>(normalized, new JsonSerializerOptions
++            {
++                PropertyNameCaseInsensitive = true
++            });
++
++            return new AiProviderJsonResult<T>(value, value == null ? AiFailureKind.InvalidResponse : AiFailureKind.None, 0);
++        }
++        catch (Exception ex) when (ex is not OperationCanceledException)
++        {
++            _logger.LogWarning(ex, "AI JSON generation failed for provider {Provider}/{Model}", candidate.Provider.Name, candidate.Model.Id);
++            await _usageLogger.LogAsync(candidate, 0, string.Empty, ex.Message, cancellationToken);
++            return new AiProviderJsonResult<T>(default, AiFailureKind.InvalidResponse, candidate.Provider.CooldownSeconds);
++        }
++    }
++
++    private static string? ExtractAssistantContent(string body)
++    {
++        using var document = JsonDocument.Parse(body);
++        return document.RootElement
++            .GetProperty("choices")[0]
++            .GetProperty("message")
++            .GetProperty("content")
++            .GetString();
++    }
++
++    private static bool IsRateLimitOrCapacityFailure(HttpStatusCode statusCode, string body)
++    {
++        return statusCode == HttpStatusCode.TooManyRequests ||
++               statusCode == HttpStatusCode.ServiceUnavailable ||
++               body.Contains("rate", StringComparison.OrdinalIgnoreCase) ||
++               body.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
++               body.Contains("capacity", StringComparison.OrdinalIgnoreCase) ||
++               body.Contains("temporarily", StringComparison.OrdinalIgnoreCase) ||
++               body.Contains("insufficient", StringComparison.OrdinalIgnoreCase);
++    }
++
++    private static int GetFailureCooldownSeconds(HttpStatusCode statusCode, string body, AiProviderOptions provider)
++    {
++        if (statusCode is HttpStatusCode.PaymentRequired or HttpStatusCode.Forbidden ||
++            body.Contains("insufficient balance", StringComparison.OrdinalIgnoreCase) ||
++            body.Contains("suspended", StringComparison.OrdinalIgnoreCase) ||
++            body.Contains("access denied", StringComparison.OrdinalIgnoreCase) ||
++            body.Contains("AccessDenied", StringComparison.OrdinalIgnoreCase) ||
++            body.Contains("Unpurchased", StringComparison.OrdinalIgnoreCase))
++        {
++            return 3600;
++        }
++
++        return provider.CooldownSeconds;
++    }
++
++    private static string ExtractJson(string text)
++    {
++        text = text.Trim();
++        if (text.StartsWith("```", StringComparison.Ordinal))
++        {
++            var firstLineEnd = text.IndexOf('\n');
++            if (firstLineEnd >= 0)
++            {
++                text = text[(firstLineEnd + 1)..].Trim();
++            }
++
++            if (text.EndsWith("```", StringComparison.Ordinal))
++            {
++                text = text[..^3].Trim();
++            }
++        }
++
++        var firstBrace = text.IndexOf('{');
++        var lastBrace = text.LastIndexOf('}');
++        if (firstBrace >= 0 && lastBrace > firstBrace)
++        {
++            return text[firstBrace..(lastBrace + 1)];
++        }
++
++        return text;
++    }
++
++    private static string Truncate(string value, int max)
++    {
++        value = value.Trim();
++        return value.Length <= max ? value : value[..max];
++    }
++}
+diff --git a/src/ClientScout.Application/Search/SearchJobService.cs b/src/ClientScout.Application/Search/SearchJobService.cs
+index 97461da..1d52df6 100644
+--- a/src/ClientScout.Application/Search/SearchJobService.cs
++++ b/src/ClientScout.Application/Search/SearchJobService.cs
+@@ -70,15 +70,17 @@ public class SearchJobService : ISearchJobService
+         foreach (var setting in settings)
+         {
+             var telegramJitter = TimeSpan.Zero;
+-            var kworkJitter = TimeSpan.Zero;
++            var exchangeJitter = TimeSpan.Zero;
+ 
+-            var kworkConnection = await _dbContext.ExchangeConnections
+-                .FirstOrDefaultAsync(c => c.ProfileId == setting.ProfileId && c.ExchangeType == ExchangeType.Kwork, cancellationToken);
+-
+-            if (kworkConnection is { IsConnected: true, RequiresReconnect: false } &&
+-                IsDue(kworkConnection.LastCheckedAt, setting.IntervalMinutes, kworkJitter, now))
++            var exchangeConnections = await _dbContext.ExchangeConnections
++                .Where(c => c.ProfileId == setting.ProfileId && c.IsConnected && !c.RequiresReconnect)
++                .ToListAsync(cancellationToken);
++            foreach (var exchangeConnection in exchangeConnections)
+             {
+-                _backgroundJobs.Enqueue<ISearchJobService>(service => service.ScanKworkAsync(setting.ProfileId, CancellationToken.None));
++                if (IsDue(exchangeConnection.LastCheckedAt, setting.IntervalMinutes, exchangeJitter, now))
++                {
++                    _backgroundJobs.Enqueue<ISearchJobService>(service => service.ScanExchangeAsync(setting.ProfileId, exchangeConnection.ExchangeType, CancellationToken.None));
++                }
+             }
+ 
+             var searchSources = await _dbContext.Sources
+@@ -174,6 +176,22 @@ public class SearchJobService : ISearchJobService
+     }
+ 
+     public async Task ScanKworkAsync(Guid profileId, CancellationToken cancellationToken = default)
++    {
++        await ScanExchangeAsync(profileId, ExchangeType.Kwork, cancellationToken);
++    }
++
++    public async Task ScanExchangeAsync(Guid profileId, ExchangeType exchangeType, CancellationToken cancellationToken = default)
++    {
++        if (exchangeType != ExchangeType.Kwork)
++        {
++            _logger.LogInformation("Exchange scan skipped for profile {ProfileId}: exchange {ExchangeType} is not implemented", profileId, exchangeType);
++            return;
++        }
++
++        await ScanKworkCoreAsync(profileId, cancellationToken);
++    }
++
++    private async Task ScanKworkCoreAsync(Guid profileId, CancellationToken cancellationToken = default)
+     {
+         var scanLock = KworkScanLocks.GetOrAdd(profileId, _ => new SemaphoreSlim(1, 1));
+         if (!await scanLock.WaitAsync(0, cancellationToken))
+diff --git a/src/ClientScout.Application/Search/TelegramLeadNotificationService.cs b/src/ClientScout.Application/Search/TelegramLeadNotificationService.cs
+index a786fd4..e123524 100644
+--- a/src/ClientScout.Application/Search/TelegramLeadNotificationService.cs
++++ b/src/ClientScout.Application/Search/TelegramLeadNotificationService.cs
+@@ -20,7 +20,7 @@ public class TelegramLeadNotificationService : ILeadNotificationService
+ 
+     public async Task NotifyLeadAsync(Account account, JobLead lead, CancellationToken cancellationToken = default)
+     {
+-        var botToken = _configuration["TELEGRAM_BOT_TOKEN"] ?? _configuration["Telegram:BotToken"];
++        var botToken = _configuration["Telegram:BotToken"] ?? _configuration["TELEGRAM_BOT_TOKEN"];
+         if (string.IsNullOrWhiteSpace(botToken) || botToken == "dummy_token_for_dev" || account.TelegramUserId == null)
+         {
+             return;
+@@ -59,7 +59,7 @@ AI: {lead.AiConfidence}%
+ 
+     public async Task NotifySearchStoppedAsync(Account account, string reason, CancellationToken cancellationToken = default)
+     {
+-        var botToken = _configuration["TELEGRAM_BOT_TOKEN"] ?? _configuration["Telegram:BotToken"];
++        var botToken = _configuration["Telegram:BotToken"] ?? _configuration["TELEGRAM_BOT_TOKEN"];
+         if (string.IsNullOrWhiteSpace(botToken) || botToken == "dummy_token_for_dev" || account.TelegramUserId == null)
+         {
+             return;
+diff --git a/src/ClientScout.Application/Sources/SourceService.cs b/src/ClientScout.Application/Sources/SourceService.cs
+index cfa18f6..3710bc9 100644
+--- a/src/ClientScout.Application/Sources/SourceService.cs
++++ b/src/ClientScout.Application/Sources/SourceService.cs
+@@ -28,6 +28,7 @@ public class SourceService : ISourceService
+         if (!hasAccess) throw new UnauthorizedAccessException();
+ 
+         var sources = await _dbContext.Sources
++            .AsNoTracking()
+             .Where(s => s.ProfileId == profileId)
+             .Where(s => s.Type != SourceType.Kwork)
+             .OrderByDescending(s => s.CreatedAt)
+@@ -44,6 +45,7 @@ public class SourceService : ISourceService
+         var metadata = await BuildMetadataAsync(dto, cancellationToken);
+         var normalizedUrl = NormalizeSourceUrl(dto.Url);
+         var existingSources = await _dbContext.Sources
++            .AsNoTracking()
+             .Where(s => s.ProfileId == dto.ProfileId)
+             .ToListAsync(cancellationToken);
+ 
+diff --git a/src/ClientScout.Domain/Enums/Enums.cs b/src/ClientScout.Domain/Enums/Enums.cs
+index 908d484..62c81b6 100644
+--- a/src/ClientScout.Domain/Enums/Enums.cs
++++ b/src/ClientScout.Domain/Enums/Enums.cs
+@@ -4,12 +4,17 @@ public enum SourceType
+ {
+     Telegram,
+     Kwork,
+-    Upwork
++    Upwork,
++    Fiverr,
++    Freelancer
+ }
+ 
+ public enum ExchangeType
+ {
+-    Kwork
++    Kwork,
++    Upwork,
++    Fiverr,
++    Freelancer
+ }
+ 
+ public enum ExchangeConnectionStatus
+diff --git a/src/ClientScout.Scrapers/ClientScout.Scrapers.csproj b/src/ClientScout.Scrapers/ClientScout.Scrapers.csproj
+index edb914b..23d6617 100644
+--- a/src/ClientScout.Scrapers/ClientScout.Scrapers.csproj
++++ b/src/ClientScout.Scrapers/ClientScout.Scrapers.csproj
+@@ -8,6 +8,7 @@
+   <ItemGroup>
+     <PackageReference Include="AngleSharp" Version="1.5.1" />
+     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
++    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+     <PackageReference Include="WTelegramClient" Version="4.4.6" />
+   </ItemGroup>
+ 
+diff --git a/src/ClientScout.Scrapers/Implementations/TelegramClientManager.cs b/src/ClientScout.Scrapers/Implementations/TelegramClientManager.cs
+index d1bc870..775ce83 100644
+--- a/src/ClientScout.Scrapers/Implementations/TelegramClientManager.cs
++++ b/src/ClientScout.Scrapers/Implementations/TelegramClientManager.cs
+@@ -7,6 +7,7 @@ using System.Threading.Tasks;
+ using ClientScout.Application.Sources.Models;
+ using ClientScout.Application.Telegram;
+ using Microsoft.Extensions.Configuration;
++using Microsoft.Extensions.Logging;
+ using TL;
+ using WTelegram;
+ 
+@@ -16,16 +17,20 @@ public class TelegramClientManager : ITelegramClientManager, ITelegramValidator
+ {
+     private readonly string _apiId;
+     private readonly string _apiHash;
++    private readonly ILogger<TelegramClientManager> _logger;
+     private readonly ConcurrentDictionary<string, Client> _clients = new();
+     private readonly ConcurrentDictionary<string, SemaphoreSlim> _clientLocks = new();
+ 
+-    public TelegramClientManager(IConfiguration configuration)
++    public TelegramClientManager(IConfiguration configuration, ILogger<TelegramClientManager> logger)
+     {
+         _apiId = configuration["Telegram:ApiId"] ?? throw new ArgumentException("Telegram:ApiId is missing");
+         _apiHash = configuration["Telegram:ApiHash"] ?? throw new ArgumentException("Telegram:ApiHash is missing");
++        if (string.IsNullOrWhiteSpace(_apiId)) throw new ArgumentException("Telegram:ApiId is missing");
++        if (string.IsNullOrWhiteSpace(_apiHash)) throw new ArgumentException("Telegram:ApiHash is missing");
++        _logger = logger;
+     }
+ 
+-    private string ConfigProvider(string userId, string what)
++    private string? ConfigProvider(string userId, string what)
+     {
+         return what switch
+         {
+@@ -214,8 +219,7 @@ public class TelegramClientManager : ITelegramClientManager, ITelegramValidator
+         }
+         catch (Exception ex)
+         {
+-            // Ignore avatar download failure
+-            Console.WriteLine($"Failed to download avatar: {ex.Message}");
++            _logger.LogDebug(ex, "Failed to download Telegram avatar");
+         }
+ 
+         return (name, avatarBase64);
+@@ -342,7 +346,7 @@ public class TelegramClientManager : ITelegramClientManager, ITelegramValidator
+             {
+                 if (ex.Message is "NOT_FOUND" or "READ_ONLY") throw;
+ 
+-                Console.WriteLine($"Failed to fetch topics: {ex.Message}");
++                _logger.LogDebug(ex, "Failed to fetch Telegram forum topics");
+             }
+         }
+ 
+@@ -449,7 +453,7 @@ public class TelegramClientManager : ITelegramClientManager, ITelegramValidator
+                     topicName))
+                 .ToList();
+ 
+-            Console.WriteLine($"[DEBUG] Final parsed messages count: {messages.Count}");
++            _logger.LogDebug("Parsed {MessageCount} Telegram messages", messages.Count);
+             return messages;
+         }
+         finally

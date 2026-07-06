@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="1.5.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="WTelegramClient" Version="4.4.6" />
   </ItemGroup>
 

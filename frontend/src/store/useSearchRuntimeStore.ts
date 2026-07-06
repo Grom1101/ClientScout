@@ -15,9 +15,14 @@ export interface ExchangeConnection {
   id: string;
   profileId: string;
   exchangeType: number;
+  providerKey: string;
+  displayName: string;
   status: number;
   isConnected: boolean;
   requiresReconnect: boolean;
+  supportsBrowserLogin: boolean;
+  supportsManualSession: boolean;
+  isAvailable: boolean;
   lastCheckedAt: string | null;
   lastError: string | null;
   updatedAt: string;
@@ -37,6 +42,8 @@ interface SearchRuntimeState {
   isLoading: boolean;
   fetchStatus: (profileId?: string) => Promise<void>;
   fetchExchanges: (profileId?: string) => Promise<void>;
+  startExchangeLogin: (exchangeType: number, profileId?: string) => Promise<KworkLoginFlowStatus>;
+  disconnectExchange: (exchangeType: number, profileId?: string) => Promise<void>;
   startKworkLogin: (profileId?: string) => Promise<KworkLoginFlowStatus>;
   disconnectKwork: (profileId?: string) => Promise<void>;
   fetchKworkLoginStatus: (flowId: string) => Promise<KworkLoginFlowStatus>;
@@ -65,24 +72,28 @@ export const useSearchRuntimeStore = create<SearchRuntimeState>((set, get) => ({
     }
   },
 
-  startKworkLogin: async (profileId = getActiveProfileId()) => {
+  startExchangeLogin: async (exchangeType, profileId = getActiveProfileId()) => {
     const response = await apiClient.post<KworkLoginFlowStatus>('/search/exchanges/login/start', {
       profileId,
-      exchangeType: 0,
+      exchangeType,
     });
     return response.data;
   },
 
-  disconnectKwork: async (profileId = getActiveProfileId()) => {
+  disconnectExchange: async (exchangeType, profileId = getActiveProfileId()) => {
     if (!profileId) return;
     await apiClient.post('/search/exchanges/disconnect', {
       profileId,
-      exchangeType: 0,
+      exchangeType,
     });
     await get().fetchExchanges(profileId);
     await get().fetchStatus(profileId);
     await useSearchSettingsStore.getState().fetchSettings(profileId);
   },
+
+  startKworkLogin: async (profileId = getActiveProfileId()) => get().startExchangeLogin(0, profileId),
+
+  disconnectKwork: async (profileId = getActiveProfileId()) => get().disconnectExchange(0, profileId),
 
   fetchKworkLoginStatus: async (flowId: string) => {
     const response = await apiClient.get<KworkLoginFlowStatus>(`/search/exchanges/login/${flowId}`);

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, LogOut, Pencil, Plus, Send, Trash2, User, Users, X, BookOpen, Shield } from 'lucide-react';
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import Modal from '../components/Modal';
 import { useAppStore, type Profile } from '../store/useAppStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -19,7 +19,6 @@ export default function HomePage() {
   const { stats, fetchStats } = useOutreachStore();
   const { fetchHistory } = useLeadsStore();
 
-  const [showRecommendations, setShowRecommendations] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [profileView, setProfileView] = useState<'main' | 'list' | 'new'>('main');
   const [newProfileName, setNewProfileName] = useState('');
@@ -28,7 +27,6 @@ export default function HomePage() {
   
   const [chartPeriod, setChartPeriod] = useState<StatsPeriod>('today');
   const [combinedChartData, setCombinedChartData] = useState<OutreachActivityPoint[]>([]);
-  const [sentChartData, setSentChartData] = useState<OutreachActivityPoint[]>([]);
 
   const [searchChatsCount, setSearchChatsCount] = useState<number | null>(null);
   const [mailingChatsCount, setMailingChatsCount] = useState<number | null>(null);
@@ -307,7 +305,6 @@ export default function HomePage() {
 
         {/* Recommendations Button */}
         <button
-          onClick={() => setShowRecommendations(true)}
           className="flex items-center justify-between w-full rounded-[20px] transition-all active:scale-[0.98] shrink-0 mt-auto"
           style={{ 
             padding: '20px',

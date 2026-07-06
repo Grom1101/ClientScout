@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { getActiveProfileId } from '../api/client';
 import { useLeadsStore } from '../store/useLeadsStore';
 import SwipeableItem from '../components/SwipeableItem';
@@ -63,7 +62,6 @@ const openLeadLink = (link: string) => {
 };
 
 export default function SearchLeadHistoryPage() {
-  const navigate = useNavigate();
   const { history, isHistoryLoading, fetchHistory, viewLead, hideLead } = useLeadsStore();
   const [page, setPage] = useState(0);
   const [aiFilter, setAiFilter] = useState<'confirmed' | 'unverified'>('confirmed');

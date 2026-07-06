@@ -7,11 +7,13 @@ using ClientScout.Application.Auth;
 using ClientScout.Application.Auth.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ClientScout.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+[EnableRateLimiting("Auth")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;

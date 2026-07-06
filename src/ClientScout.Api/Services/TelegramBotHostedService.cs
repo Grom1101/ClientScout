@@ -16,15 +16,18 @@ public class TelegramBotHostedService : BackgroundService
 {
     private readonly ILogger<TelegramBotHostedService> _logger;
     private readonly string _botToken;
-    private readonly long _adminTelegramId = 1080953147;
+    private readonly HashSet<long> _adminTelegramIds;
     private readonly string _frontendUrl;
     private TelegramBotClient? _botClient;
 
     public TelegramBotHostedService(ILogger<TelegramBotHostedService> logger, IConfiguration configuration)
     {
         _logger = logger;
-        // In production, token should be read from configuration, but for simplicity here we use the exact one
-        _botToken = "8714330561:AAE0r-2KBOZjf_XuFKajJMb4p_910ZwIGK0"; 
+        _botToken = configuration["Telegram:BotToken"] ?? configuration["TELEGRAM_BOT_TOKEN"] ?? string.Empty;
+        _adminTelegramIds = (configuration.GetSection("Admin:TelegramUserIds").Get<string[]>() ?? [])
+            .Select(value => long.TryParse(value, out var id) ? id : 0)
+            .Where(id => id > 0)
+            .ToHashSet();
         _frontendUrl = configuration["FrontendUrl"] ?? "https://client-scout.com";
     }
 
@@ -72,10 +75,8 @@ public class TelegramBotHostedService : BackgroundService
         long chatId = message.Chat.Id;
         long userId = message.From?.Id ?? 0;
 
-        // Ensure this is our admin
-        if (userId != _adminTelegramId)
+        if (!_adminTelegramIds.Contains(userId))
         {
-            // Optionally, we could send a message indicating no access
             return;
         }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Bell, Bot, Clock, Loader2, Plus, X } from 'lucide-react';
 import Modal from './Modal';
 import Toggle from './Toggle';
@@ -56,10 +56,6 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
 
   const keywordsLeft = MAX_SEARCH_KEYWORDS - draftKeywords.length;
   const negativeLeft = MAX_SEARCH_NEGATIVE_KEYWORDS - draftNegativeKeywords.length;
-
-  const summary = useMemo(() => (
-    `${draftKeywords.length}/${MAX_SEARCH_KEYWORDS} ключевых, ${draftNegativeKeywords.length}/${MAX_SEARCH_NEGATIVE_KEYWORDS} стоп-слов`
-  ), [draftKeywords.length, draftNegativeKeywords.length]);
 
   const addTerm = (value: string, list: string[], setList: (terms: string[]) => void, max: number, label: string) => {
     const term = normalizeTerm(value);

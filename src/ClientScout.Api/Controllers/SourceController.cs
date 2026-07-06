@@ -10,6 +10,7 @@ using ClientScout.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ClientScout.Api.Controllers;
 
@@ -20,11 +21,16 @@ public class SourceController : ControllerBase
 {
     private readonly ISourceService _sourceService;
     private readonly IAppDbContext _dbContext;
+    private readonly ILogger<SourceController> _logger;
 
-    public SourceController(ISourceService sourceService, IAppDbContext dbContext)
+    public SourceController(
+        ISourceService sourceService,
+        IAppDbContext dbContext,
+        ILogger<SourceController> logger)
     {
         _sourceService = sourceService;
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     /// <summary>Get accountId from JWT sub claim.</summary>
@@ -110,8 +116,8 @@ public class SourceController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[CREATE SOURCE ERROR] {ex}");
-            return BadRequest(new { message = ex.Message });
+            _logger.LogWarning(ex, "Create source failed for account {AccountId} and profile {ProfileId}", AccountId, dto.ProfileId);
+            return BadRequest(new { message = "SOURCE_CREATE_FAILED" });
         }
     }
 
@@ -158,8 +164,8 @@ public class SourceController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[VALIDATE ERROR] {ex}");
-            return BadRequest(new { message = ex.Message });
+            _logger.LogWarning(ex, "Validate source failed for account {AccountId}", AccountId);
+            return BadRequest(new { message = "SOURCE_VALIDATE_FAILED" });
         }
     }
 

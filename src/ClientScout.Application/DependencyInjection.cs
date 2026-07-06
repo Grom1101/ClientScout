@@ -21,7 +21,9 @@ public static class DependencyInjection
         services.AddScoped<ISearchSettingsService, SearchSettingsService>();
         services.AddOptions<AiProviderPoolOptions>()
             .BindConfiguration("AI");
-        services.AddHttpClient<AiJsonClient>(client =>
+        services.AddScoped<IAiProviderRegistry, AiProviderRegistry>();
+        services.AddScoped<IAiUsageLogger, AiUsageLogger>();
+        services.AddHttpClient<OpenAiCompatibleAiProviderClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(45);
         })
@@ -29,13 +31,18 @@ public static class DependencyInjection
         {
             ConnectTimeout = TimeSpan.FromSeconds(5)
         });
+        services.AddScoped<AiJsonClient>();
         services.AddScoped<IAiSearchExpansionService, AiSearchExpansionService>();
         services.AddScoped<IAiLeadClassifier, AiLeadClassifier>();
         services.AddScoped<ISearchCandidateFilter, SearchCandidateFilter>();
         services.AddScoped<ISearchIngestionService, SearchIngestionService>();
+        services.AddScoped<IExchangeProvider, KworkExchangeProvider>();
+        services.AddScoped<IExchangeProviderRegistry, ExchangeProviderRegistry>();
         services.AddScoped<IExchangeConnectionService, ExchangeConnectionService>();
         services.AddScoped<ISearchJobService, SearchJobService>();
-        services.AddSingleton<IKworkBrowserLoginService, KworkBrowserLoginService>();
+        services.AddSingleton<KworkBrowserLoginService>();
+        services.AddSingleton<IKworkBrowserLoginService>(provider => provider.GetRequiredService<KworkBrowserLoginService>());
+        services.AddSingleton<IExchangeBrowserLoginService>(provider => provider.GetRequiredService<KworkBrowserLoginService>());
         services.AddHttpClient<ILeadNotificationService, TelegramLeadNotificationService>();
         services.AddHttpClient("Kwork");
         services.AddScoped<LeadParsingService>();

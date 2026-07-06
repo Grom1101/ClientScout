@@ -119,20 +119,24 @@ public class AuthService : IAuthService
 
     private string GenerateToken(Account account, bool rememberMe)
     {
-        var secret = _config["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret not configured");
+        var secret = GetRequiredJwtSecret(_config);
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         // rememberMe = 30 days; otherwise 24 hours
         var expiry = rememberMe ? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddHours(24);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, account.Email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim("accountId", account.Id.ToString())
         };
+        if (account.TelegramUserId.HasValue)
+        {
+            claims.Add(new Claim("telegramUserId", account.TelegramUserId.Value.ToString()));
+        }
 
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
@@ -143,6 +147,22 @@ public class AuthService : IAuthService
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private static string GetRequiredJwtSecret(IConfiguration config)
+    {
+        var secret = config["Jwt:Secret"];
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            throw new InvalidOperationException("Jwt:Secret not configured");
+        }
+
+        if (Encoding.UTF8.GetByteCount(secret) < 32)
+        {
+            throw new InvalidOperationException("Jwt:Secret must be at least 32 bytes.");
+        }
+
+        return secret;
     }
 
     private static AccountDto MapToDto(Account account) => new(

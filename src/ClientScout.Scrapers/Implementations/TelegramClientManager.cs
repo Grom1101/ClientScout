@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ClientScout.Application.Sources.Models;
 using ClientScout.Application.Telegram;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using TL;
 using WTelegram;
 
@@ -16,16 +17,20 @@ public class TelegramClientManager : ITelegramClientManager, ITelegramValidator
 {
     private readonly string _apiId;
     private readonly string _apiHash;
+    private readonly ILogger<TelegramClientManager> _logger;
     private readonly ConcurrentDictionary<string, Client> _clients = new();
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _clientLocks = new();
 
-    public TelegramClientManager(IConfiguration configuration)
+    public TelegramClientManager(IConfiguration configuration, ILogger<TelegramClientManager> logger)
     {
         _apiId = configuration["Telegram:ApiId"] ?? throw new ArgumentException("Telegram:ApiId is missing");
         _apiHash = configuration["Telegram:ApiHash"] ?? throw new ArgumentException("Telegram:ApiHash is missing");
+        if (string.IsNullOrWhiteSpace(_apiId)) throw new ArgumentException("Telegram:ApiId is missing");
+        if (string.IsNullOrWhiteSpace(_apiHash)) throw new ArgumentException("Telegram:ApiHash is missing");
+        _logger = logger;
     }
 
-    private string ConfigProvider(string userId, string what)
+    private string? ConfigProvider(string userId, string what)
     {
         return what switch
         {
@@ -214,8 +219,7 @@ public class TelegramClientManager : ITelegramClientManager, ITelegramValidator
         }
         catch (Exception ex)
         {
-            // Ignore avatar download failure
-            Console.WriteLine($"Failed to download avatar: {ex.Message}");
+            _logger.LogDebug(ex, "Failed to download Telegram avatar");
         }
 
         return (name, avatarBase64);
@@ -342,7 +346,7 @@ public class TelegramClientManager : ITelegramClientManager, ITelegramValidator
             {
                 if (ex.Message is "NOT_FOUND" or "READ_ONLY") throw;
 
-                Console.WriteLine($"Failed to fetch topics: {ex.Message}");
+                _logger.LogDebug(ex, "Failed to fetch Telegram forum topics");
             }
         }
 
@@ -449,7 +453,7 @@ public class TelegramClientManager : ITelegramClientManager, ITelegramValidator
                     topicName))
                 .ToList();
 
-            Console.WriteLine($"[DEBUG] Final parsed messages count: {messages.Count}");
+            _logger.LogDebug("Parsed {MessageCount} Telegram messages", messages.Count);
             return messages;
         }
         finally

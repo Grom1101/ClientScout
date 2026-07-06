@@ -70,15 +70,17 @@ public class SearchJobService : ISearchJobService
         foreach (var setting in settings)
         {
             var telegramJitter = TimeSpan.Zero;
-            var kworkJitter = TimeSpan.Zero;
+            var exchangeJitter = TimeSpan.Zero;
 
-            var kworkConnection = await _dbContext.ExchangeConnections
-                .FirstOrDefaultAsync(c => c.ProfileId == setting.ProfileId && c.ExchangeType == ExchangeType.Kwork, cancellationToken);
-
-            if (kworkConnection is { IsConnected: true, RequiresReconnect: false } &&
-                IsDue(kworkConnection.LastCheckedAt, setting.IntervalMinutes, kworkJitter, now))
+            var exchangeConnections = await _dbContext.ExchangeConnections
+                .Where(c => c.ProfileId == setting.ProfileId && c.IsConnected && !c.RequiresReconnect)
+                .ToListAsync(cancellationToken);
+            foreach (var exchangeConnection in exchangeConnections)
             {
-                _backgroundJobs.Enqueue<ISearchJobService>(service => service.ScanKworkAsync(setting.ProfileId, CancellationToken.None));
+                if (IsDue(exchangeConnection.LastCheckedAt, setting.IntervalMinutes, exchangeJitter, now))
+                {
+                    _backgroundJobs.Enqueue<ISearchJobService>(service => service.ScanExchangeAsync(setting.ProfileId, exchangeConnection.ExchangeType, CancellationToken.None));
+                }
             }
 
             var searchSources = await _dbContext.Sources
@@ -174,6 +176,22 @@ public class SearchJobService : ISearchJobService
     }
 
     public async Task ScanKworkAsync(Guid profileId, CancellationToken cancellationToken = default)
+    {
+        await ScanExchangeAsync(profileId, ExchangeType.Kwork, cancellationToken);
+    }
+
+    public async Task ScanExchangeAsync(Guid profileId, ExchangeType exchangeType, CancellationToken cancellationToken = default)
+    {
+        if (exchangeType != ExchangeType.Kwork)
+        {
+            _logger.LogInformation("Exchange scan skipped for profile {ProfileId}: exchange {ExchangeType} is not implemented", profileId, exchangeType);
+            return;
+        }
+
+        await ScanKworkCoreAsync(profileId, cancellationToken);
+    }
+
+    private async Task ScanKworkCoreAsync(Guid profileId, CancellationToken cancellationToken = default)
     {
         var scanLock = KworkScanLocks.GetOrAdd(profileId, _ => new SemaphoreSlim(1, 1));
         if (!await scanLock.WaitAsync(0, cancellationToken))

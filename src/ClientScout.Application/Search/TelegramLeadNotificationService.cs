@@ -20,7 +20,7 @@ public class TelegramLeadNotificationService : ILeadNotificationService
 
     public async Task NotifyLeadAsync(Account account, JobLead lead, CancellationToken cancellationToken = default)
     {
-        var botToken = _configuration["TELEGRAM_BOT_TOKEN"] ?? _configuration["Telegram:BotToken"];
+        var botToken = _configuration["Telegram:BotToken"] ?? _configuration["TELEGRAM_BOT_TOKEN"];
         if (string.IsNullOrWhiteSpace(botToken) || botToken == "dummy_token_for_dev" || account.TelegramUserId == null)
         {
             return;
@@ -59,7 +59,7 @@ AI: {lead.AiConfidence}%
 
     public async Task NotifySearchStoppedAsync(Account account, string reason, CancellationToken cancellationToken = default)
     {
-        var botToken = _configuration["TELEGRAM_BOT_TOKEN"] ?? _configuration["Telegram:BotToken"];
+        var botToken = _configuration["Telegram:BotToken"] ?? _configuration["TELEGRAM_BOT_TOKEN"];
         if (string.IsNullOrWhiteSpace(botToken) || botToken == "dummy_token_for_dev" || account.TelegramUserId == null)
         {
             return;

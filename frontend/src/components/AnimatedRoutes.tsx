@@ -1,18 +1,19 @@
-import { useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import HomePage from '../pages/HomePage';
-import SearchPage from '../pages/SearchPage';
-import SearchChatsPage from '../pages/SearchChatsPage';
-import SearchLeadHistoryPage from '../pages/SearchLeadHistoryPage';
-import MailingPage from '../pages/MailingPage';
-import MailingChatsPage from '../pages/MailingChatsPage';
-import LoginPage from '../pages/LoginPage';
-import RegisterPage from '../pages/RegisterPage';
-import TelegramLinkPage from '../pages/TelegramLinkPage';
-import AdminAnalyticsPage from '../pages/AdminAnalyticsPage';
 import AuthGuard from './AuthGuard';
+
+const HomePage = lazy(() => import('../pages/HomePage'));
+const SearchPage = lazy(() => import('../pages/SearchPage'));
+const SearchChatsPage = lazy(() => import('../pages/SearchChatsPage'));
+const SearchLeadHistoryPage = lazy(() => import('../pages/SearchLeadHistoryPage'));
+const MailingPage = lazy(() => import('../pages/MailingPage'));
+const MailingChatsPage = lazy(() => import('../pages/MailingChatsPage'));
+const LoginPage = lazy(() => import('../pages/LoginPage'));
+const RegisterPage = lazy(() => import('../pages/RegisterPage'));
+const TelegramLinkPage = lazy(() => import('../pages/TelegramLinkPage'));
+const AdminAnalyticsPage = lazy(() => import('../pages/AdminAnalyticsPage'));
 
 const variants = {
   initial: (direction: number) => ({
@@ -62,21 +63,23 @@ export default function AnimatedRoutes() {
           transition={{ type: "spring", stiffness: 260, damping: 30 }}
           className="absolute inset-0 w-full h-full overflow-y-auto overflow-x-hidden bg-[#202020]"
         >
-          <Routes location={location}>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/link-telegram" element={<TelegramLinkPage />} />
-            
-            <Route element={<AuthGuard />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/search/chats" element={<SearchChatsPage />} />
-              <Route path="/search/leads" element={<SearchLeadHistoryPage />} />
-              <Route path="/mailing" element={<MailingPage />} />
-              <Route path="/mailing/chats" element={<MailingChatsPage />} />
-              <Route path="/admin" element={<AdminAnalyticsPage />} />
-            </Route>
-          </Routes>
+          <Suspense fallback={null}>
+            <Routes location={location}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/link-telegram" element={<TelegramLinkPage />} />
+
+              <Route element={<AuthGuard />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/search/chats" element={<SearchChatsPage />} />
+                <Route path="/search/leads" element={<SearchLeadHistoryPage />} />
+                <Route path="/mailing" element={<MailingPage />} />
+                <Route path="/mailing/chats" element={<MailingChatsPage />} />
+                <Route path="/admin" element={<AdminAnalyticsPage />} />
+              </Route>
+            </Routes>
+          </Suspense>
         </motion.div>
       </AnimatePresence>
     </div>

@@ -39,6 +39,7 @@ public class LeadService : ILeadService
         var now = DateTimeOffset.UtcNow;
 
         var query = _dbContext.JobLeads
+            .AsNoTracking()
             .Where(l => l.ProfileId == profileId &&
                         l.Status != LeadStatus.Hidden &&
                         l.ExpiresAt > now)
@@ -74,6 +75,7 @@ public class LeadService : ILeadService
 
         var now = DateTimeOffset.UtcNow;
         var query = _dbContext.JobLeads
+            .AsNoTracking()
             .Where(l => l.ProfileId == profileId &&
                         l.Status != LeadStatus.Hidden &&
                         l.ExpiresAt > now);

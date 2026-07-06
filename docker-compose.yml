@@ -2,9 +2,9 @@
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: clientscout
+      POSTGRES_USER: ${POSTGRES_USER:-clientscout}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env or environment}
+      POSTGRES_DB: ${POSTGRES_DB:-clientscout}
     ports:
       - "5432:5432"
     volumes:

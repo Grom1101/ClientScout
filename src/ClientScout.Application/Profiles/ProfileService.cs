@@ -22,6 +22,7 @@ public class ProfileService : IProfileService
     public async Task<List<ProfileDto>> GetProfilesAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
         var profiles = await _dbContext.Profiles
+            .AsNoTracking()
             .Where(p => p.AccountId == accountId)
             .OrderByDescending(p => p.IsDefault)
             .ThenByDescending(p => p.CreatedAt)
@@ -33,6 +34,7 @@ public class ProfileService : IProfileService
     public async Task<ProfileDto?> GetProfileAsync(Guid id, Guid accountId, CancellationToken cancellationToken = default)
     {
         var profile = await _dbContext.Profiles
+            .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id && p.AccountId == accountId, cancellationToken);
 
         return profile == null ? null : MapToDto(profile);

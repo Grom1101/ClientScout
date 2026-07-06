@@ -3,6 +3,7 @@ using ClientScout.Application;
 using ClientScout.Application.Leads;
 using ClientScout.Application.Outreach;
 using ClientScout.Application.Search;
+using ClientScout.Api.Security;
 using ClientScout.Infrastructure;
 using ClientScout.Infrastructure.Persistence;
 using ClientScout.Scrapers;
@@ -13,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IO;
+using System.Threading.RateLimiting;
 
 Console.SetIn(StreamReader.Null); // Prevent WTelegramClient from blocking locally
 
@@ -21,6 +23,57 @@ builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, relo
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ClientApp", policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+        if (allowedOrigins.Length > 0)
+        {
+            policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod();
+            return;
+        }
+
+        if (builder.Environment.IsDevelopment())
+        {
+            policy
+                .WithOrigins("http://localhost:5173", "https://localhost:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+            return;
+        }
+
+        policy.SetIsOriginAllowed(_ => false).AllowAnyHeader().AllowAnyMethod();
+    });
+});
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("Auth", context => RateLimitPartition.GetFixedWindowLimiter(
+        GetRateLimitPartitionKey(context),
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        }));
+    options.AddPolicy("Search", context => RateLimitPartition.GetFixedWindowLimiter(
+        GetRateLimitPartitionKey(context),
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 60,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        }));
+    options.AddPolicy("Api", context => RateLimitPartition.GetFixedWindowLimiter(
+        GetRateLimitPartitionKey(context),
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 120,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        }));
+});
 
 // Add Layers
 builder.Services.AddApplication();
@@ -44,17 +97,42 @@ builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 
-app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers.TryAdd("X-Content-Type-Options", "nosniff");
+    headers.TryAdd("Referrer-Policy", "strict-origin-when-cross-origin");
+    headers.TryAdd("Content-Security-Policy",
+        "default-src 'self'; " +
+        "script-src 'self'; " +
+        "style-src 'self' 'unsafe-inline'; " +
+        "img-src 'self' data: https:; " +
+        "font-src 'self' data:; " +
+        "connect-src 'self' https: wss:; " +
+        "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org https://t.me");
+    await next();
+});
+
+app.UseCors("ClientApp");
 app.UseHttpsRedirection();
 app.Environment.WebRootPath ??= Path.Combine(app.Environment.ContentRootPath, "wwwroot");
 Directory.CreateDirectory(Path.Combine(app.Environment.WebRootPath, "uploads"));
 app.UseStaticFiles();
 
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 // Hangfire Dashboard
-app.UseHangfireDashboard("/hangfire");
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = [new HangfireDashboardAuthorizationFilter(app.Configuration)]
+});
 
 app.MapControllers();
 
@@ -68,7 +146,8 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error migrating database: {ex.Message}");
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Error migrating database");
     }
 
     dbContext.Database.ExecuteSqlRaw("""
@@ -181,8 +260,7 @@ app.Run();
 
 void ConfigureJwtOptions(WebApplicationBuilder webApplicationBuilder, JwtBearerOptions jwtBearerOptions)
 {
-    var secret = webApplicationBuilder.Configuration["Jwt:Secret"] ??
-                 "A_VERY_LONG_SECRET_KEY_THAT_NEEDS_TO_BE_AT_LEAST_32_BYTES_LONG_OR_MORE";
+    var secret = GetRequiredJwtSecret(webApplicationBuilder.Configuration, webApplicationBuilder.Environment);
     jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -193,4 +271,34 @@ void ConfigureJwtOptions(WebApplicationBuilder webApplicationBuilder, JwtBearerO
         ValidAudience = webApplicationBuilder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
     };
+}
+
+string GetRateLimitPartitionKey(HttpContext context)
+{
+    var accountId = AdminAccess.GetAccountId(context.User);
+    return accountId?.ToString()
+           ?? context.Connection.RemoteIpAddress?.ToString()
+           ?? "anonymous";
+}
+
+static string GetRequiredJwtSecret(IConfiguration configuration, IWebHostEnvironment environment)
+{
+    var secret = configuration["Jwt:Secret"];
+    if (string.IsNullOrWhiteSpace(secret))
+    {
+        throw new InvalidOperationException("Jwt:Secret must be configured from environment, user-secrets, or production secret storage.");
+    }
+
+    if (Encoding.UTF8.GetByteCount(secret) < 32)
+    {
+        throw new InvalidOperationException("Jwt:Secret must be at least 32 bytes.");
+    }
+
+    if (!environment.IsDevelopment() &&
+        secret.Contains("CHANGE_ME", StringComparison.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException("Jwt:Secret placeholder cannot be used outside Development.");
+    }
+
+    return secret;
 }

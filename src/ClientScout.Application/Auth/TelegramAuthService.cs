@@ -11,7 +11,13 @@ public class TelegramAuthService
 
     public TelegramAuthService(IConfiguration config)
     {
-        _botToken = config["TELEGRAM_BOT_TOKEN"] ?? throw new ArgumentNullException("TELEGRAM_BOT_TOKEN is missing");
+        _botToken = config["Telegram:BotToken"]
+            ?? config["TELEGRAM_BOT_TOKEN"]
+            ?? throw new ArgumentNullException("Telegram bot token is missing");
+        if (string.IsNullOrWhiteSpace(_botToken))
+        {
+            throw new ArgumentNullException("Telegram bot token is missing");
+        }
     }
 
     public bool ValidateInitData(string initData)

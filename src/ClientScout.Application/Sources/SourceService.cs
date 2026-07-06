@@ -28,6 +28,7 @@ public class SourceService : ISourceService
         if (!hasAccess) throw new UnauthorizedAccessException();
 
         var sources = await _dbContext.Sources
+            .AsNoTracking()
             .Where(s => s.ProfileId == profileId)
             .Where(s => s.Type != SourceType.Kwork)
             .OrderByDescending(s => s.CreatedAt)
@@ -44,6 +45,7 @@ public class SourceService : ISourceService
         var metadata = await BuildMetadataAsync(dto, cancellationToken);
         var normalizedUrl = NormalizeSourceUrl(dto.Url);
         var existingSources = await _dbContext.Sources
+            .AsNoTracking()
             .Where(s => s.ProfileId == dto.ProfileId)
             .ToListAsync(cancellationToken);
 

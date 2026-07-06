@@ -18,7 +18,17 @@ public class JwtService
 
     public string GenerateToken(User user)
     {
-        var secret = _config["Jwt:Secret"] ?? throw new ArgumentNullException("Jwt:Secret missing");
+        var secret = _config["Jwt:Secret"];
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            throw new ArgumentNullException("Jwt:Secret missing");
+        }
+
+        if (Encoding.UTF8.GetByteCount(secret) < 32)
+        {
+            throw new InvalidOperationException("Jwt:Secret must be at least 32 bytes.");
+        }
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

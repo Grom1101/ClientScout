@@ -4,12 +4,17 @@ public enum SourceType
 {
     Telegram,
     Kwork,
-    Upwork
+    Upwork,
+    Fiverr,
+    Freelancer
 }
 
 public enum ExchangeType
 {
-    Kwork
+    Kwork,
+    Upwork,
+    Fiverr,
+    Freelancer
 }
 
 public enum ExchangeConnectionStatus

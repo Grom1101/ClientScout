@@ -5,7 +5,7 @@ using Microsoft.Playwright;
 
 namespace ClientScout.Application.Search;
 
-public class KworkBrowserLoginService : IKworkBrowserLoginService
+public class KworkBrowserLoginService : IKworkBrowserLoginService, IExchangeBrowserLoginService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<KworkBrowserLoginService> _logger;
@@ -16,6 +16,8 @@ public class KworkBrowserLoginService : IKworkBrowserLoginService
         _scopeFactory = scopeFactory;
         _logger = logger;
     }
+
+    public Domain.Enums.ExchangeType ExchangeType => Domain.Enums.ExchangeType.Kwork;
 
     public Task<Models.ExchangeLoginStartResult> StartAsync(Guid accountId, Guid profileId, CancellationToken cancellationToken = default)
     {

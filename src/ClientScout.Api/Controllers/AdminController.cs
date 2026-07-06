@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
+using ClientScout.Api.Security;
 using ClientScout.Infrastructure.Persistence;
 
 namespace ClientScout.Api.Controllers;
@@ -13,11 +14,12 @@ namespace ClientScout.Api.Controllers;
 public class AdminController : ControllerBase
 {
     private readonly AppDbContext _context;
-    private const long AdminTelegramId = 1080953147;
+    private readonly IConfiguration _configuration;
 
-    public AdminController(AppDbContext context)
+    public AdminController(AppDbContext context, IConfiguration configuration)
     {
         _context = context;
+        _configuration = configuration;
     }
 
     [HttpGet("stats")]
@@ -26,8 +28,10 @@ public class AdminController : ControllerBase
         var accountId = GetAccountId();
         if (accountId == null) return Unauthorized();
 
-        var account = await _context.Accounts.FirstOrDefaultAsync(a => a.Id == accountId);
-        if (account == null || account.TelegramUserId != AdminTelegramId)
+        var account = await _context.Accounts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Id == accountId);
+        if (account == null || !AdminAccess.IsAdmin(account.Id, account.TelegramUserId, _configuration))
         {
             return Forbid();
         }
@@ -36,11 +40,12 @@ public class AdminController : ControllerBase
         var today = DateTimeOffset.UtcNow.Date;
         var startOfMonth = new DateTimeOffset(today.Year, today.Month, 1, 0, 0, 0, TimeSpan.Zero);
 
-        var totalLogs = await _context.AiUsageLogs.CountAsync();
-        var errorCount = await _context.AiUsageLogs.CountAsync(l => l.StatusCode >= 400);
+        var totalLogs = await _context.AiUsageLogs.AsNoTracking().CountAsync();
+        var errorCount = await _context.AiUsageLogs.AsNoTracking().CountAsync(l => l.StatusCode >= 400);
         
         // Calculate provider stats
         var providerStats = await _context.AiUsageLogs
+            .AsNoTracking()
             .GroupBy(l => l.ProviderName)
             .Select(g => new
             {
@@ -56,6 +61,7 @@ public class AdminController : ControllerBase
 
         // Calculate model stats
         var modelStats = await _context.AiUsageLogs
+            .AsNoTracking()
             .GroupBy(l => new { l.ProviderName, l.ModelName })
             .Select(g => new
             {
