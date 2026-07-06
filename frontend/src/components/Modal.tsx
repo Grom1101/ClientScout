@@ -44,7 +44,7 @@ export default function Modal({ isOpen, onClose, onBack, title, children }: Moda
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-[#64748B] hover:text-[#0078D4] hover:bg-[#0078D4]/10 active:text-[#005A9E] active:scale-95 transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-[#64748B] hover:text-[#0EA5E9] hover:bg-[#0EA5E9]/10 active:text-[#0284C7] active:scale-95 transition-all"
           >
             <X className="w-5 h-5" />
           </button>

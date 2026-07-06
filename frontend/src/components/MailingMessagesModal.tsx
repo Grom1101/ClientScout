@@ -135,7 +135,7 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
                     backdropFilter: 'blur(8px)',
                   }}
                 >
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 120, 212,0.15)' }}>
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(14, 165, 233,0.15)' }}>
                     <FileText className="w-5 h-5 shrink-0" style={{ color: '#60CDFF' }} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -158,8 +158,8 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
         <label
           className="w-full h-[56px] rounded-xl text-[15px] font-bold flex items-center justify-center gap-2 cursor-pointer transition-all hover:bg-white/5 active:scale-[0.98]"
           style={{
-            border: '1px dashed rgba(0, 120, 212,0.5)',
-            backgroundColor: 'rgba(0, 120, 212,0.08)',
+            border: '1px dashed rgba(14, 165, 233,0.5)',
+            backgroundColor: 'rgba(14, 165, 233,0.08)',
             color: '#9ECBFF',
           }}
         >
@@ -183,8 +183,8 @@ export default function MailingMessagesModal({ isOpen, onClose }: Props) {
           disabled={isLoading || isUploading}
           className="w-full h-[56px] rounded-xl text-[14px] font-black tracking-wide text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
           style={{ 
-            background: 'linear-gradient(135deg, #0078D4 0%, #005A9E 100%)',
-            boxShadow: '0 8px 24px rgba(0, 120, 212,0.3)',
+            backgroundColor: '#0EA5E9',
+            boxShadow: '0 8px 24px rgba(14, 165, 233,0.3)',
           }}
         >
           СОХРАНИТЬ

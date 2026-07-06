@@ -118,7 +118,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
       key={term}
       className="inline-flex max-w-full items-center gap-1.5 rounded-lg text-xs font-bold"
       style={{
-        backgroundColor: tone === 'purple' ? 'rgba(0, 120, 212,0.18)' : 'rgba(239,68,68,0.12)',
+        backgroundColor: tone === 'purple' ? 'rgba(14, 165, 233,0.18)' : 'rgba(239,68,68,0.12)',
         color: tone === 'purple' ? '#9ECBFF' : '#FCA5A5',
         border: tone === 'purple' ? '1px solid rgba(76, 194, 255,0.22)' : '1px solid rgba(248,113,113,0.2)',
         padding: '3px 10px'
@@ -152,7 +152,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
                 onClick={() => setDraftInterval(option)}
                 className="h-11 rounded-xl text-[13px] font-black transition-all active:scale-95"
                 style={{
-                  backgroundColor: draftInterval === option ? 'rgba(0, 120, 212,0.24)' : 'rgba(255,255,255,0.04)',
+                  backgroundColor: draftInterval === option ? 'rgba(14, 165, 233,0.24)' : 'rgba(255,255,255,0.04)',
                   color: draftInterval === option ? '#FFFFFF' : '#94A3B8',
                   border: draftInterval === option ? '1px solid rgba(76, 194, 255,0.45)' : '1px solid rgba(255,255,255,0.08)',
                 }}
@@ -176,7 +176,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <h3 className="text-[15px] font-extrabold text-white">Ключевые слова</h3>
-              <span className="inline-flex items-center gap-1.5 rounded-full text-[10px] font-black uppercase" style={{ backgroundColor: 'rgba(0, 120, 212,0.16)', color: '#9ECBFF', padding: '3px 8px' }}>
+              <span className="inline-flex items-center gap-1.5 rounded-full text-[10px] font-black uppercase" style={{ backgroundColor: 'rgba(14, 165, 233,0.16)', color: '#9ECBFF', padding: '3px 8px' }}>
                 <Bot className="h-3 w-3" />
                 AI
               </span>
@@ -197,7 +197,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
               className="min-w-0 flex-1 rounded-xl bg-black/20 px-3 text-sm text-white outline-none placeholder:text-slate-500"
               style={{ border: '1px solid rgba(255,255,255,0.08)', paddingLeft: '16px', paddingRight: '16px' }}
             />
-            <button disabled={!keywordInput.trim()} onClick={handleAddKeyword} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition-all disabled:opacity-50" style={{ backgroundColor: '#0078D4' }} type="button">
+            <button disabled={!keywordInput.trim()} onClick={handleAddKeyword} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition-all disabled:opacity-50" style={{ backgroundColor: '#0EA5E9' }} type="button">
               <Plus className="h-5 w-5" />
             </button>
           </div>
@@ -225,7 +225,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
               className="min-w-0 flex-1 rounded-xl bg-black/20 px-3 text-sm text-white outline-none placeholder:text-slate-500"
               style={{ border: '1px solid rgba(255,255,255,0.08)', paddingLeft: '16px', paddingRight: '16px' }}
             />
-            <button disabled={!negativeInput.trim()} onClick={handleAddNegative} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition-all disabled:opacity-50" style={{ backgroundColor: '#0078D4' }} type="button">
+            <button disabled={!negativeInput.trim()} onClick={handleAddNegative} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition-all disabled:opacity-50" style={{ backgroundColor: '#0EA5E9' }} type="button">
               <Plus className="h-5 w-5" />
             </button>
           </div>
@@ -243,7 +243,7 @@ export default function SearchSettingsModal({ isOpen, onClose }: Props) {
         <button
           onClick={handleSave}
           className="flex h-[52px] w-full items-center justify-center rounded-[14px] text-[14px] font-black uppercase tracking-widest text-white transition-all active:scale-[0.98]"
-          style={{ background: 'linear-gradient(135deg, #0078D4, #005A9E)', boxShadow: '0 8px 24px rgba(0, 120, 212,0.3)' }}
+          style={{ backgroundColor: '#0EA5E9', boxShadow: '0 4px 20px rgba(14,165,233,0.3)' }}
         >
           Сохранить
         </button>

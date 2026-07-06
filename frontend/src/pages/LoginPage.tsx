@@ -36,7 +36,7 @@ export default function LoginPage() {
           <input
             type="email"
             placeholder="Email"
-            className="w-full p-3.5 bg-white/5 border border-white/10 rounded-md text-white outline-none transition-colors focus:border-[#0078D4] focus:bg-white/[0.07]"
+            className="w-full p-3.5 bg-white/5 border border-white/10 rounded-md text-white outline-none transition-colors focus:border-[#0EA5E9] focus:bg-white/[0.07]"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -44,7 +44,7 @@ export default function LoginPage() {
           <input
             type="password"
             placeholder="Пароль"
-            className="w-full p-3.5 bg-white/5 border border-white/10 rounded-md text-white outline-none transition-colors focus:border-[#0078D4] focus:bg-white/[0.07]"
+            className="w-full p-3.5 bg-white/5 border border-white/10 rounded-md text-white outline-none transition-colors focus:border-[#0EA5E9] focus:bg-white/[0.07]"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -54,7 +54,7 @@ export default function LoginPage() {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 rounded border-white/20 bg-white/5 accent-[#0078D4]"
+              className="h-4 w-4 rounded border-white/20 bg-white/5 accent-[#0EA5E9]"
             />
             Запомнить меня на 30 дней
           </label>
@@ -62,7 +62,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="mt-2 w-full py-4 text-base bg-[#0078D4] hover:bg-[#0067B8] text-white font-semibold rounded-md transition-all active:scale-[0.99] shadow-lg shadow-[#0078D4]/30 disabled:opacity-50"
+            className="mt-2 w-full py-4 text-base bg-[#0EA5E9] hover:bg-[#0284C7] text-white font-semibold rounded-md transition-all active:scale-[0.99] shadow-lg shadow-[#0EA5E9]/30 disabled:opacity-50"
           >
             {isLoading ? 'Загрузка...' : 'Войти'}
           </button>

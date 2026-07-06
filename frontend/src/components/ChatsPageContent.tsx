@@ -252,9 +252,9 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
     <div
       className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-all"
       style={{
-        backgroundColor: checked ? 'rgba(0, 120, 212,0.6)' : 'rgba(0, 120, 212,0.08)',
+        backgroundColor: checked ? 'rgba(14, 165, 233,0.6)' : 'rgba(14, 165, 233,0.08)',
         border: '1px solid rgba(76, 194, 255,0.75)',
-        boxShadow: checked ? '0 0 16px rgba(0, 120, 212,0.45)' : 'none',
+        boxShadow: checked ? '0 0 16px rgba(14, 165, 233,0.45)' : 'none',
       }}
     >
       {checked && <Check className="h-4 w-4 text-white" strokeWidth={3} />}
@@ -269,7 +269,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
         <button
           onClick={() => setShowAddChat(true)}
           className="flex h-9 w-9 items-center justify-center rounded-full transition-transform hover:scale-105"
-          style={{ background: 'linear-gradient(135deg, #0078D4, #005A9E)', marginRight: '14px' }}
+          style={{ backgroundColor: '#0EA5E9', marginRight: '14px' }}
         >
           <Plus className="h-5 w-5 text-white" />
         </button>
@@ -313,7 +313,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
                     <span className="truncate text-[15px] font-extrabold text-white">{platformLabels[platform]}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="flex min-w-[32px] h-[32px] items-center justify-center rounded-lg px-2 text-[15px] font-black" style={{ backgroundColor: 'rgba(0, 120, 212,0.18)', color: '#60CDFF' }}>
+                    <span className="flex min-w-[32px] h-[32px] items-center justify-center rounded-lg px-2 text-[15px] font-black" style={{ backgroundColor: 'rgba(14, 165, 233,0.18)', color: '#60CDFF' }}>
                       {platformEntries.length}
                     </span>
                     {isCollapsed ? <ChevronDown className="h-4 w-4 text-slate-500" /> : <ChevronUp className="h-4 w-4 text-slate-500" />}
@@ -421,10 +421,10 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
             <div className="flex flex-col" style={{ marginTop: addError ? '0' : '5px' }}>
               <div className="relative group">
                 <div 
-                  className="pointer-events-none absolute inset-y-0 left-0 flex items-center transition-colors group-focus-within:text-[#0078D4]"
+                  className="pointer-events-none absolute inset-y-0 left-0 flex items-center transition-colors group-focus-within:text-[#0EA5E9]"
                   style={{ paddingLeft: '15px' }}
                 >
-                  <Link className="h-5 w-5 text-slate-400 group-focus-within:text-[#0078D4] transition-colors" />
+                  <Link className="h-5 w-5 text-slate-400 group-focus-within:text-[#0EA5E9] transition-colors" />
                 </div>
                 <input
                   type="text"
@@ -434,7 +434,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
                     setAddError(null);
                   }}
                   placeholder="https://t.me/your_chat_link"
-                  className="w-full rounded-2xl pr-4 text-[15px] text-white transition-all placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0078D4]/40 focus:border-[#0078D4]/40"
+                  className="w-full rounded-2xl pr-4 text-[15px] text-white transition-all placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0EA5E9]/40 focus:border-[#0EA5E9]/40"
                   style={{ 
                     height: '46px',
                     paddingLeft: '43px',
@@ -458,7 +458,7 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
                       className="flex cursor-pointer items-center gap-3 rounded-xl transition-all"
                       style={{ padding: '14px 14px', backgroundColor: disabled ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)', opacity: disabled ? 0.55 : 1 }}
                     >
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-all" style={{ backgroundColor: topic.checked ? 'rgba(0, 120, 212,0.6)' : 'rgba(0, 120, 212,0.08)', border: '1px solid rgba(76, 194, 255,0.75)', boxShadow: topic.checked ? '0 0 16px rgba(0, 120, 212,0.45)' : 'none' }}>
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-all" style={{ backgroundColor: topic.checked ? 'rgba(14, 165, 233,0.6)' : 'rgba(14, 165, 233,0.08)', border: '1px solid rgba(76, 194, 255,0.75)', boxShadow: topic.checked ? '0 0 16px rgba(14, 165, 233,0.45)' : 'none' }}>
                         {topic.checked && <Check className="h-4 w-4 text-white" strokeWidth={3} />}
                         {!topic.checked && showWriteLock && <Lock className="h-4 w-4 text-slate-400" />}
                       </div>
@@ -492,8 +492,8 @@ export default function ChatsPageContent({ title, backTo, purpose }: ChatsPageCo
             className="flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl text-[15px] font-black uppercase tracking-wide text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
             style={{ 
               marginTop: '5px',
-              background: 'linear-gradient(135deg, #0078D4, #005A9E)',
-              boxShadow: '0 8px 24px -6px rgba(0, 120, 212, 0.4)'
+              backgroundColor: '#0EA5E9',
+              boxShadow: '0 8px 24px -6px rgba(14, 165, 233, 0.4)'
             }}
           >
             {isAdding ? <Loader2 className="h-5 w-5 animate-spin" /> : forumTopics ? 'Сохранить' : 'Добавить'}

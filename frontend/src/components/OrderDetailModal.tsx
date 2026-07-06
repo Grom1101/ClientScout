@@ -98,7 +98,7 @@ export default function OrderDetailModal({ isOpen, onClose, orderId }: Props) {
         <button
           onClick={onClose}
           className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity active:opacity-80"
-          style={{ backgroundColor: '#0078D4' }}
+          style={{ backgroundColor: '#0EA5E9' }}
         >
           {isTelegram ? (
             <><Send className="w-4 h-4" /> Написать в чат</>

@@ -145,7 +145,7 @@ export default function SearchExchangesModal({ isOpen, onClose }: Props) {
                 onClick={handleConnect}
                 disabled={isStarting || isFlowPending}
                 className="flex items-center justify-center gap-2 rounded-xl text-[13px] font-bold text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
-                style={{ backgroundColor: needsReconnect ? '#F59E0B' : '#0078D4', height: '38px' }}
+                style={{ backgroundColor: needsReconnect ? '#F59E0B' : '#0EA5E9', height: '38px' }}
               >
                 {(isStarting || isFlowPending) && (
                   <Loader2 className="h-4 w-4 animate-spin" />

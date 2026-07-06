@@ -7,6 +7,7 @@ import { useAppStore, type Profile } from '../store/useAppStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useOutreachStore, type OutreachActivityPoint } from '../store/useOutreachStore';
 import { useLeadsStore } from '../store/useLeadsStore';
+import { useSearchRuntimeStore } from '../store/useSearchRuntimeStore';
 import { getActiveProfileId, apiClient } from '../api/client';
 
 type StatsPeriod = 'today' | 'month';
@@ -29,6 +30,10 @@ export default function HomePage() {
   const [combinedChartData, setCombinedChartData] = useState<OutreachActivityPoint[]>([]);
   const [sentChartData, setSentChartData] = useState<OutreachActivityPoint[]>([]);
 
+  const [searchChatsCount, setSearchChatsCount] = useState<number | null>(null);
+  const [mailingChatsCount, setMailingChatsCount] = useState<number | null>(null);
+  const { exchanges, fetchExchanges } = useSearchRuntimeStore();
+
   useEffect(() => {
     fetchProfiles().catch((error) => console.error('Failed to load profiles', error));
   }, [fetchProfiles]);
@@ -39,6 +44,10 @@ export default function HomePage() {
 
     fetchStats(profileId, 'today');
     fetchHistory(profileId, 5, 0, 'confirmed');
+    fetchExchanges(profileId);
+
+    apiClient.get('/sources', { params: { purpose: 0 } }).then(res => setSearchChatsCount(res.data?.length || 0)).catch(() => {});
+    apiClient.get('/sources', { params: { purpose: 1 } }).then(res => setMailingChatsCount(res.data?.length || 0)).catch(() => {});
 
     const fetchLocalStats = async () => {
       try {
@@ -58,7 +67,7 @@ export default function HomePage() {
         fetchLocalStats();
     }, 15000);
     return () => window.clearInterval(timer);
-  }, [activeProfile?.id, fetchStats, fetchHistory, chartPeriod]);
+  }, [activeProfile?.id, fetchStats, fetchHistory, chartPeriod, fetchExchanges]);
 
   const handleLogout = () => {
     logout();
@@ -108,7 +117,7 @@ export default function HomePage() {
                             <div 
       className="relative flex flex-col" 
       style={{ 
-        padding: '20px 20px 84px 20px',
+        padding: '20px 20px 24px 20px',
         boxSizing: 'border-box', 
         height: '100%', 
         width: '100%',
@@ -199,6 +208,36 @@ export default function HomePage() {
             </div>
         </div>
 
+        {/* Info Block */}
+        <div className="grid grid-cols-3 gap-2 shrink-0">
+          <div className="flex flex-col items-center justify-center rounded-[20px]" style={{ padding: '12px 8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="h-7 flex items-center justify-center">
+              <span className="text-[20px] font-black text-white leading-none">{searchChatsCount ?? '-'}</span>
+            </div>
+            <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400 mt-1 text-center leading-tight">Чатов в поиске</span>
+          </div>
+          <div className="flex flex-col items-center justify-center rounded-[20px]" style={{ padding: '12px 8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="h-7 flex items-center justify-center">
+              <span className="text-[20px] font-black text-white leading-none">{mailingChatsCount ?? '-'}</span>
+            </div>
+            <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400 mt-1 text-center leading-tight">Чатов в рассылке</span>
+          </div>
+          <div className="flex flex-col items-center justify-center rounded-[20px]" style={{ padding: '12px 8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="h-7 flex items-center justify-center">
+              {exchanges.some(e => e.exchangeType === 0 && e.status === 1) ? (
+                 <div className="w-6 h-6 rounded-full bg-[#4CC2FF]/20 flex items-center justify-center">
+                   <div className="w-2 h-2 rounded-full bg-[#4CC2FF] animate-pulse" style={{ boxShadow: '0 0 10px rgba(76,194,255,1)' }} />
+                 </div>
+              ) : (
+                 <div className="w-6 h-6 rounded-full bg-slate-500/20 flex items-center justify-center">
+                   <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                 </div>
+              )}
+            </div>
+            <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400 text-center mt-1 leading-tight">KWORK</span>
+          </div>
+        </div>
+
         {/* Combined Chart */}
         <div className="flex flex-col relative overflow-hidden rounded-[24px] flex-1 min-h-[160px]" 
              style={{ 
@@ -220,10 +259,10 @@ export default function HomePage() {
                     className="inline-flex items-center justify-center rounded-[6px] text-[9px] font-black uppercase tracking-widest transition-all"
                     style={{
                       padding: '4px 10px',
-                      backgroundColor: isActive ? 'rgba(0, 120, 212, 0.25)' : 'transparent',
+                      backgroundColor: isActive ? 'rgba(14, 165, 233, 0.25)' : 'transparent',
                       color: isActive ? '#9ECBFF' : '#64748B',
                       border: isActive ? '1px solid rgba(76, 194, 255, 0.3)' : '1px solid transparent',
-                      boxShadow: isActive ? '0 2px 10px rgba(0, 120, 212, 0.2)' : 'none'
+                      boxShadow: isActive ? '0 2px 10px rgba(14, 165, 233, 0.2)' : 'none'
                     }}
                   >
                     {period === 'today' ? 'Сегодня' : 'Месяц'}
@@ -269,16 +308,16 @@ export default function HomePage() {
         {/* Recommendations Button */}
         <button
           onClick={() => setShowRecommendations(true)}
-          className="flex items-center justify-between w-full rounded-[20px] transition-all active:scale-[0.98] shrink-0"
+          className="flex items-center justify-between w-full rounded-[20px] transition-all active:scale-[0.98] shrink-0 mt-auto"
           style={{ 
             padding: '20px',
-            backgroundColor: 'rgba(0, 120, 212, 0.1)',
-            border: '1px solid rgba(0, 120, 212, 0.2)',
+            backgroundColor: 'rgba(14, 165, 233, 0.1)',
+            border: '1px solid rgba(14, 165, 233, 0.2)',
             backdropFilter: 'blur(12px)',
           }}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(0, 120, 212, 0.2)' }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(14, 165, 233, 0.2)' }}>
               <BookOpen className="w-5 h-5" style={{ color: '#60CDFF' }} />
             </div>
             <div className="flex flex-col text-left">
@@ -306,7 +345,7 @@ export default function HomePage() {
           >
             {/* Avatar block */}
             <div className="flex items-center gap-5 px-1" style={{ marginBottom: '15px' }}>
-              <div className="shrink-0 rounded-full flex items-center justify-center text-xl font-bold overflow-hidden shadow-[0_4px_20px_rgba(0, 120, 212,0.3)]" style={{ width: '64px', height: '64px', minWidth: '64px', minHeight: '64px', backgroundColor: '#0078D4', color: 'white' }}>
+              <div className="shrink-0 rounded-full flex items-center justify-center text-xl font-bold overflow-hidden shadow-[0_4px_20px_rgba(14, 165, 233,0.3)]" style={{ width: '64px', height: '64px', minWidth: '64px', minHeight: '64px', backgroundColor: '#0EA5E9', color: 'white' }}>
                 {account?.telegramAvatarBase64 ? (
                   <img src={account.telegramAvatarBase64} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -376,12 +415,12 @@ export default function HomePage() {
                       height: '56px',
                       paddingLeft: '15px',
                       paddingRight: '15px',
-                      backgroundColor: isCurrent ? 'rgba(0, 120, 212,0.15)' : 'rgba(255, 255, 255, 0.03)',
-                      border: isCurrent ? '1px solid rgba(0, 120, 212,0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
+                      backgroundColor: isCurrent ? 'rgba(14, 165, 233,0.15)' : 'rgba(255, 255, 255, 0.03)',
+                      border: isCurrent ? '1px solid rgba(14, 165, 233,0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
                       backdropFilter: 'blur(12px)'
                     }}
                   >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 shadow-sm" style={{ backgroundColor: p.color || '#0078D4', color: 'white' }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 shadow-sm" style={{ backgroundColor: p.color || '#0EA5E9', color: 'white' }}>
                       {p.name.charAt(0).toUpperCase()}
                     </div>
 
@@ -472,7 +511,7 @@ export default function HomePage() {
               <button 
                 onClick={handleCreateProfile} 
                 className="w-full rounded-2xl text-[15px] font-semibold text-white transition-all active:scale-[0.98]" 
-                style={{ height: '56px', backgroundColor: '#0078D4', boxShadow: '0 4px 15px rgba(0, 120, 212,0.3)' }}
+                style={{ height: '56px', backgroundColor: '#0EA5E9', boxShadow: '0 4px 15px rgba(14, 165, 233,0.3)' }}
               >
                 Создать профиль
               </button>

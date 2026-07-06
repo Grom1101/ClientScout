@@ -21,7 +21,7 @@ export default function SubPage({ title, backTo, children, rightAction, hideDivi
       >
         <button
           onClick={() => navigate(backTo)}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#94A3B8] hover:text-[#0078D4] hover:bg-[#0078D4]/10 active:text-[#005A9E] active:scale-95 transition-all"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#94A3B8] hover:text-[#0EA5E9] hover:bg-[#0EA5E9]/10 active:text-[#0284C7] active:scale-95 transition-all"
         >
           <ArrowLeft className="h-6 w-6" />
         </button>

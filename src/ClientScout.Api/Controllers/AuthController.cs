@@ -79,7 +79,7 @@ public class AuthController : ControllerBase
         }
         catch (KeyNotFoundException)
         {
-            return NotFound();
+            return NotFound(new { message = "Account not found." });
         }
     }
 

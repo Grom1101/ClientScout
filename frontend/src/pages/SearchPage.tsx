@@ -224,7 +224,7 @@ export default function SearchPage() {
           <div className="flex items-center gap-3">
             <span
               className="flex min-w-[28px] h-[28px] items-center justify-center rounded-[8px] px-2 text-[13px] font-black"
-              style={{ backgroundColor: 'rgba(0, 120, 212,0.18)', color: '#60CDFF' }}
+              style={{ backgroundColor: 'rgba(14, 165, 233,0.18)', color: '#60CDFF' }}
             >
               {selectedSearchChats.length}
             </span>
@@ -269,8 +269,8 @@ export default function SearchPage() {
             className="relative flex h-[58px] items-center justify-center gap-3 overflow-hidden rounded-[10px] text-[14px] font-black uppercase tracking-wide text-white transition-all disabled:opacity-50"
             style={{
               width: actionWidth,
-              background: 'linear-gradient(135deg, #0078D4, #005A9E)',
-              boxShadow: '0 8px 24px rgba(0, 120, 212,0.3)',
+              backgroundColor: '#0EA5E9',
+              boxShadow: '0 4px 20px rgba(14,165,233,0.3)',
             }}
           >
             {isToggling ? <Loader2 className="relative z-10 h-5 w-5 animate-spin" fill="white" /> : <Play className="relative z-10 h-5 w-5" fill="white" />}
@@ -404,7 +404,7 @@ export default function SearchPage() {
                     <button
                       onClick={() => openOrder(order.id, order.link)}
                       style={{
-                        backgroundColor: '#0078D4',
+                        backgroundColor: '#0EA5E9',
                         color: 'white',
                         borderRadius: 10,
                         paddingTop: 6,
@@ -440,8 +440,8 @@ export default function SearchPage() {
             marginRight: -20,
             width: 'calc(100% + 40px)',
             minHeight: 76,
-            backgroundColor: 'rgba(0, 120, 212, 0.12)',
-            borderTop: '1px solid rgba(0, 120, 212, 0.25)',
+            backgroundColor: 'rgba(14, 165, 233, 0.12)',
+            borderTop: '1px solid rgba(14, 165, 233, 0.25)',
           }}
         >
           <span style={{ color: '#E2E8F0', fontSize: 16, fontWeight: 700 }}>Показать все</span>

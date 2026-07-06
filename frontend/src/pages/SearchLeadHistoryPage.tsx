@@ -106,7 +106,7 @@ export default function SearchLeadHistoryPage() {
             cursor: 'pointer',
             color: aiFilter === 'confirmed' ? '#F8FAFC' : '#64748B',
             border: aiFilter === 'confirmed'
-              ? '1px solid rgba(0, 120, 212,0.5)'
+              ? '1px solid rgba(14, 165, 233,0.5)'
               : '1px solid rgba(255,255,255,0.06)',
             backgroundColor: aiFilter === 'confirmed' ? '#1E293B' : 'transparent',
           }}
@@ -128,7 +128,7 @@ export default function SearchLeadHistoryPage() {
             cursor: 'pointer',
             color: aiFilter === 'unverified' ? '#F8FAFC' : '#64748B',
             border: aiFilter === 'unverified'
-              ? '1px solid rgba(0, 120, 212,0.5)'
+              ? '1px solid rgba(14, 165, 233,0.5)'
               : '1px solid rgba(255,255,255,0.06)',
             backgroundColor: aiFilter === 'unverified' ? '#1E293B' : 'transparent',
           }}
@@ -140,7 +140,7 @@ export default function SearchLeadHistoryPage() {
       {/* Р—Р°РіСЂСѓР·РєР° */}
       {isHistoryLoading && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
-          <Loader2 style={{ width: 32, height: 32, color: '#0078D4' }} className="animate-spin" />
+          <Loader2 style={{ width: 32, height: 32, color: '#0EA5E9' }} className="animate-spin" />
         </div>
       )}
 
@@ -247,7 +247,7 @@ export default function SearchLeadHistoryPage() {
                     <button
                       onClick={() => openLead(order.id, order.link)}
                       style={{
-                        backgroundColor: '#0078D4',
+                        backgroundColor: '#0EA5E9',
                         color: 'white',
                         borderRadius: 8,
                         paddingTop: 6,
@@ -305,8 +305,8 @@ export default function SearchLeadHistoryPage() {
             minWidth: 44,
             height: 44,
             borderRadius: 12,
-            backgroundColor: 'rgba(0, 120, 212,0.12)',
-            border: '1px solid rgba(0, 120, 212,0.2)',
+            backgroundColor: 'rgba(14, 165, 233,0.12)',
+            border: '1px solid rgba(14, 165, 233,0.2)',
           }}>
             <span style={{ color: '#60CDFF', fontSize: 14, fontWeight: 800 }}>{page + 1}</span>
           </div>

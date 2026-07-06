@@ -56,8 +56,8 @@ export default function MailingIntervalModal({ isOpen, onClose }: Props) {
       style={{
         paddingLeft: '15px',
         paddingRight: '15px',
-        backgroundColor: selected ? 'rgba(0, 120, 212,0.1)' : 'rgba(0,0,0,0.15)',
-        border: selected ? '1px solid rgba(0, 120, 212,0.4)' : '1px solid rgba(255,255,255,0.04)',
+        backgroundColor: selected ? 'rgba(14, 165, 233,0.1)' : 'rgba(0,0,0,0.15)',
+        border: selected ? '1px solid rgba(14, 165, 233,0.4)' : '1px solid rgba(255,255,255,0.04)',
       }}
     >
       <span className="text-[14px] font-semibold" style={{ color: selected ? '#fff' : '#94A3B8' }}>
@@ -66,9 +66,9 @@ export default function MailingIntervalModal({ isOpen, onClose }: Props) {
       <div
         className="flex h-5 w-5 items-center justify-center rounded-full transition-all"
         style={{
-          border: selected ? '5px solid #0078D4' : '1px solid rgba(255,255,255,0.2)',
+          border: selected ? '5px solid #0EA5E9' : '1px solid rgba(255,255,255,0.2)',
           backgroundColor: selected ? '#fff' : 'transparent',
-          boxShadow: selected ? '0 0 10px rgba(0, 120, 212,0.5)' : 'none',
+          boxShadow: selected ? '0 0 10px rgba(14, 165, 233,0.5)' : 'none',
         }}
       />
     </button>
@@ -91,7 +91,7 @@ export default function MailingIntervalModal({ isOpen, onClose }: Props) {
                 onClick={() => setDraftPeriodicity(option.value)}
                 className="h-11 rounded-xl text-[13px] font-black transition-all active:scale-95"
                 style={{
-                  backgroundColor: draftPeriodicity === option.value ? 'rgba(0, 120, 212,0.24)' : 'rgba(255,255,255,0.04)',
+                  backgroundColor: draftPeriodicity === option.value ? 'rgba(14, 165, 233,0.24)' : 'rgba(255,255,255,0.04)',
                   color: draftPeriodicity === option.value ? '#FFFFFF' : '#94A3B8',
                   border: draftPeriodicity === option.value ? '1px solid rgba(76, 194, 255,0.45)' : '1px solid rgba(255,255,255,0.08)',
                 }}
@@ -148,7 +148,7 @@ export default function MailingIntervalModal({ isOpen, onClose }: Props) {
           <button
             onClick={handleSave}
             className="flex h-[52px] w-full items-center justify-center rounded-[14px] text-[14px] font-black uppercase tracking-widest text-white transition-all active:scale-[0.98]"
-            style={{ background: 'linear-gradient(135deg, #0078D4, #005A9E)', boxShadow: '0 8px 24px rgba(0, 120, 212,0.3)' }}
+            style={{ backgroundColor: '#0EA5E9', boxShadow: '0 8px 24px rgba(14, 165, 233,0.3)' }}
           >
             Сохранить
           </button>

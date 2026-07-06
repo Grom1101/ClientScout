@@ -3,6 +3,9 @@ import { useAuthStore } from '../store/useAuthStore';
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
+  headers: {
+    'ngrok-skip-browser-warning': '1',
+  },
 });
 
 export const isPreviewMode = () => {

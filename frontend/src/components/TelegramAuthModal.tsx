@@ -130,14 +130,14 @@ export function TelegramAuthModal({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+375291234567"
-                className="w-full bg-white/5 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#0078D4] transition-all border border-white/10"
+                className="w-full bg-white/5 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#0EA5E9] transition-all border border-white/10"
               />
               <div className="flex gap-3 mt-6">
                 <button className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-white/10 hover:bg-white/20" onClick={handleClose}>
                   Отмена
                 </button>
                 <button
-                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-[#0078D4] hover:bg-[#005A9E] disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-[#0EA5E9] hover:bg-[#0284C7] disabled:opacity-50"
                   onClick={handleSendCode}
                   disabled={!phone.trim() || loading}
                 >
@@ -155,14 +155,14 @@ export function TelegramAuthModal({
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="12345"
-                className="w-full bg-white/5 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#0078D4] transition-all border border-white/10"
+                className="w-full bg-white/5 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#0EA5E9] transition-all border border-white/10"
               />
               <div className="flex gap-3 mt-6">
                 <button className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-white/10 hover:bg-white/20" onClick={() => setStep('phone')}>
                   Назад
                 </button>
                 <button
-                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-[#0078D4] hover:bg-[#005A9E] disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-[#0EA5E9] hover:bg-[#0284C7] disabled:opacity-50"
                   onClick={handleVerifyCode}
                   disabled={!code.trim() || loading}
                 >
@@ -180,14 +180,14 @@ export function TelegramAuthModal({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Введите пароль 2FA"
-                className="w-full bg-white/5 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#0078D4] transition-all border border-white/10"
+                className="w-full bg-white/5 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#0EA5E9] transition-all border border-white/10"
               />
               <div className="flex gap-3 mt-6">
                 <button className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-white/10 hover:bg-white/20" onClick={() => setStep('code')}>
                   Назад
                 </button>
                 <button
-                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-[#0078D4] hover:bg-[#005A9E] disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-[#0EA5E9] hover:bg-[#0284C7] disabled:opacity-50"
                   onClick={handleVerifyPassword}
                   disabled={!password || loading}
                 >

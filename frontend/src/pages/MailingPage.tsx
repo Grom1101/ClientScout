@@ -126,7 +126,7 @@ export default function MailingPage() {
           <div className="flex items-center gap-3">
             <span
               className="flex min-w-[28px] h-[28px] items-center justify-center rounded-[8px] px-2 text-[13px] font-black"
-              style={{ backgroundColor: 'rgba(0, 120, 212,0.18)', color: '#60CDFF' }}
+              style={{ backgroundColor: 'rgba(14, 165, 233,0.18)', color: '#60CDFF' }}
             >
               {selectedChats.length}
             </span>
@@ -171,8 +171,8 @@ export default function MailingPage() {
             className="relative flex h-[58px] items-center justify-center gap-3 overflow-hidden rounded-[10px] text-[14px] font-black uppercase tracking-wide text-white transition-all disabled:opacity-50"
             style={{
               width: actionWidth,
-              background: 'linear-gradient(135deg, #0078D4, #005A9E)',
-              boxShadow: '0 8px 24px rgba(0, 120, 212,0.3)',
+              backgroundColor: '#0EA5E9',
+              boxShadow: '0 4px 20px rgba(14,165,233,0.3)',
             }}
           >
             {isOutreachLoading ? <Loader2 className="relative z-10 h-5 w-5 animate-spin" fill="white" /> : <Play className="relative z-10 h-5 w-5" fill="white" />}
@@ -226,7 +226,7 @@ export default function MailingPage() {
                 paddingTop: index === 0 ? 20 : 0,
                 paddingBottom: index === stats.recentLogs.length - 1 ? 20 : 0
               }}>
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-active:scale-95 shadow-sm" style={{ backgroundColor: entry.status === 0 ? 'rgba(0, 120, 212, 0.12)' : 'rgba(239, 68, 68, 0.1)', border: entry.status === 0 ? '1px solid rgba(0, 120, 212, 0.18)' : '1px solid rgba(239, 68, 68, 0.15)' }}>
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-active:scale-95 shadow-sm" style={{ backgroundColor: entry.status === 0 ? 'rgba(14, 165, 233, 0.12)' : 'rgba(239, 68, 68, 0.1)', border: entry.status === 0 ? '1px solid rgba(14, 165, 233, 0.18)' : '1px solid rgba(239, 68, 68, 0.15)' }}>
                   <Send className="w-5 h-5" style={{ color: entry.status === 0 ? '#60CDFF' : '#F87171' }} />
                 </div>
                 <div className="flex-1 min-w-0">
